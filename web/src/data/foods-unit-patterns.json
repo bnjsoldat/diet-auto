@@ -1,0 +1,248 @@
+[
+  {
+    "prefix": "oeuf,",
+    "excludes": ["blanc", "jaune", "coquille", "en poudre", "déshydraté", "omelette"],
+    "unites": [{ "label": "œuf", "g": 60 }, { "label": "œuf gros", "g": 70 }, { "label": "œuf petit", "g": 50 }]
+  },
+  {
+    "prefix": "oeuf, blanc",
+    "excludes": ["en poudre"],
+    "unites": [{ "label": "blanc d'œuf", "g": 33 }]
+  },
+  {
+    "prefix": "oeuf, jaune",
+    "excludes": ["en poudre"],
+    "unites": [{ "label": "jaune d'œuf", "g": 17 }]
+  },
+  {
+    "prefix": "oeuf de caille",
+    "unites": [{ "label": "œuf de caille", "g": 10 }]
+  },
+  {
+    "prefix": "oeuf de cane",
+    "unites": [{ "label": "œuf de cane", "g": 80 }]
+  },
+  {
+    "prefix": "oeuf de dinde",
+    "unites": [{ "label": "œuf de dinde", "g": 80 }]
+  },
+  {
+    "prefix": "oeuf d'oie",
+    "unites": [{ "label": "œuf d'oie", "g": 200 }]
+  },
+  {
+    "prefix": "omelette",
+    "unites": [{ "label": "omelette (2 œufs)", "g": 120 }, { "label": "omelette (3 œufs)", "g": 180 }]
+  },
+  {
+    "prefix": "pomme, ",
+    "excludes": ["de terre", "compote", "jus"],
+    "unites": [{ "label": "pomme moyenne", "g": 150 }, { "label": "pomme grosse", "g": 200 }]
+  },
+  {
+    "prefix": "banane",
+    "excludes": ["plantain", "séchée", "chips"],
+    "unites": [{ "label": "banane moyenne", "g": 120 }, { "label": "banane grosse", "g": 150 }]
+  },
+  {
+    "prefix": "orange",
+    "excludes": ["jus", "confite", "ade"],
+    "unites": [{ "label": "orange moyenne", "g": 150 }, { "label": "orange grosse", "g": 200 }]
+  },
+  {
+    "prefix": "clémentine",
+    "unites": [{ "label": "clémentine", "g": 70 }]
+  },
+  {
+    "prefix": "mandarine",
+    "unites": [{ "label": "mandarine", "g": 70 }]
+  },
+  {
+    "prefix": "kiwi",
+    "unites": [{ "label": "kiwi", "g": 80 }]
+  },
+  {
+    "prefix": "poire",
+    "excludes": ["jus", "sirop"],
+    "unites": [{ "label": "poire moyenne", "g": 180 }]
+  },
+  {
+    "prefix": "pêche",
+    "excludes": ["jus", "sirop", "séchée"],
+    "unites": [{ "label": "pêche", "g": 150 }]
+  },
+  {
+    "prefix": "abricot",
+    "excludes": ["séché", "sirop", "confiture", "jus"],
+    "unites": [{ "label": "abricot", "g": 50 }]
+  },
+  {
+    "prefix": "ananas",
+    "excludes": ["jus", "sirop", "confit"],
+    "unites": [{ "label": "tranche", "g": 80 }]
+  },
+  {
+    "prefix": "mangue",
+    "excludes": ["séchée", "jus"],
+    "unites": [{ "label": "mangue moyenne", "g": 300 }, { "label": "1/2 mangue", "g": 150 }]
+  },
+  {
+    "prefix": "cerise",
+    "excludes": ["confite", "sirop", "jus", "liqueur"],
+    "unites": [{ "label": "cerise", "g": 7 }, { "label": "poignée", "g": 50 }]
+  },
+  {
+    "prefix": "citron",
+    "excludes": ["jus", "zeste"],
+    "unites": [{ "label": "citron moyen", "g": 80 }, { "label": "1/2 citron", "g": 40 }]
+  },
+  {
+    "prefix": "figue",
+    "excludes": ["séchée", "sirop", "confiture"],
+    "unites": [{ "label": "figue", "g": 50 }]
+  },
+  {
+    "prefix": "tomate",
+    "excludes": ["cerise", "jus", "sauce", "coulis", "séchée", "concentré", "purée", "soupe", "confite"],
+    "unites": [{ "label": "tomate moyenne", "g": 120 }, { "label": "tomate grosse", "g": 180 }]
+  },
+  {
+    "prefix": "tomate cerise",
+    "unites": [{ "label": "tomate cerise", "g": 10 }, { "label": "barquette (250 g)", "g": 250 }]
+  },
+  {
+    "prefix": "concombre",
+    "unites": [{ "label": "concombre moyen", "g": 300 }, { "label": "1/2 concombre", "g": 150 }]
+  },
+  {
+    "prefix": "courgette",
+    "unites": [{ "label": "courgette moyenne", "g": 200 }]
+  },
+  {
+    "prefix": "carotte",
+    "excludes": ["jus", "râpée", "purée"],
+    "unites": [{ "label": "carotte moyenne", "g": 100 }]
+  },
+  {
+    "prefix": "poivron",
+    "excludes": ["grillé", "mariné"],
+    "unites": [{ "label": "poivron", "g": 200 }, { "label": "1/2 poivron", "g": 100 }]
+  },
+  {
+    "prefix": "oignon",
+    "excludes": ["jus", "poudre", "séché", "frit"],
+    "unites": [{ "label": "oignon moyen", "g": 120 }, { "label": "petit oignon", "g": 60 }]
+  },
+  {
+    "prefix": "avocat",
+    "excludes": ["huile", "guacamole"],
+    "unites": [{ "label": "avocat moyen", "g": 150 }, { "label": "1/2 avocat", "g": 75 }]
+  },
+  {
+    "prefix": "endive",
+    "unites": [{ "label": "endive", "g": 120 }]
+  },
+  {
+    "prefix": "pomme de terre",
+    "excludes": ["frite", "chips", "purée", "flocon", "soupe", "gratin"],
+    "unites": [{ "label": "pomme de terre moyenne", "g": 150 }, { "label": "pomme de terre grosse", "g": 250 }]
+  },
+  {
+    "prefix": "patate douce",
+    "excludes": ["frite", "chips", "purée"],
+    "unites": [{ "label": "patate douce moyenne", "g": 200 }]
+  },
+  {
+    "prefix": "pain",
+    "excludes": ["d'épices", "perdu", "chapelure", "hamburger", "burger", "hot-dog", "hot dog", "pita", "naan"],
+    "unites": [{ "label": "tranche", "g": 35 }]
+  },
+  {
+    "prefix": "biscotte",
+    "unites": [{ "label": "biscotte", "g": 8 }]
+  },
+  {
+    "prefix": "huile",
+    "unites": [{ "label": "c. à soupe", "g": 13 }, { "label": "c. à café", "g": 5 }, { "label": "filet (5 g)", "g": 5 }]
+  },
+  {
+    "prefix": "beurre",
+    "excludes": ["cacahuète", "cacao", "amande", "noisette", "sésame", "karité", "clarifié"],
+    "unites": [{ "label": "noisette", "g": 10 }, { "label": "c. à soupe", "g": 15 }, { "label": "plaquette (250 g)", "g": 250 }]
+  },
+  {
+    "prefix": "margarine",
+    "unites": [{ "label": "c. à soupe", "g": 15 }, { "label": "noisette", "g": 10 }]
+  },
+  {
+    "prefix": "crème fraîche",
+    "unites": [{ "label": "c. à soupe", "g": 15 }, { "label": "pot (200 g)", "g": 200 }]
+  },
+  {
+    "prefix": "miel",
+    "unites": [{ "label": "c. à café", "g": 7 }, { "label": "c. à soupe", "g": 20 }]
+  },
+  {
+    "prefix": "confiture",
+    "unites": [{ "label": "c. à café", "g": 10 }, { "label": "c. à soupe", "g": 20 }]
+  },
+  {
+    "prefix": "yaourt",
+    "excludes": ["à boire", "glacé"],
+    "unites": [{ "label": "pot (125 g)", "g": 125 }]
+  },
+  {
+    "prefix": "fromage blanc",
+    "unites": [{ "label": "pot (100 g)", "g": 100 }, { "label": "c. à soupe", "g": 30 }]
+  },
+  {
+    "prefix": "petit-suisse",
+    "unites": [{ "label": "petit-suisse (60 g)", "g": 60 }]
+  },
+  {
+    "prefix": "lait",
+    "excludes": ["poudre", "concentré", "coco", "amande", "soja", "riz", "avoine", "noisette"],
+    "unites": [{ "label": "verre (200 ml)", "g": 200 }, { "label": "bol (250 ml)", "g": 250 }, { "label": "brique (1 L)", "g": 1000 }]
+  },
+  {
+    "prefix": "sucre",
+    "excludes": ["vanille", "glace"],
+    "unites": [{ "label": "c. à café", "g": 5 }, { "label": "c. à soupe", "g": 15 }, { "label": "morceau", "g": 6 }]
+  },
+  {
+    "prefix": "sel",
+    "excludes": ["céleri"],
+    "unites": [{ "label": "pincée", "g": 1 }, { "label": "c. à café", "g": 5 }]
+  },
+  {
+    "prefix": "farine",
+    "unites": [{ "label": "c. à soupe", "g": 10 }, { "label": "poignée (50 g)", "g": 50 }]
+  },
+  {
+    "prefix": "riz",
+    "excludes": ["lait", "galette", "soupe", "poudre", "farine"],
+    "unites": [{ "label": "portion cuite (150 g)", "g": 150 }, { "label": "bol (200 g)", "g": 200 }]
+  },
+  {
+    "prefix": "pâtes",
+    "excludes": ["sauce", "à tartiner", "fromage"],
+    "unites": [{ "label": "portion cuite (200 g)", "g": 200 }, { "label": "portion crue (80 g)", "g": 80 }]
+  },
+  {
+    "prefix": "saucisse",
+    "excludes": ["foie"],
+    "unites": [{ "label": "saucisse", "g": 80 }]
+  },
+  {
+    "prefix": "merguez",
+    "unites": [{ "label": "merguez", "g": 70 }]
+  },
+  {
+    "prefix": "chipolata",
+    "unites": [{ "label": "chipolata", "g": 50 }]
+  },
+  {
+    "prefix": "steak haché",
+    "unites": [{ "label": "steak haché", "g": 100 }, { "label": "steak haché (125 g)", "g": 125 }]
+  }
+]

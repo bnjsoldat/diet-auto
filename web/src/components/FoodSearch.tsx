@@ -98,7 +98,14 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
               >
                 {isFav && <Star size={12} className="text-amber-500 shrink-0" fill="currentColor" />}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm truncate">{f.nom}</div>
+                  <div className="text-sm truncate flex items-center gap-2">
+                    <span>{f.nom}</span>
+                    {f.unites && f.unites[0] && (
+                      <span className="shrink-0 text-[10px] uppercase tracking-wide muted border rounded px-1 py-0.5">
+                        1 {f.unites[0].label} ≈ {f.unites[0].g} g
+                      </span>
+                    )}
+                  </div>
                   <div className="text-xs muted truncate">
                     {Math.round(f.kcal)} kcal · P {f.prot.toFixed(1)} · G {f.gluc.toFixed(1)} · L{' '}
                     {f.lip.toFixed(1)} (pour 100 g)

@@ -7,6 +7,7 @@ import { Today } from './pages/Today';
 import { History } from './pages/History';
 import { Profiles } from './pages/Profiles';
 import { Favorites } from './pages/Favorites';
+import { Shopping } from './pages/Shopping';
 import { useProfile } from './store/useProfile';
 import { useDayPlan } from './store/useDayPlan';
 import { useFavorites } from './store/useFavorites';
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/history" element={<History />} />
         <Route path="/profiles" element={<Profiles />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/shopping" element={<Shopping />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

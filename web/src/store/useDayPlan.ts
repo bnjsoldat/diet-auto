@@ -3,6 +3,7 @@ import { storage } from '@/lib/storage';
 import type { DayPlan, Meal, MealFoodItem } from '@/types';
 import { DEFAULT_MEALS } from '@/lib/constants';
 import { debounce, todayKey, uid } from '@/lib/utils';
+import { foodsByName } from '@/lib/foods';
 
 interface DayPlanState {
   profileId: string | null;
@@ -15,7 +16,7 @@ interface DayPlanState {
   ensurePlan: () => DayPlan;
   current: () => DayPlan | null;
 
-  addFood: (mealId: string, nomFood: string, quantite?: number) => void;
+  addFood: (mealId: string, nomFood: string, quantite?: number | null) => void;
   updateItem: (mealId: string, itemId: string, patch: Partial<MealFoodItem>) => void;
   removeItem: (mealId: string, itemId: string) => void;
   renameMeal: (mealId: string, nom: string) => void;
@@ -76,12 +77,18 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       return plans[date] ?? null;
     },
 
-    addFood(mealId, nomFood, quantite = 100) {
+    addFood(mealId, nomFood, quantite) {
       const plan = get().ensurePlan();
+      // Quantité par défaut : 1 unité si l'aliment en a une, sinon 100 g
+      let qDefault = quantite;
+      if (qDefault == null) {
+        const food = foodsByName.get(nomFood.toLowerCase());
+        qDefault = food?.unites?.[0] ? food.unites[0].g : 100;
+      }
       const item: MealFoodItem = {
         id: uid('itm'),
         nom: nomFood,
-        quantite,
+        quantite: qDefault,
         verrou: false,
       };
       const meals = plan.meals.map((m) =>

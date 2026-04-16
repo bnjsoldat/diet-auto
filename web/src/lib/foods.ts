@@ -1,17 +1,26 @@
 import foodsRaw from '@/data/foods.json';
 import foodsExtras from '@/data/foods-extras.json';
+import foodsUnits from '@/data/foods-units.json';
 import Fuse from 'fuse.js';
-import type { Food } from '@/types';
+import type { Food, Unite } from '@/types';
+
+const UNITS = foodsUnits as Record<string, Unite[]>;
 
 // Merge CIQUAL export + extras curated (legumes, fruits, cereals, etc.),
-// dédupliqué par nom (insensible à la casse, les extras gagnent sur les doublons)
+// dédupliqué par nom. Les entrées extras gagnent sur les doublons, et les
+// unités pratiques (foods-units.json) viennent décorer les aliments éligibles.
 function mergeFoods(): Food[] {
   const map = new Map<string, Food>();
   for (const f of foodsRaw as Food[]) {
-    map.set(f.nom.toLowerCase(), f);
+    map.set(f.nom.toLowerCase(), { ...f });
   }
   for (const f of foodsExtras as Food[]) {
-    map.set(f.nom.toLowerCase(), f);
+    map.set(f.nom.toLowerCase(), { ...f });
+  }
+  // Appliquer les unités (override si déjà défini inline)
+  for (const f of map.values()) {
+    const u = UNITS[f.nom];
+    if (u && !f.unites) f.unites = u;
   }
   return Array.from(map.values()).sort((a, b) =>
     a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' })

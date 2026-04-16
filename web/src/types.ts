@@ -27,6 +27,13 @@ export interface Profile {
   updatedAt: number;
 }
 
+export interface Unite {
+  /** Étiquette affichée (ex: "œuf", "c. à soupe", "pomme moyenne") */
+  label: string;
+  /** Poids en grammes pour 1 unité (ex: 60 pour un œuf moyen) */
+  g: number;
+}
+
 export interface Food {
   nom: string;
   groupe: string;
@@ -34,6 +41,11 @@ export interface Food {
   prot: number;
   gluc: number;
   lip: number;
+  /**
+   * Unités pratiques en plus des grammes (œuf, cuillère, pomme, tranche…).
+   * La première unité est l'unité par défaut à l'ajout.
+   */
+  unites?: Unite[];
 }
 
 export interface MealFoodItem {

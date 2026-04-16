@@ -9,6 +9,7 @@ import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
 import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
+import { ShareButton } from '@/components/ShareButton';
 import { exportDayPlanPDF } from '@/lib/pdf';
 import type { OptimizeResult } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
@@ -89,6 +90,7 @@ export function Today() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <ShareButton plan={current} />
           <button className="btn-outline" onClick={handleExportPDF}>
             <FileDown size={14} /> PDF
           </button>

@@ -1,5 +1,5 @@
 import localforage from 'localforage';
-import type { DayPlan, Profile, Settings, WeightEntry } from '@/types';
+import type { DayPlan, Food, Profile, Reminder, Settings, WeightEntry } from '@/types';
 
 localforage.config({
   name: 'diet-auto',
@@ -15,6 +15,8 @@ const K = {
   settings: 'settings',
   weights: (profileId: string) => `weights:${profileId}`,
   recipes: (profileId: string) => `recipes:${profileId}`,
+  customFoods: 'customFoods',
+  reminders: 'reminders',
 };
 
 export const storage = {
@@ -65,5 +67,19 @@ export const storage = {
   },
   async saveRecipes<T = unknown>(profileId: string, list: T[]) {
     await localforage.setItem(K.recipes(profileId), list);
+  },
+
+  async getCustomFoods(): Promise<Food[]> {
+    return (await localforage.getItem<Food[]>(K.customFoods)) ?? [];
+  },
+  async saveCustomFoods(list: Food[]) {
+    await localforage.setItem(K.customFoods, list);
+  },
+
+  async getReminders(): Promise<Reminder[]> {
+    return (await localforage.getItem<Reminder[]>(K.reminders)) ?? [];
+  },
+  async saveReminders(list: Reminder[]) {
+    await localforage.setItem(K.reminders, list);
   },
 };

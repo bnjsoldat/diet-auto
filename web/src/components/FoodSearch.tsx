@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Star } from 'lucide-react';
 import { foods, searchFoods } from '@/lib/foods';
 import { useFavorites } from '@/store/useFavorites';
+import { useCustomFoods } from '@/store/useCustomFoods';
 import type { Food } from '@/types';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, categorieOfFood, foodsByCategorie } from '@/lib/categories';
@@ -22,6 +23,8 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
   const listRef = useRef<HTMLDivElement>(null);
 
   const favs = useFavorites((s) => s.favorites);
+  // Déclencheur de re-render quand les aliments perso changent (scan, ajout, suppr).
+  const customs = useCustomFoods((s) => s.customs);
 
   /** Si l'utilisateur n'a aucun favori, le filtre "favoris" vide redirige vers "all". */
   useEffect(() => {
@@ -48,7 +51,10 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
     }
     if (filter === 'all') return foods.slice(0, 40);
     return (foodsByCategorie[filter] ?? []).slice(0, 80);
-  }, [q, favs, filter]);
+    // `customs` est listé en dépendance pour forcer un recompute quand
+    // l'utilisateur scanne ou supprime un aliment perso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, favs, filter, customs]);
 
   useEffect(() => {
     setIdx(0);
@@ -80,7 +86,8 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
 
   const availableCategories = useMemo(
     () => CATEGORIES.filter((c) => (foodsByCategorie[c.id]?.length ?? 0) > 0),
-    []
+    // Recompute quand les customs changent (ajoute la cat "perso" dynamiquement).
+    [customs]
   );
 
   return (

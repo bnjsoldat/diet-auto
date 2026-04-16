@@ -85,6 +85,14 @@ export interface WeightEntry {
   note?: string;
 }
 
+export interface Reminder {
+  id: string;
+  label: string; // "Petit-déj", "Déjeuner"…
+  time: string; // "HH:MM" (24h)
+  enabled: boolean;
+  message?: string; // message perso affiché dans la notification
+}
+
 export interface RecipeIngredient {
   nom: string; // nom d'aliment (CIQUAL ou custom)
   quantite: number; // g

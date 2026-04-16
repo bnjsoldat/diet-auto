@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { ImportPlanPrompt } from './components/ImportPlanPrompt';
 import { Home } from './pages/Home';
 import { Setup } from './pages/Setup';
 import { Today } from './pages/Today';
@@ -15,6 +16,9 @@ import { useFavorites } from './store/useFavorites';
 import { useSettings } from './store/useSettings';
 import { useWeight } from './store/useWeight';
 import { useRecipes } from './store/useRecipes';
+import { useCustomFoods } from './store/useCustomFoods';
+import { useReminders } from './store/useReminders';
+import { useReminderScheduler } from './hooks/useReminderScheduler';
 
 export default function App() {
   const loadProfiles = useProfile((s) => s.load);
@@ -24,11 +28,17 @@ export default function App() {
   const loadFavs = useFavorites((s) => s.load);
   const loadWeights = useWeight((s) => s.load);
   const loadRecipes = useRecipes((s) => s.load);
+  const loadCustomFoods = useCustomFoods((s) => s.load);
+  const loadReminders = useReminders((s) => s.load);
+
+  useReminderScheduler();
 
   useEffect(() => {
     loadProfiles();
     loadSettings();
-  }, [loadProfiles, loadSettings]);
+    loadCustomFoods();
+    loadReminders();
+  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders]);
 
   useEffect(() => {
     if (activeId) {
@@ -40,18 +50,21 @@ export default function App() {
   }, [activeId, loadDayPlan, loadFavs, loadWeights, loadRecipes]);
 
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/setup" element={<Setup />} />
-        <Route path="/today" element={<Today />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/profiles" element={<Profiles />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/shopping" element={<Shopping />} />
-        <Route path="/recipes" element={<Recipes />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+    <>
+      <ImportPlanPrompt />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/today" element={<Today />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/profiles" element={<Profiles />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/shopping" element={<Shopping />} />
+          <Route path="/recipes" element={<Recipes />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </>
   );
 }

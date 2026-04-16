@@ -1,5 +1,5 @@
 import type { Food } from '@/types';
-import { foods } from './foods';
+import { foods, onFoodsRebuild } from './foods';
 
 /** Catégorie d'affichage (libellé court + emoji) avec la liste de "groupes" CIQUAL qui y correspondent. */
 export interface Categorie {
@@ -33,6 +33,12 @@ export const CATEGORIES: Categorie[] = [
     label: 'Céréales & féculents',
     emoji: '🌾',
     groupes: ['céréales et produits à base de céréales', 'féculents'],
+  },
+  {
+    id: 'plats',
+    label: 'Plats composés',
+    emoji: '🍱',
+    groupes: ['plats composés'],
   },
   {
     id: 'legumes',
@@ -77,10 +83,22 @@ export const CATEGORIES: Categorie[] = [
     groupes: ['boissons'],
   },
   {
+    id: 'sauces',
+    label: 'Sauces & condiments',
+    emoji: '🫙',
+    groupes: ['sauces et condiments'],
+  },
+  {
     id: 'complements',
     label: 'Compléments',
     emoji: '💊',
     groupes: ['compléments'],
+  },
+  {
+    id: 'perso',
+    label: 'Mes aliments',
+    emoji: '📦',
+    groupes: ['perso'],
   },
 ];
 
@@ -96,7 +114,7 @@ export function categorieOfFood(food: Food): string | null {
   return GROUPE_TO_CAT.get(food.groupe.toLowerCase()) ?? null;
 }
 
-/** Aliments groupés par catégorie (pré-calculé). */
+/** Aliments groupés par catégorie. Muté en place quand les customs changent. */
 export const foodsByCategorie: Record<string, Food[]> = (() => {
   const acc: Record<string, Food[]> = {};
   for (const c of CATEGORIES) acc[c.id] = [];
@@ -106,3 +124,14 @@ export const foodsByCategorie: Record<string, Food[]> = (() => {
   }
   return acc;
 })();
+
+function rebuildFoodsByCategorie() {
+  for (const c of CATEGORIES) foodsByCategorie[c.id] = [];
+  for (const f of foods) {
+    const cat = categorieOfFood(f);
+    if (cat) foodsByCategorie[cat].push(f);
+  }
+}
+
+// Re-trier les catégories dès que la base est modifiée (scan, ajout, suppr).
+onFoodsRebuild(rebuildFoodsByCategorie);

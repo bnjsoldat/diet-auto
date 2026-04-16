@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, Plus, Trash2, UserPen } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { ProfileForm } from '@/components/ProfileForm';
+import { RemindersCard } from '@/components/RemindersCard';
 import { calcTargets } from '@/lib/calculations';
 import type { Profile } from '@/types';
 
@@ -72,6 +73,10 @@ export function Profiles() {
         <button className="btn-primary" onClick={() => setCreating(true)}>
           <Plus size={14} /> Nouveau profil
         </button>
+      </div>
+
+      <div className="mb-6">
+        <RemindersCard />
       </div>
 
       <div className="grid gap-3">

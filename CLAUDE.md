@@ -105,12 +105,15 @@ Les références sont centralisées dans l'objet `CONFIG` en tête de fichier :
 
 Projet Vite + React 18 + TypeScript + Tailwind + Zustand + localForage.
 
-- **Base aliments** : `web/src/data/foods.json` (770 entrées CIQUAL, format `{nom, groupe, kcal, prot, gluc, lip}` par 100 g) — extraite du Sheet via l'endpoint gviz (avril 2026).
+- **Base aliments** : `web/src/data/foods.json` (3010 entrées CIQUAL 2020, format `{nom, groupe, kcal, prot, gluc, lip}` par 100 g) — extraite depuis les XML officiels ANSES via `web/scripts/extract-ciqual.cjs`.
+- **Aliments perso** : ajoutés au vol via le scanner code-barres (Open Food Facts) et persistés en IndexedDB (store `useCustomFoods`). Catégorie 📦 « Mes aliments ».
 - **Logique portée depuis `Code.gs`** : `web/src/lib/calculations.ts` (Harris-Benedict + coefs + macros), `web/src/lib/optimizer.ts` (descente de gradient projetée, même algo).
-- **Persistance** : IndexedDB via localForage (profils, plans, favoris, settings). Zéro backend, zéro compte.
-- **Navigation** : React Router v6 — routes `/`, `/setup`, `/today`, `/history`, `/profiles`, `/favorites`.
+- **Persistance** : IndexedDB via localForage (profils, plans, favoris, settings, aliments perso, rappels, poids, recettes). Zéro backend, zéro compte.
+- **Navigation** : React Router v6 — routes `/`, `/setup`, `/today`, `/history`, `/profiles`, `/favorites`, `/shopping`, `/recipes`.
 - **Design** : moderne épuré, palette émeraude + neutres, mode sombre via classe `.dark` sur `<html>`, responsive mobile-first.
-- **Commandes** : `cd web && npm install && npm run dev`. Build : `npm run build`. Typecheck : `npm run typecheck`.
+- **PWA** : installable (manifest + service worker), fonctionne hors-ligne, shortcut "Plan du jour".
+- **Features** : scanner code-barres (BarcodeDetector + Open Food Facts, fallback saisie manuelle), partage de plan via URL encodée base64url, rappels quotidiens via Notifications API, progression pondérale + courbe, recettes composées, export PDF.
+- **Commandes** : `cd web && npm install && npm run dev`. Build : `npm run build`. Typecheck : `npm run typecheck`. Extraction CIQUAL : `node scripts/extract-ciqual.cjs <dossierXmlCiqual> src/data/foods.json`.
 - **Déploiement** : Vercel (voir `web/README.md`), root directory = `web`.
 
 Le site et le Sheet partagent la logique mais sont totalement **indépendants** — aucune synchro bidirectionnelle. Les utilisateurs du site n'ont pas besoin du Sheet.

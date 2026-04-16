@@ -1,0 +1,331 @@
+import { useEffect, useRef, useState } from 'react';
+import { Camera, Loader2, ScanBarcode, X } from 'lucide-react';
+import { createDetector, isBarcodeDetectorSupported } from '@/lib/barcode';
+import { fetchOpenFoodFactsProduct } from '@/lib/openfoodfacts';
+import { useCustomFoods } from '@/store/useCustomFoods';
+import type { Food } from '@/types';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (food: Food, grams: number) => void;
+}
+
+type Status = 'idle' | 'scanning' | 'searching' | 'found' | 'not-found' | 'error';
+
+/**
+ * Modal qui ouvre la webcam, scanne un code-barres (via BarcodeDetector natif),
+ * puis interroge Open Food Facts et propose de confirmer + saisir une quantité.
+ * Si la caméra ou l'API BarcodeDetector n'est pas dispo, l'utilisateur peut
+ * saisir le code manuellement.
+ */
+export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const loopRef = useRef<number | null>(null);
+  const [status, setStatus] = useState<Status>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [manualCode, setManualCode] = useState('');
+  const [foundFood, setFoundFood] = useState<Food | null>(null);
+  const [grams, setGrams] = useState<number>(100);
+  const addCustom = useCustomFoods((s) => s.addOrUpdate);
+
+  const supported = isBarcodeDetectorSupported();
+
+  // Démarrage caméra + boucle de détection
+  useEffect(() => {
+    if (!open || !supported) return;
+
+    let cancelled = false;
+    setStatus('scanning');
+    setErrorMsg('');
+    setFoundFood(null);
+
+    const detector = createDetector();
+    if (!detector) {
+      setStatus('error');
+      setErrorMsg('Détection de code-barres non disponible.');
+      return;
+    }
+
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+
+        const tick = async () => {
+          if (cancelled || !videoRef.current) return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            if (barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              stopCamera();
+              await lookup(code);
+              return;
+            }
+          } catch {
+            /* ignore ticks silently */
+          }
+          loopRef.current = window.setTimeout(tick, 400);
+        };
+        tick();
+      } catch (e: any) {
+        if (cancelled) return;
+        setStatus('error');
+        setErrorMsg(
+          e?.name === 'NotAllowedError'
+            ? 'Accès caméra refusé. Tu peux saisir le code à la main.'
+            : 'Impossible d’accéder à la caméra. Saisis le code à la main.'
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      stopCamera();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, supported]);
+
+  // Quand la modal se ferme, reset complet
+  useEffect(() => {
+    if (!open) {
+      stopCamera();
+      setStatus('idle');
+      setErrorMsg('');
+      setManualCode('');
+      setFoundFood(null);
+      setGrams(100);
+    }
+  }, [open]);
+
+  function stopCamera() {
+    if (loopRef.current) {
+      clearTimeout(loopRef.current);
+      loopRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  }
+
+  async function lookup(code: string) {
+    setStatus('searching');
+    setErrorMsg('');
+    try {
+      const food = await fetchOpenFoodFactsProduct(code);
+      if (!food) {
+        setStatus('not-found');
+        return;
+      }
+      setFoundFood(food);
+      setStatus('found');
+    } catch (e: any) {
+      setStatus('error');
+      setErrorMsg(e?.message ?? 'Erreur réseau.');
+    }
+  }
+
+  function handleManualSearch() {
+    const c = manualCode.trim();
+    if (c.length < 6) return;
+    stopCamera();
+    lookup(c);
+  }
+
+  function handleConfirm() {
+    if (!foundFood) return;
+    addCustom(foundFood);
+    onConfirm(foundFood, Math.max(1, Math.round(grams)));
+    onClose();
+  }
+
+  function handleRestart() {
+    setFoundFood(null);
+    setManualCode('');
+    setStatus(supported ? 'scanning' : 'idle');
+    setErrorMsg('');
+  }
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-lg bg-[var(--card)] border shadow-xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <ScanBarcode size={18} className="text-emerald-600" />
+            <h3 className="font-semibold">Scanner un produit</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-8 w-8 grid place-items-center rounded hover:bg-[var(--bg-subtle)]"
+            aria-label="Fermer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {/* Video preview + indicator */}
+          {supported && !foundFood && status !== 'error' && (
+            <div className="relative aspect-[4/3] bg-black rounded-md overflow-hidden">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+                autoPlay
+              />
+              <div className="absolute inset-0 pointer-events-none grid place-items-center">
+                <div className="border-2 border-emerald-400/80 rounded-md w-3/4 h-1/3" />
+              </div>
+              {status === 'scanning' && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white bg-black/50 px-2 py-1 rounded flex items-center gap-1">
+                  <Camera size={12} /> En attente d’un code-barres…
+                </div>
+              )}
+              {status === 'searching' && (
+                <div className="absolute inset-0 grid place-items-center bg-black/60 text-white text-sm gap-2">
+                  <Loader2 size={28} className="animate-spin" />
+                  <span>Recherche sur Open Food Facts…</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manual input / fallback */}
+          {!foundFood && (status === 'error' || !supported) && (
+            <div className="space-y-2">
+              {errorMsg && <p className="text-xs text-amber-600">{errorMsg}</p>}
+              {!supported && (
+                <p className="text-xs muted">
+                  Ton navigateur ne prend pas en charge la détection automatique. Saisis le code
+                  à la main — il est imprimé sous le code-barres.
+                </p>
+              )}
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1"
+                  placeholder="Code-barres (ex : 3017620422003)"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value.replace(/\D/g, ''))}
+                  inputMode="numeric"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleManualSearch}
+                  disabled={manualCode.length < 6 || status === 'searching'}
+                >
+                  {status === 'searching' ? <Loader2 size={14} className="animate-spin" /> : 'OK'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Manual entry toggle when camera is running */}
+          {supported && !foundFood && status !== 'error' && (
+            <details className="text-xs muted">
+              <summary className="cursor-pointer">Saisir le code à la main</summary>
+              <div className="flex gap-2 mt-2">
+                <input
+                  className="input flex-1"
+                  placeholder="13 chiffres"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value.replace(/\D/g, ''))}
+                  inputMode="numeric"
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleManualSearch}
+                  disabled={manualCode.length < 6}
+                >
+                  OK
+                </button>
+              </div>
+            </details>
+          )}
+
+          {/* Not found */}
+          {status === 'not-found' && (
+            <div className="space-y-2 text-sm">
+              <p>Produit inconnu dans Open Food Facts, ou valeurs nutritionnelles manquantes.</p>
+              <button
+                type="button"
+                className="btn"
+                onClick={handleRestart}
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {/* Found : confirm */}
+          {foundFood && (
+            <div className="space-y-3">
+              <div className="rounded-md border bg-[var(--bg-subtle)] p-3">
+                <div className="font-medium text-sm">{foundFood.nom}</div>
+                <div className="text-xs muted mt-1">
+                  Pour 100 g : {Math.round(foundFood.kcal)} kcal · P{' '}
+                  {foundFood.prot.toFixed(1)} · G {foundFood.gluc.toFixed(1)} · L{' '}
+                  {foundFood.lip.toFixed(1)}
+                </div>
+              </div>
+              <div className="flex items-end gap-2">
+                <label className="flex-1">
+                  <span className="text-xs muted block mb-1">Quantité (g)</span>
+                  <input
+                    className="input"
+                    type="number"
+                    min="1"
+                    max="2000"
+                    value={grams || ''}
+                    onChange={(e) => setGrams(Number(e.target.value) || 0)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className={cn('btn', !grams && 'opacity-50 cursor-not-allowed')}
+                  onClick={handleRestart}
+                >
+                  Autre
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleConfirm}
+                  disabled={!grams}
+                >
+                  Ajouter
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

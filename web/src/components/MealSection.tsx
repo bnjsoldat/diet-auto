@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit2, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit2, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import type { Meal, MealFoodItem } from '@/types';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { FoodRow } from './FoodRow';
 import { FoodSearch } from './FoodSearch';
 import { RecipePicker } from './RecipePicker';
+import { BarcodeScanner } from './BarcodeScanner';
 import { useDayPlan } from '@/store/useDayPlan';
 import { cn, formatNumber } from '@/lib/utils';
 
@@ -18,6 +19,7 @@ export function MealSection({ meal, canRemove }: Props) {
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nomEdit, setNomEdit] = useState(meal.nom);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const updateItem = useDayPlan((s) => s.updateItem);
   const removeItem = useDayPlan((s) => s.removeItem);
@@ -119,8 +121,23 @@ export function MealSection({ meal, canRemove }: Props) {
               placeholder={`Ajouter un aliment dans ${meal.nom.toLowerCase()}…`}
             />
           </div>
+          <button
+            type="button"
+            onClick={() => setScannerOpen(true)}
+            className="inline-flex items-center gap-1.5 h-10 px-3 rounded-md border text-sm whitespace-nowrap transition-colors hover:bg-[var(--bg-subtle)]"
+            title="Scanner un code-barres"
+          >
+            <ScanBarcode size={14} />
+            <span className="hidden sm:inline">Scan</span>
+          </button>
           <RecipePicker onPick={(r, ratio) => addRecipe(meal.id, r, ratio)} />
         </div>
+
+        <BarcodeScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onConfirm={(food, grams) => addFood(meal.id, food.nom, grams)}
+        />
 
         {meal.items.length === 0 && (
           <p className="text-xs muted mt-2 flex items-center gap-1">

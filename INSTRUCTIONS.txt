@@ -1,0 +1,193 @@
+══════════════════════════════════════════════════════════════
+  DIÉT AUTO — Guide d'installation et d'utilisation
+══════════════════════════════════════════════════════════════
+
+Le script « Code.gs » (à côté de ce fichier) ajuste automatiquement
+les quantités d'aliments dans tes feuilles « Programme » pour que
+les totaux journaliers (kcal + macros) collent à tes cibles.
+
+
+─────────────────────────────────────────────────────────────
+1) INSTALLATION DU SCRIPT (à faire une seule fois)
+─────────────────────────────────────────────────────────────
+
+  a. Ouvrir le Google Sheet « Programme alimentaire bnj »
+     (importer le .ods dans Drive si ce n'est pas encore fait).
+
+  b. Menu du Sheet :   Extensions  >  Apps Script
+
+  c. Un éditeur s'ouvre avec un fichier « Code.gs » vide.
+     Effacer ce qu'il contient.
+
+  d. Ouvrir le fichier « Code.gs » qui se trouve dans ce dossier
+     (C:\Users\Client\Documents\diét automatique\Code.gs), copier
+     tout son contenu, et le coller dans l'éditeur Apps Script.
+
+  e. Sauvegarder (icône disquette ou Ctrl+S).
+     Renommer le projet si tu veux (ex. « Diét Auto »).
+
+  f. Fermer l'onglet Apps Script et recharger le Sheet (F5).
+     Au bout de quelques secondes, un nouveau menu « Diét Auto »
+     apparaît à côté de « Aide ».
+
+  g. À la première utilisation, Google demandera l'autorisation
+     d'exécuter le script sur ton compte. Accepter.
+
+
+─────────────────────────────────────────────────────────────
+2) PRÉPARATION DES FEUILLES (à faire une seule fois)
+─────────────────────────────────────────────────────────────
+
+  A) AJOUTER LA COLONNE « VERROU » (K) DANS CHAQUE FEUILLE
+     « Programme », « Programme 2 », … , « Programme 7 »
+
+     - En K7, écrire l'en-tête : Verrou
+     - Pour chaque ligne d'aliment (plages 8-17, 19-28, 30-39,
+       41-49, 51-60), insérer une CASE À COCHER en colonne K :
+         * Sélectionner la cellule K8 par ex.
+         * Menu  Insertion  >  Case à cocher
+         * Copier-coller vers le bas sur toutes les lignes
+           d'aliments. Non cochée par défaut.
+
+     Règle : case cochée = l'aliment garde sa quantité actuelle,
+             l'optimiseur ne la modifie PAS.
+
+  B) (FACULTATIF) LIMITES PAR ALIMENT DANS « Toutes les recettes »
+
+     - En G1 : Qmin (g)      - en H1 : Qmax (g)
+     - Renseigner ligne par ligne si tu veux des bornes précises
+       (ex. un œuf = 50 à 60 g ; du blanc de poulet = 50 à 250 g).
+     - Laisser vide = bornes par défaut (10 g min, 400 g max).
+
+
+─────────────────────────────────────────────────────────────
+3) VÉRIFICATION DE LA CONFIGURATION
+─────────────────────────────────────────────────────────────
+
+  Menu :  Diét Auto  >  Vérifier configuration
+
+  Cela affiche :
+    - si les feuilles « Données » et « Toutes les recettes »
+      sont bien trouvées ;
+    - les cibles (kcal / P / G / L) lues dans « Données » ;
+    - le nombre total d'aliments de la base ;
+    - le nombre d'aliments reconnus dans la feuille active.
+
+  Si les cibles affichées ne correspondent pas à ce que tu
+  attends, il faut adapter les références de cellules dans la
+  partie « CONFIG » tout en haut du Code.gs. Voir §6.
+
+
+─────────────────────────────────────────────────────────────
+4) UTILISATION QUOTIDIENNE
+─────────────────────────────────────────────────────────────
+
+  1. Feuille « Données » : renseigner A2..F2
+     (Poids, Taille, Âge, Activité, Genre, Objectif).
+
+  2. Choisir une feuille « Programme » (ex. « Programme 3 »).
+
+  3. Saisir les aliments souhaités en colonne E, aux lignes
+     correspondant aux repas. L'orthographe doit être IDENTIQUE
+     à celle de la base « Toutes les recettes » (sinon la ligne
+     est ignorée).
+
+  4. (Option) Cocher en colonne K les aliments à figer.
+
+  5. Menu  Diét Auto  >  Optimiser les quantités.
+
+  6. Une fenêtre de résumé s'affiche : cibles, totaux AVANT,
+     totaux APRÈS, avec écart en %. Les quantités de la colonne F
+     sont automatiquement ajustées (multiples de 5 g).
+
+
+─────────────────────────────────────────────────────────────
+5) COMMENT ÇA MARCHE ?
+─────────────────────────────────────────────────────────────
+
+  L'optimiseur minimise la somme des erreurs relatives au
+  carré sur les 4 totaux (kcal, P, G, L) en ajustant chaque
+  quantité non verrouillée entre Qmin et Qmax.
+
+  Méthode : descente de gradient projetée avec recherche de pas
+  par backtracking. Poids par défaut : kcal = 2, chaque macro = 1
+  (les calories sont un peu plus prioritaires).
+
+  Si la solution parfaite n'existe pas (ex. pas assez de protéines
+  dans les aliments choisis), l'optimiseur s'approche au maximum
+  des cibles dans les bornes autorisées.
+
+
+─────────────────────────────────────────────────────────────
+6) PERSONNALISATION
+─────────────────────────────────────────────────────────────
+
+  Tout se configure dans l'objet CONFIG au début du Code.gs :
+
+  - cellulesCibleKcal : cellules à additionner pour la cible
+    calorique. Par défaut [« C4 », « C5 »] = maintenance + delta.
+    Si tu as déjà une cellule avec la cible finale, remplacer
+    par ex. par [« C6 »].
+
+  - cellCibleProteines / Glucides / Lipides : à changer si les
+    quotas macro ne sont pas en B12 / B13 / B14.
+
+  - plagesAliments : lignes de début/fin de chaque repas.
+    À modifier si tu as ajouté/supprimé des lignes.
+
+  - qminDefaut / qmaxDefaut : bornes globales (10 g / 400 g).
+
+  - poidsKcal / poidsMacro : pour privilégier plus ou moins
+    les calories par rapport aux macros.
+
+  - arrondiGrammes : 5 par défaut. Mettre 1 pour ne pas arrondir,
+    ou 10 pour des portions rondes.
+
+
+─────────────────────────────────────────────────────────────
+7) BON À SAVOIR SUR LES FORMULES EXISTANTES
+─────────────────────────────────────────────────────────────
+
+  Les formules de ton classeur utilisent :
+
+     VLOOKUP(F10 ; 'nombre pour la quantité'!A:A ; 1 ; 0) / 100
+
+  Cela oblige la quantité écrite en F à EXISTER dans la colonne A
+  de la feuille « nombre pour la quantité ». Si tu obtiens des
+  « #N/A » après optimisation, deux options :
+
+    - Option simple : étendre la liste en colonne A de « nombre
+      pour la quantité » pour couvrir toutes les valeurs possibles
+      (par ex. 5, 10, 15, … , 400). Avec l'arrondi à 5 g du script,
+      une liste 5 → 500 par pas de 5 règle le problème.
+
+    - Option propre : remplacer la formule par une multiplication
+      directe, par ex. en G10 :
+          = VLOOKUP(E10; 'Toutes les recettes'!B:F; 2; 0) * F10/100
+      (et équivalent pour H, I, J). On se passe alors totalement
+      de la feuille « nombre pour la quantité ».
+
+
+─────────────────────────────────────────────────────────────
+8) DÉPANNAGE
+─────────────────────────────────────────────────────────────
+
+  « Aucun aliment reconnu »
+    → l'orthographe des aliments en colonne E ne correspond pas
+      à la base. Vérifie les majuscules, espaces en double, accents.
+
+  « Cible calorique <= 0 »
+    → les cellules cellulesCibleKcal n'ont pas de valeur
+      numérique. Regarde « Données ! C4 » et « C5 » (ou adapte
+      la liste dans CONFIG).
+
+  Les quantités ne bougent pas
+    → probablement toutes verrouillées, ou déjà très proches
+      de la cible. Décocher quelques aliments et relancer.
+
+  Résultats très déséquilibrés
+    → augmente poidsMacro dans CONFIG (ex. 2.0) pour plus de
+      poids sur les macros ; ou restreins Qmin/Qmax dans
+      « Toutes les recettes ».
+
+══════════════════════════════════════════════════════════════

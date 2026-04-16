@@ -1,0 +1,27 @@
+# Web app build artifacts
+web/node_modules
+web/dist
+web/dist-ssr
+web/*.tsbuildinfo
+web/vite.config.d.ts
+web/vite.config.js
+
+# Dev helpers spécifiques à la machine (Windows, PATH Node, etc.)
+web/dev.cmd
+
+# Claude Code local config (specific to user's machine)
+.claude/
+web/.claude/
+
+# OS / éditeurs
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Secrets / env
+.env
+.env.local
+
+# Vercel deployment local cache
+.vercel

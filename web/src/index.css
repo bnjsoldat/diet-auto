@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #ffffff;
+    --bg-subtle: #f8fafc;
+    --border: #e5e7eb;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --warn: #f59e0b;
+    --error: #ef4444;
+    --card: #ffffff;
+    --ring: #10b981;
+  }
+
+  .dark {
+    --bg: #0a0a0a;
+    --bg-subtle: #141414;
+    --border: #262626;
+    --text: #fafafa;
+    --text-muted: #a3a3a3;
+    --accent: #10b981;
+    --accent-hover: #34d399;
+    --warn: #f59e0b;
+    --error: #ef4444;
+    --card: #171717;
+    --ring: #10b981;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  /* Hide number input spinners */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border bg-[var(--card)] shadow-sm;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 dark:hover:bg-emerald-500;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-[var(--bg-subtle)];
+  }
+
+  .btn-outline {
+    @apply btn border bg-transparent hover:bg-[var(--bg-subtle)];
+  }
+
+  .btn-danger {
+    @apply btn text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30;
+  }
+
+  .input {
+    @apply w-full rounded-md border bg-[var(--card)] px-3 py-2 text-sm placeholder:text-[var(--text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:opacity-50;
+  }
+
+  .muted {
+    @apply text-[var(--text-muted)];
+  }
+
+  .kbd {
+    @apply inline-flex h-5 items-center justify-center rounded border px-1.5 text-[10px] font-medium muted;
+  }
+}

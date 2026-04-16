@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/storage';
-import type { DayPlan, Meal, MealFoodItem } from '@/types';
+import type { DayPlan, Meal, MealFoodItem, Recipe } from '@/types';
 import { DEFAULT_MEALS } from '@/lib/constants';
 import { debounce, todayKey, uid } from '@/lib/utils';
 import { foodsByName } from '@/lib/foods';
@@ -17,6 +17,7 @@ interface DayPlanState {
   current: () => DayPlan | null;
 
   addFood: (mealId: string, nomFood: string, quantite?: number | null) => void;
+  addRecipe: (mealId: string, recipe: Recipe, portionRatio?: number) => void;
   updateItem: (mealId: string, itemId: string, patch: Partial<MealFoodItem>) => void;
   removeItem: (mealId: string, itemId: string) => void;
   renameMeal: (mealId: string, nom: string) => void;
@@ -93,6 +94,22 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       };
       const meals = plan.meals.map((m) =>
         m.id === mealId ? { ...m, items: [...m.items, item] } : m
+      );
+      const updated: DayPlan = { ...plan, meals, updatedAt: Date.now() };
+      set({ plans: { ...get().plans, [plan.date]: updated } });
+      _persist?.();
+    },
+
+    addRecipe(mealId, recipe, portionRatio = 1) {
+      const plan = get().ensurePlan();
+      const newItems: MealFoodItem[] = recipe.ingredients.map((ing) => ({
+        id: uid('itm'),
+        nom: ing.nom,
+        quantite: Math.max(1, Math.round(ing.quantite * portionRatio)),
+        verrou: false,
+      }));
+      const meals = plan.meals.map((m) =>
+        m.id === mealId ? { ...m, items: [...m.items, ...newItems] } : m
       );
       const updated: DayPlan = { ...plan, meals, updatedAt: Date.now() };
       set({ plans: { ...get().plans, [plan.date]: updated } });

@@ -29,13 +29,20 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
   // Unité "active" : la première du food (par défaut) quand on édite en unité
   const activeUnite = food?.unites?.[0] ?? null;
 
-  function handleChangeGrams(g: number) {
-    onUpdate({ quantite: Math.max(0, g) });
+  function parseNum(raw: string): number {
+    const s = raw.replace(',', '.').trim();
+    if (s === '') return 0;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  function handleChangeCount(c: number) {
+  function handleChangeGrams(raw: string) {
+    onUpdate({ quantite: Math.max(0, parseNum(raw)) });
+  }
+
+  function handleChangeCount(raw: string) {
     if (!activeUnite) return;
-    onUpdate({ quantite: Math.max(0, Math.round(c * activeUnite.g)) });
+    onUpdate({ quantite: Math.max(0, Math.round(parseNum(raw) * activeUnite.g)) });
   }
 
   return (
@@ -80,11 +87,16 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
         >
           <input
             type="number"
-            value={activeUnite ? formatCount(item.quantite / activeUnite.g).replace(',', '.') : ''}
+            inputMode="decimal"
+            value={
+              activeUnite && item.quantite > 0
+                ? formatCount(item.quantite / activeUnite.g).replace(',', '.')
+                : ''
+            }
             min={0}
             max={100}
             step={0.5}
-            onChange={(e) => handleChangeCount(Number(e.target.value))}
+            onChange={(e) => handleChangeCount(e.target.value)}
             className="input h-8 w-14 px-2 text-right text-sm"
             aria-label={`Nombre en ${activeUnite.label}`}
           />
@@ -97,11 +109,12 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
       <div className="flex items-center gap-1">
         <input
           type="number"
-          value={item.quantite}
+          inputMode="numeric"
+          value={item.quantite > 0 ? item.quantite : ''}
           min={0}
           max={2000}
           step={5}
-          onChange={(e) => handleChangeGrams(Number(e.target.value))}
+          onChange={(e) => handleChangeGrams(e.target.value)}
           className="input h-8 w-16 px-2 text-right text-sm"
           aria-label="Quantité en grammes"
         />

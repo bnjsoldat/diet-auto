@@ -7,6 +7,7 @@ import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { calcTargets } from '@/lib/calculations';
 import { friendlyDate } from '@/lib/utils';
+import { WeightTracker } from '@/components/WeightTracker';
 
 export function History() {
   const profile = useProfile((s) => s.getActive());
@@ -46,6 +47,10 @@ export function History() {
             ? 'Aucun plan enregistré pour l\u2019instant.'
             : `${entries.length} jour${entries.length > 1 ? 's' : ''} de données pour ${profile.nom}.`}
         </p>
+      </div>
+
+      <div className="mb-6">
+        <WeightTracker profile={profile} />
       </div>
 
       {entries.length === 0 ? (

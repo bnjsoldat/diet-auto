@@ -5,6 +5,7 @@ import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { FoodRow } from './FoodRow';
 import { FoodSearch } from './FoodSearch';
+import { RecipePicker } from './RecipePicker';
 import { useDayPlan } from '@/store/useDayPlan';
 import { cn, formatNumber } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ export function MealSection({ meal, canRemove }: Props) {
   const updateItem = useDayPlan((s) => s.updateItem);
   const removeItem = useDayPlan((s) => s.removeItem);
   const addFood = useDayPlan((s) => s.addFood);
+  const addRecipe = useDayPlan((s) => s.addRecipe);
   const renameMeal = useDayPlan((s) => s.renameMeal);
   const removeMeal = useDayPlan((s) => s.removeMeal);
 
@@ -110,10 +112,15 @@ export function MealSection({ meal, canRemove }: Props) {
           </div>
         )}
 
-        <FoodSearch
-          onSelect={(food) => addFood(meal.id, food.nom, 100)}
-          placeholder={`Ajouter un aliment dans ${meal.nom.toLowerCase()}…`}
-        />
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <FoodSearch
+              onSelect={(food) => addFood(meal.id, food.nom)}
+              placeholder={`Ajouter un aliment dans ${meal.nom.toLowerCase()}…`}
+            />
+          </div>
+          <RecipePicker onPick={(r, ratio) => addRecipe(meal.id, r, ratio)} />
+        </div>
 
         {meal.items.length === 0 && (
           <p className="text-xs muted mt-2 flex items-center gap-1">

@@ -1,12 +1,14 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { CalendarDays, History as HistoryIcon, ShoppingCart, Star, User, Utensils } from 'lucide-react';
+import { CalendarDays, ChefHat, History as HistoryIcon, ShoppingCart, Star, User, Utensils } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
+import { InstallButton } from './InstallButton';
 import { cn } from '@/lib/utils';
 
 const nav = [
   { to: '/today', label: 'Aujourd\u2019hui', icon: CalendarDays },
   { to: '/shopping', label: 'Courses', icon: ShoppingCart },
+  { to: '/recipes', label: 'Recettes', icon: ChefHat },
   { to: '/history', label: 'Historique', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
   { to: '/profiles', label: 'Profils', icon: User },
@@ -51,6 +53,7 @@ export function Layout() {
 
           <div className="flex items-center gap-2">
             {!isLanding && <ProfileSwitcher />}
+            <InstallButton />
             <ThemeToggle />
           </div>
         </div>

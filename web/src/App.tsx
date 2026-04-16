@@ -8,10 +8,13 @@ import { History } from './pages/History';
 import { Profiles } from './pages/Profiles';
 import { Favorites } from './pages/Favorites';
 import { Shopping } from './pages/Shopping';
+import { Recipes } from './pages/Recipes';
 import { useProfile } from './store/useProfile';
 import { useDayPlan } from './store/useDayPlan';
 import { useFavorites } from './store/useFavorites';
 import { useSettings } from './store/useSettings';
+import { useWeight } from './store/useWeight';
+import { useRecipes } from './store/useRecipes';
 
 export default function App() {
   const loadProfiles = useProfile((s) => s.load);
@@ -19,6 +22,8 @@ export default function App() {
   const activeId = useProfile((s) => s.activeId);
   const loadDayPlan = useDayPlan((s) => s.load);
   const loadFavs = useFavorites((s) => s.load);
+  const loadWeights = useWeight((s) => s.load);
+  const loadRecipes = useRecipes((s) => s.load);
 
   useEffect(() => {
     loadProfiles();
@@ -29,8 +34,10 @@ export default function App() {
     if (activeId) {
       loadDayPlan(activeId);
       loadFavs(activeId);
+      loadWeights(activeId);
+      loadRecipes(activeId);
     }
-  }, [activeId, loadDayPlan, loadFavs]);
+  }, [activeId, loadDayPlan, loadFavs, loadWeights, loadRecipes]);
 
   return (
     <Routes>
@@ -42,6 +49,7 @@ export default function App() {
         <Route path="/profiles" element={<Profiles />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/shopping" element={<Shopping />} />
+        <Route path="/recipes" element={<Recipes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

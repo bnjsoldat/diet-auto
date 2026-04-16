@@ -13,42 +13,62 @@ interface Props {
 const ACTIVITES = Object.keys(ACTIVITY_COEFS) as Activite[];
 const OBJECTIFS = Object.keys(OBJECTIVE_DELTA_KCAL) as Objectif[];
 
+type NumLike = number | '';
+
 export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, onCancel }: Props) {
   const [nom, setNom] = useState(initial?.nom ?? '');
-  const [poids, setPoids] = useState<number>(initial?.poids ?? 70);
-  const [tailleCm, setTailleCm] = useState<number>(
+  const [poids, setPoids] = useState<NumLike>(initial?.poids ?? 70);
+  const [tailleCm, setTailleCm] = useState<NumLike>(
     initial?.taille ? Math.round(initial.taille * 100) : 175
   );
-  const [age, setAge] = useState<number>(initial?.age ?? 30);
+  const [age, setAge] = useState<NumLike>(initial?.age ?? 30);
   const [genre, setGenre] = useState<Genre>(initial?.genre ?? 'Homme');
   const [activite, setActivite] = useState<Activite>(initial?.activite ?? 'Actif');
   const [objectif, setObjectif] = useState<Objectif>(initial?.objectif ?? 'Maintien');
 
+  const poidsNum = typeof poids === 'number' ? poids : 0;
+  const tailleCmNum = typeof tailleCm === 'number' ? tailleCm : 0;
+  const ageNum = typeof age === 'number' ? age : 0;
+
   const previewProfile = {
     nom,
-    poids,
-    taille: tailleCm / 100,
-    age,
+    poids: poidsNum,
+    taille: tailleCmNum / 100,
+    age: ageNum,
     genre,
     activite,
     objectif,
   };
 
-  const previewTargets = poids > 30 && tailleCm > 100 && age > 5 ? calcTargets(previewProfile as Profile) : null;
+  const previewTargets =
+    poidsNum > 30 && tailleCmNum > 100 && ageNum > 5
+      ? calcTargets(previewProfile as Profile)
+      : null;
+
+  /** Parser robuste : vide → '', sinon nombre (virgule acceptée). */
+  function parseNum(raw: string): NumLike {
+    const trimmed = raw.replace(',', '.').trim();
+    if (trimmed === '') return '';
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : '';
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!nom.trim()) return;
+    if (poidsNum <= 0 || tailleCmNum <= 0 || ageNum <= 0) return;
     onSubmit({
       nom: nom.trim(),
-      poids,
-      taille: tailleCm / 100,
-      age,
+      poids: poidsNum,
+      taille: tailleCmNum / 100,
+      age: ageNum,
       genre,
       activite,
       objectif,
     });
   }
+
+  const canSubmit = !!nom.trim() && poidsNum > 0 && tailleCmNum > 0 && ageNum > 0;
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5">
@@ -69,34 +89,40 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
           <label className="block text-sm font-medium mb-1.5">Poids (kg)</label>
           <input
             type="number"
+            inputMode="decimal"
             className="input"
             value={poids}
             min={30}
             max={250}
             step={0.1}
-            onChange={(e) => setPoids(Number(e.target.value))}
+            onChange={(e) => setPoids(parseNum(e.target.value))}
+            onBlur={() => { if (poids === '') setPoids(0); }}
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">Taille (cm)</label>
           <input
             type="number"
+            inputMode="numeric"
             className="input"
             value={tailleCm}
             min={120}
             max={230}
-            onChange={(e) => setTailleCm(Number(e.target.value))}
+            onChange={(e) => setTailleCm(parseNum(e.target.value))}
+            onBlur={() => { if (tailleCm === '') setTailleCm(0); }}
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">Âge</label>
           <input
             type="number"
+            inputMode="numeric"
             className="input"
             value={age}
             min={10}
             max={100}
-            onChange={(e) => setAge(Number(e.target.value))}
+            onChange={(e) => setAge(parseNum(e.target.value))}
+            onBlur={() => { if (age === '') setAge(0); }}
           />
         </div>
         <div>
@@ -165,7 +191,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
             Annuler
           </button>
         )}
-        <button type="submit" className="btn-primary" disabled={!nom.trim()}>
+        <button type="submit" className="btn-primary" disabled={!canSubmit}>
           {submitLabel}
         </button>
       </div>

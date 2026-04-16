@@ -79,6 +79,32 @@ export interface DayPlan {
   updatedAt: number;
 }
 
+export interface WeightEntry {
+  date: string; // YYYY-MM-DD
+  kg: number;
+  note?: string;
+}
+
+export interface RecipeIngredient {
+  nom: string; // nom d'aliment (CIQUAL ou custom)
+  quantite: number; // g
+}
+
+/**
+ * Recette composée : liste d'ingrédients + portion par défaut.
+ * Quand on l'ajoute à un repas, elle est "explosée" en items individuels
+ * proportionnels à la portion demandée.
+ */
+export interface Recipe {
+  id: string;
+  nom: string;
+  ingredients: RecipeIngredient[];
+  /** Portion standard totale en grammes (somme des quantités par défaut). Calculé à partir des ingrédients. */
+  portionG: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface OptimizeResult {
   iterations: number;
   converge: boolean;

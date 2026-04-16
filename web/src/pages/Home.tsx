@@ -41,8 +41,8 @@ export function Home() {
         </div>
 
         <p className="mt-3 text-xs muted">
-          {nbAliments.toLocaleString('fr-FR')} aliments · viandes, poissons, œufs, charcuteries
-          (base CIQUAL)
+          {nbAliments.toLocaleString('fr-FR')} aliments · viandes, poissons, œufs, légumes, fruits,
+          céréales, produits laitiers…
         </p>
       </section>
 
@@ -86,8 +86,8 @@ export function Home() {
             Poids, taille, âge, activité, objectif. Métabolisme et macros calculés instantanément.
           </Step>
           <Step n={2} title="Construis tes repas">
-            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments (protéines animales CIQUAL),
-            ajoute-les dans les sections de repas.
+            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments (base CIQUAL), ajoute-les
+            dans les sections de repas.
           </Step>
           <Step n={3} title="Optimise">
             Un clic : les quantités s'ajustent automatiquement pour coller à tes cibles.

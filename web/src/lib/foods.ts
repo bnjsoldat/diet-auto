@@ -1,8 +1,24 @@
 import foodsRaw from '@/data/foods.json';
+import foodsExtras from '@/data/foods-extras.json';
 import Fuse from 'fuse.js';
 import type { Food } from '@/types';
 
-export const foods: Food[] = foodsRaw as Food[];
+// Merge CIQUAL export + extras curated (legumes, fruits, cereals, etc.),
+// dédupliqué par nom (insensible à la casse, les extras gagnent sur les doublons)
+function mergeFoods(): Food[] {
+  const map = new Map<string, Food>();
+  for (const f of foodsRaw as Food[]) {
+    map.set(f.nom.toLowerCase(), f);
+  }
+  for (const f of foodsExtras as Food[]) {
+    map.set(f.nom.toLowerCase(), f);
+  }
+  return Array.from(map.values()).sort((a, b) =>
+    a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' })
+  );
+}
+
+export const foods: Food[] = mergeFoods();
 
 /** Map lowercase -> Food, utilisée pour lookup O(1) par nom canonique */
 export const foodsByName = new Map<string, Food>(

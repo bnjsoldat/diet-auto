@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Star } from 'lucide-react';
-import { foods, searchFoods } from '@/lib/foods';
+import { Search, Star, TrendingUp } from 'lucide-react';
+import { foods, foodsByName, searchFoods } from '@/lib/foods';
 import { useFavorites } from '@/store/useFavorites';
 import { useCustomFoods } from '@/store/useCustomFoods';
+import { useDayPlan } from '@/store/useDayPlan';
+import { useProfile } from '@/store/useProfile';
+import { calcTargets } from '@/lib/calculations';
+import { totalsForItems } from '@/lib/optimizer';
 import type { Food } from '@/types';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, categorieOfFood, foodsByCategorie } from '@/lib/categories';
@@ -25,11 +29,60 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
   const favs = useFavorites((s) => s.favorites);
   // Déclencheur de re-render quand les aliments perso changent (scan, ajout, suppr).
   const customs = useCustomFoods((s) => s.customs);
+  const profile = useProfile((s) => s.getActive());
+  const current = useDayPlan((s) => s.current());
+
+  /**
+   * Macro dominante en déficit sur le plan actuel. Sert à reclasser les
+   * résultats : un aliment riche en protéines remonte si le plan manque de
+   * protéines. Retourne null si on est dans la tolérance ou si on ne peut
+   * pas calculer (pas de profil/plan).
+   */
+  const deficitMacro = useMemo<'prot' | 'gluc' | 'lip' | 'kcal' | null>(() => {
+    if (!profile || !current) return null;
+    const targets = calcTargets(profile);
+    const items = current.meals.flatMap((m) => m.items);
+    if (items.length === 0) return null; // Plan vide : pas de biais
+    const t = totalsForItems(items, foodsByName);
+    const gaps = {
+      prot: (targets.prot - t.prot) / targets.prot,
+      gluc: (targets.gluc - t.gluc) / targets.gluc,
+      lip: (targets.lip - t.lip) / targets.lip,
+      kcal: (targets.kcalCible - t.kcal) / targets.kcalCible,
+    };
+    // Seul un déficit > 8 % déclenche le reclassement
+    const entries = (Object.entries(gaps) as [keyof typeof gaps, number][])
+      .filter(([, v]) => v > 0.08);
+    if (entries.length === 0) return null;
+    entries.sort((a, b) => b[1] - a[1]);
+    return entries[0][0];
+  }, [profile, current]);
 
   /** Si l'utilisateur n'a aucun favori, le filtre "favoris" vide redirige vers "all". */
   useEffect(() => {
     if (filter === 'favoris' && favs.length === 0) setFilter('all');
   }, [favs, filter]);
+
+  /**
+   * Re-ordonne une liste de Food pour remonter les aliments qui comblent
+   * la macro en déficit. On garde l'ordre relatif pour les ex æquo (tri
+   * stable) — on bonus juste ceux qui ont une densité pertinente.
+   */
+  function rerankForDeficit(list: Food[]): Food[] {
+    if (!deficitMacro) return list;
+    return list
+      .map((f, i) => {
+        let bonus = 0;
+        if (deficitMacro === 'prot' && f.prot >= 10) bonus = f.prot;
+        else if (deficitMacro === 'gluc' && f.gluc >= 15) bonus = f.gluc;
+        else if (deficitMacro === 'lip' && f.lip >= 8) bonus = f.lip;
+        else if (deficitMacro === 'kcal' && f.kcal >= 150) bonus = f.kcal / 10;
+        return { f, i, score: bonus };
+      })
+      // Tri : bonus décroissant, puis ordre original (stable)
+      .sort((a, b) => (b.score - a.score) || (a.i - b.i))
+      .map((x) => x.f);
+  }
 
   const results = useMemo<Food[]>(() => {
     const query = q.trim();
@@ -41,7 +94,7 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
         const favHits = raw.filter((f) => favSet.has(f.nom));
         return favHits.length ? favHits : raw.slice(0, 40);
       }
-      if (filter === 'all') return raw.slice(0, 40);
+      if (filter === 'all') return rerankForDeficit(raw).slice(0, 40);
       return raw.filter((f) => categorieOfFood(f) === filter).slice(0, 40);
     }
     // Pas de query : on montre par catégorie
@@ -49,12 +102,13 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
       const favSet = new Set(favs);
       return foods.filter((f) => favSet.has(f.nom)).slice(0, 40);
     }
-    if (filter === 'all') return foods.slice(0, 40);
+    if (filter === 'all') return rerankForDeficit(foods.slice()).slice(0, 40);
     return (foodsByCategorie[filter] ?? []).slice(0, 80);
-    // `customs` est listé en dépendance pour forcer un recompute quand
-    // l'utilisateur scanne ou supprime un aliment perso.
+    // `customs` et `deficitMacro` sont listés en dépendances pour
+    // forcer un recompute quand l'utilisateur scanne un aliment ou
+    // modifie son plan.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, favs, filter, customs]);
+  }, [q, favs, filter, customs, deficitMacro]);
 
   useEffect(() => {
     setIdx(0);
@@ -143,6 +197,22 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
               </CategoryPill>
             ))}
           </div>
+
+          {/* Bandeau "en manque de X" quand la vue Tous est active */}
+          {deficitMacro && (filter === 'all' || (q.trim() && filter !== 'favoris')) && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-b border-emerald-100 dark:border-emerald-900">
+              <TrendingUp size={11} />
+              Tri intelligent : aliments riches en{' '}
+              {deficitMacro === 'prot'
+                ? 'protéines'
+                : deficitMacro === 'gluc'
+                ? 'glucides'
+                : deficitMacro === 'lip'
+                ? 'lipides'
+                : 'calories'}{' '}
+              remontés.
+            </div>
+          )}
 
           {results.length === 0 ? (
             <div className="p-4 text-sm muted text-center">

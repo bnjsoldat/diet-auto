@@ -1,19 +1,64 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileDown, ListPlus, Sparkles } from 'lucide-react';
+import { FileDown, ListPlus, Sparkles, Wand2 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
 import { calcTargets } from '@/lib/calculations';
-import { foodsByName } from '@/lib/foods';
+import { foods, foodsByName } from '@/lib/foods';
 import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
+import { suggestComplements } from '@/lib/suggestions';
+import { categorieOfFood } from '@/lib/categories';
 import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
-import type { OptimizeResult, OptimizerMode } from '@/types';
+import type { MealFoodItem, OptimizeResult, OptimizerMode } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
+
+/**
+ * Choisit l'id du repas le plus pertinent pour y insérer un aliment
+ * d'une catégorie donnée. Un fruit ou un yaourt part en petit-déj ou en
+ * collation ; une viande/poisson part au déjeuner/dîner ; les féculents
+ * rejoignent le repas qui a déjà un féculent similaire. À défaut, on
+ * tombe sur le premier repas du plan.
+ */
+function pickMealForCategory(
+  meals: { id: string; nom: string; items: { nom: string }[] }[],
+  cat: string | null
+): string {
+  const lc = (s: string) => s.toLowerCase();
+  const findByPattern = (patt: RegExp) =>
+    meals.find((m) => patt.test(lc(m.nom)))?.id;
+  // Heuristique simple par catégorie + nom du repas
+  if (cat === 'fruits' || cat === 'laitiers' || cat === 'sucres' || cat === 'cereales') {
+    return (
+      findByPattern(/matin|petit.?d[ée]j|r[ée]veil/) ||
+      findByPattern(/collation|go[uû]ter|snack/) ||
+      meals[0].id
+    );
+  }
+  if (cat === 'proteines' || cat === 'legumineuses' || cat === 'plats') {
+    return (
+      findByPattern(/midi|d[ée]jeuner|d[îi]ner|soir|repas 2|repas 3/) ||
+      meals[0].id
+    );
+  }
+  if (cat === 'legumes') {
+    return (
+      findByPattern(/midi|d[ée]jeuner|d[îi]ner|soir|repas 2|repas 3/) ||
+      meals[0].id
+    );
+  }
+  if (cat === 'fruits-coque' || cat === 'matieres-grasses' || cat === 'sauces') {
+    // Se glisse dans le plus gros repas existant
+    let best = meals[0];
+    for (const m of meals) if (m.items.length > best.items.length) best = m;
+    return best.id;
+  }
+  return meals[0].id;
+}
 
 export function Today() {
   const navigate = useNavigate();
@@ -30,6 +75,7 @@ export function Today() {
 
   const [result, setResult] = useState<OptimizeResult | null>(null);
   const [open, setOpen] = useState(false);
+  const [autoBusy, setAutoBusy] = useState(false);
 
   useEffect(() => {
     if (profilesLoaded && !profile) {
@@ -80,6 +126,90 @@ export function Today() {
     setOpen(true);
   }
 
+  /**
+   * "Optimiser+" : cycle automatique jusqu'à ce que le plan rentre dans la
+   * tolérance du mode actif (max 3 passes). À chaque itération :
+   *  1. Optimise les quantités.
+   *  2. Si encore hors tolérance, calcule les suggestions, puis insère
+   *     chacune dans le repas le plus pertinent selon la catégorie
+   *     (déjeuner = plat principal, petit-déj = sucré/fruits/laitiers).
+   *  3. Recommence.
+   * Le dialogue final montre l'écart résiduel et la liste des ajouts.
+   */
+  async function handleOptimizePlus() {
+    if (!current || !targets || autoBusy) return;
+    const clone = JSON.parse(JSON.stringify(current)) as typeof current;
+    if (clone.meals.flatMap((m) => m.items).length === 0) {
+      alert('Ajoute au moins un aliment avant d\u2019optimiser.');
+      return;
+    }
+    setAutoBusy(true);
+    const mode = OPTIMIZER_MODES[optimizerMode];
+    const cibles = {
+      kcal: targets.kcalCible,
+      prot: targets.prot,
+      gluc: targets.gluc,
+      lip: targets.lip,
+    };
+    const addedLog: string[] = [];
+    let lastRes: OptimizeResult | null = null;
+
+    for (let pass = 0; pass < 3; pass++) {
+      const items = clone.meals.flatMap((m) => m.items);
+      const res = optimizeQuantities(items, foodsByName, cibles, { mode: optimizerMode });
+      lastRes = res;
+
+      const ecart = {
+        k: Math.abs((res.apres.kcal - cibles.kcal) / cibles.kcal),
+        p: Math.abs((res.apres.prot - cibles.prot) / cibles.prot),
+        g: Math.abs((res.apres.gluc - cibles.gluc) / cibles.gluc),
+        l: Math.abs((res.apres.lip - cibles.lip) / cibles.lip),
+      };
+      const ok =
+        ecart.k <= mode.tolKcal &&
+        ecart.p <= mode.tolMacro &&
+        ecart.g <= mode.tolMacro &&
+        ecart.l <= mode.tolMacro;
+      if (ok) break;
+
+      // Calcule les suggestions sur l'état optimisé courant.
+      const sugs = suggestComplements({
+        plan: clone,
+        totals: res.apres,
+        cibles,
+        foods,
+        poids: { kcal: mode.poidsKcal, macro: mode.poidsMacro },
+        tolerance: { kcal: mode.tolKcal, macro: mode.tolMacro },
+        max: 2,
+      });
+      if (sugs.length === 0) break;
+
+      // Insère chaque suggestion dans le meilleur repas pour sa catégorie.
+      for (const s of sugs) {
+        const cat = categorieOfFood(s.food);
+        const targetMeal = pickMealForCategory(clone.meals, cat);
+        const newItem: MealFoodItem = {
+          id: 'itm_' + Math.random().toString(36).slice(2, 9),
+          nom: s.food.nom,
+          quantite: s.quantite,
+          verrou: false,
+        };
+        const meal = clone.meals.find((m) => m.id === targetMeal);
+        if (meal) {
+          meal.items.push(newItem);
+          addedLog.push(`${s.food.nom} (${s.quantite} g) → ${meal.nom}`);
+        }
+      }
+    }
+
+    replacePlan({ ...clone, updatedAt: Date.now() });
+    setResult(lastRes);
+    setOpen(true);
+    setAutoBusy(false);
+    // Petit log dans le title de la modale en mettant les ajouts dans la console
+    if (addedLog.length) console.log('Optimiser+ a ajouté :', addedLog);
+  }
+
   async function handleExportPDF() {
     if (!current || !profile || !targets) return;
     // Import dynamique : jsPDF + html2canvas (~400 KB) ne sont téléchargés
@@ -127,8 +257,16 @@ export function Today() {
               </button>
             ))}
           </div>
-          <button className="btn-primary" onClick={handleOptimize}>
+          <button className="btn-outline" onClick={handleOptimize} disabled={autoBusy}>
             <Sparkles size={14} /> Optimiser
+          </button>
+          <button
+            className="btn-primary"
+            onClick={handleOptimizePlus}
+            disabled={autoBusy}
+            title="Optimise, ajoute automatiquement les aliments qui manquent, puis réoptimise — en un clic."
+          >
+            <Wand2 size={14} /> {autoBusy ? 'En cours…' : 'Optimiser +'}
           </button>
         </div>
       </div>
@@ -182,6 +320,7 @@ export function Today() {
               currentProt={totals.prot}
               currentGluc={totals.gluc}
               currentLip={totals.lip}
+              mode={optimizerMode}
             />
             <div className="mt-3 text-xs muted">
               Profil :{' '}

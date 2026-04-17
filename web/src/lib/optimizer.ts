@@ -232,12 +232,25 @@ export function optimizeQuantities(
   // Arrondi final (sauf verrouillés). Pour les aliments dont l'unité par
   // défaut est discrète (œuf, pomme, tranche…), on aligne sur un multiple
   // entier de cette unité — sinon sur roundingGrams (5 g).
+  // Important : snap PUIS clamp — si le snap fait sortir des bornes, on
+  // choisit le multiple entier le plus proche à l'intérieur des bornes.
   for (const l of lignes) {
     if (l.item.verrou) continue;
     const defUnit = l.food.unites?.[0];
-    if (defUnit && isDiscreteUnit(defUnit) && defUnit.g > 0) {
-      const count = Math.max(1, Math.round(l.item.quantite / defUnit.g));
-      l.item.quantite = count * defUnit.g;
+    if (defUnit && isDiscreteUnit(defUnit, l.food) && defUnit.g > 0) {
+      let count = Math.max(1, Math.round(l.item.quantite / defUnit.g));
+      let snapped = count * defUnit.g;
+      // Si le snap dépasse les bornes, on redescend ou remonte d'une unité.
+      while (snapped > l.qmax && count > 1) {
+        count--;
+        snapped = count * defUnit.g;
+      }
+      while (snapped < l.qmin) {
+        count++;
+        snapped = count * defUnit.g;
+        if (snapped > l.qmax) break; // plus de solution entière : on laisse clamp ci-dessous
+      }
+      l.item.quantite = snapped;
     } else if (roundingGrams > 0) {
       l.item.quantite = Math.round(l.item.quantite / roundingGrams) * roundingGrams;
     }

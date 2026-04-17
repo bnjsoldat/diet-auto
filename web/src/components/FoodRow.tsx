@@ -73,8 +73,8 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
             <>
               {' · '}
               <span className="text-emerald-600 dark:text-emerald-500">
-                ≈ {formatCount(count, isDiscreteUnit(unite))}{' '}
-                {pluralize(unite.label, isDiscreteUnit(unite) ? Math.max(1, Math.round(count)) : count)}
+                ≈ {formatCount(count, isDiscreteUnit(unite, food))}{' '}
+                {pluralize(unite.label, isDiscreteUnit(unite, food) ? Math.max(1, Math.round(count)) : count)}
               </span>
             </>
           )}
@@ -88,15 +88,15 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
         >
           <input
             type="number"
-            inputMode={isDiscreteUnit(activeUnite) ? 'numeric' : 'decimal'}
+            inputMode={isDiscreteUnit(activeUnite, food) ? 'numeric' : 'decimal'}
             value={
               activeUnite && item.quantite > 0
-                ? formatCount(item.quantite / activeUnite.g, isDiscreteUnit(activeUnite)).replace(',', '.')
+                ? formatCount(item.quantite / activeUnite.g, isDiscreteUnit(activeUnite, food)).replace(',', '.')
                 : ''
             }
             min={0}
             max={100}
-            step={isDiscreteUnit(activeUnite) ? 1 : 0.5}
+            step={isDiscreteUnit(activeUnite, food) ? 1 : 0.5}
             onChange={(e) => handleChangeCount(e.target.value)}
             className="input h-8 w-14 px-2 text-right text-sm"
             aria-label={`Nombre en ${activeUnite.label}`}
@@ -104,7 +104,7 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
           <span className="text-xs muted whitespace-nowrap max-w-[80px] truncate">
             {pluralize(
               activeUnite.label,
-              isDiscreteUnit(activeUnite)
+              isDiscreteUnit(activeUnite, food)
                 ? Math.max(1, Math.round(item.quantite / activeUnite.g))
                 : item.quantite / activeUnite.g
             )}

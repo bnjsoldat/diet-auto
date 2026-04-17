@@ -84,6 +84,32 @@ const SUGGEST_SERVING_CAP: Record<string, number> = {
 const SUGGEST_BLOCKLIST_PATTERN =
   /\b(prélevé|martinique|guadeloupe|réunion|guyane|mayotte|pays\b|reconstitué|reconstitution|fortifié|enrichi|échantillon|aromatisé à|déshydraté)/i;
 
+/**
+ * Aliments à ne JAMAIS proposer en suggestion car :
+ * - condiments (ail, échalote, oignon crus en portions absurdes),
+ * - plantes sauvages / légumes très rares (crosne, bourrache, pissenlit),
+ * - céréales/légumineuses "crues" ou "sèches" (se mangent cuites),
+ * - produits techniques (amidon, gluten pur, plasma, gélatine, son brut).
+ */
+const SUGGEST_NEVER_PATTERN = new RegExp(
+  // Condiments, plantes sauvages, produits techniques, ingrédients bruts
+  '(?:^|[^a-zA-ZÀ-ÿ])' +
+    '(?:ail|ails|échalote|échalotes|oignon|oignons|gingembre|raifort|' +
+    'crosne|bourrache|pissenlit|ortie|pourpier|mauve|' +
+    'amidon|gluten|plasma|gélatine|lécithine|présure|son de|germe de|' +
+    'fructose|glucose|saccharose|maltodextrine|sirop de glucose|' +
+    'levain|pain azyme|farine|semoule|fécule|tapioca|' +
+    'gâteau de riz|galette de riz|galettes de riz|' +
+    'vermicelle|perles du japon)' +
+    '(?:$|[^a-zA-ZÀ-ÿ])' +
+    // Céréales/légumineuses crues ou sèches (on mange cuit)
+    '|\\b(?:cru|crue|crus|crues|sec|sèche|sèches|séché|séchée)\\b.*\\b(?:riz|pâtes|pates|quinoa|boulgour|lentille|pois|haricot|flocon|avoine|orge|millet|sarrasin|épeautre)\\b' +
+    '|\\b(?:riz|pâtes|pates|quinoa|boulgour|lentille|pois chiche|haricot|flocon|avoine|orge|millet|sarrasin|épeautre)\\b.*\\b(?:cru|crue|sec|sèche|séchée)\\b' +
+    // Fruits/légumes séchés atypiques
+    '|\\babricot\\b.*\\bsec\\b|\\bbanane\\b.*\\bsèche\\b|\\btomate\\b.*\\bséchée\\b',
+  'i'
+);
+
 /** Catégories qui évoquent clairement un plat salé/cuisiné. */
 const SAVORY_CATS = new Set(['proteines', 'legumes', 'cereales', 'legumineuses']);
 
@@ -211,6 +237,23 @@ export function suggestComplements(opts: {
     // Écarte les variétés régionales / libellés marginaux pour rester sur
     // des aliments courants et reconnus.
     if (SUGGEST_BLOCKLIST_PATTERN.test(food.nom)) continue;
+    // Écarte condiments, plantes sauvages et céréales/légumineuses crues.
+    if (SUGGEST_NEVER_PATTERN.test(food.nom)) continue;
+    // Écarte les formes CRUES/SÈCHES des féculents et des fruits : on
+    // consomme ces aliments cuits (riz cuit ≈ 120 kcal/100g vs cru ≈ 350).
+    // On matche simplement sur la présence des mots "cru", "crue", "sec",
+    // "sèche", "séché" dans le nom, pour les catégories concernées.
+    if ((cat === 'cereales' || cat === 'legumineuses' || cat === 'fruits' || cat === 'plats')
+        && /\b(cru|crue|crus|crues|sec|sèche|sèches|séché|séchée|moelleux)\b/i.test(food.nom)) continue;
+    // Fruits/légumes atypiques ou exotiques souvent proposés à tort
+    if (/\b(shi.?také|shiitaké|shii?take|lentin|pleurote|melonnette|courge\s+melo|manioc|topinambour|rutabaga)\b/i.test(food.nom)) continue;
+    // Légumes ou fruits à l'état cru nécessitant cuisson (maïs, patate douce,
+    // céleri-rave, panais, citrouille, potiron…)
+    if (/\b(maïs|mais\b|patate douce|céleri-rave|panais|citrouille|potiron|courge)\b.*\bcru/i.test(food.nom)) continue;
+    // Banane plantain n'est pas un fruit courant en France : on préfère
+    // la banane "pulpe, crue" classique. Mais pour la suggestion on bloque
+    // carrément "plantain" qui nécessite cuisson.
+    if (/\bplantain\b/i.test(food.nom)) continue;
 
     // Filtrage cohérence : si c'est une catégorie "à risque" et qu'aucune
     // catégorie de ce type n'est déjà présente, on l'exclut.
@@ -275,7 +318,7 @@ export function suggestComplements(opts: {
     qRaw = Math.max(b.min, Math.min(suggestMax, qRaw));
     let q: number;
     const defUnit = food.unites?.[0];
-    if (defUnit && isDiscreteUnit(defUnit) && defUnit.g > 0) {
+    if (defUnit && isDiscreteUnit(defUnit, food) && defUnit.g > 0) {
       // Aliment discret (œuf, pomme, tranche…) : aligner sur un multiple
       // entier de l'unité par défaut.
       const count = Math.max(1, Math.round(qRaw / defUnit.g));

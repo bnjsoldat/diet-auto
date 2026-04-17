@@ -53,15 +53,18 @@ export const QUANTITY_BOUNDS = {
  * min bas = on accepte une petite quantité ; max = plafond d'une portion humaine normale.
  */
 export const PORTION_BOUNDS_BY_GROUPE: Record<string, { min: number; max: number }> = {
-  'viandes, œufs, poissons et assimilés': { min: 20, max: 300 },
-  'produits laitiers': { min: 20, max: 400 },
+  // Protéines : plancher 60 g pour garantir une vraie portion de viande/poisson
+  // quand l'aliment est la source principale de protéines du repas.
+  'viandes, œufs, poissons et assimilés': { min: 60, max: 300 },
+  'produits laitiers': { min: 20, max: 500 },
   'fromages': { min: 10, max: 80 },
-  'céréales et produits à base de céréales': { min: 15, max: 250 },
-  'féculents': { min: 30, max: 350 },
-  'plats composés': { min: 50, max: 500 },
+  // Céréales/féculents : plafonds relevés pour sportifs très actifs.
+  'céréales et produits à base de céréales': { min: 15, max: 350 },
+  'féculents': { min: 30, max: 450 },
+  'plats composés': { min: 50, max: 600 },
   'légumes': { min: 20, max: 400 },
-  'fruits': { min: 30, max: 300 },
-  'légumineuses': { min: 20, max: 250 },
+  'fruits': { min: 30, max: 350 },
+  'légumineuses': { min: 20, max: 300 },
   'fruits à coque': { min: 5, max: 50 },
   'matières grasses': { min: 2, max: 30 },
   'sucres et produits sucrés': { min: 2, max: 30 },
@@ -77,8 +80,8 @@ export const PORTION_BOUNDS_BY_GROUPE: Record<string, { min: number; max: number
  * nettement du reste de leur groupe.
  */
 export const PORTION_BOUNDS_BY_NAME_PATTERN: { pattern: RegExp; bounds: { min: number; max: number } }[] = [
-  // Sucres/sirops purs : une c. à café suffit, rarement plus de 2 c. à soupe
-  { pattern: /\b(miel|sirop|confiture|mélasse|sucre)\b/i, bounds: { min: 2, max: 25 } },
+  // Sucres/sirops purs : de 1 c. à café à 2-3 c. à soupe max
+  { pattern: /\b(miel|sirop|confiture|mélasse|sucre)\b/i, bounds: { min: 2, max: 35 } },
   // Huiles : 1 c. à café (~5 g) à 2 c. à soupe (~25 g)
   { pattern: /\bhuile\b/i, bounds: { min: 2, max: 25 } },
   // Beurre, margarine, saindoux

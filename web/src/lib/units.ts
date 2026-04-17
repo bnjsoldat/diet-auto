@@ -7,6 +7,11 @@ import type { Food, Unite } from '@/types';
  * exact du poids unitaire. À l'inverse, les unités de mesure (c. à soupe,
  * pincée, filet) peuvent rester fractionnaires.
  */
+// "noisette" ici désigne la FORME de beurre ("une noisette de beurre"), pas
+// le fruit à coque — on le garde dans la liste mais les fruits à coque
+// unitaires (noix, amande, cerneau…) sont retirés car on les mange par
+// poignée et non par pièce : 12 amandes ≈ 14 g, mais afficher "12 amandes"
+// n'est pas plus intuitif que "15 g d'amandes".
 const DISCRETE_UNIT_LABELS = [
   'œuf', 'oeuf', 'pomme', 'orange', 'banane', 'poire', 'kiwi', 'abricot',
   'pêche', 'peche', 'prune', 'clémentine', 'clementine', 'mandarine',
@@ -14,11 +19,20 @@ const DISCRETE_UNIT_LABELS = [
   'noisette', 'yaourt', 'pot', 'biscuit', 'galette', 'crêpe', 'crepe',
   'gaufre', 'muffin', 'croissant', 'pain au chocolat', 'viennoiserie',
   'steak', 'escalope', 'filet', 'saucisse', 'knack', 'merguez',
-  'gousse', 'noix', 'amande', 'cerneau', 'portion',
+  'gousse', 'portion',
 ];
 
-export function isDiscreteUnit(u: Unite | null | undefined): boolean {
+/**
+ * Noms d'aliments pour lesquels la première unité est ambiguë avec la
+ * liste discrète mais devrait rester "par poids" (ex : fruits à coque).
+ */
+const NON_DISCRETE_FOODS_PATTERN = /^(amande|noix|noisette|cerneau|pistache|cajou|graine|grain)s?\b/i;
+
+export function isDiscreteUnit(u: Unite | null | undefined, food?: Food | null): boolean {
   if (!u) return false;
+  // Les fruits à coque se mangent par poids, pas par pièce, même si on a
+  // défini une unité "noisette" (confusion possible avec la forme de beurre).
+  if (food && NON_DISCRETE_FOODS_PATTERN.test(food.nom)) return false;
   const lc = u.label.toLowerCase();
   return DISCRETE_UNIT_LABELS.some((d) => lc === d || lc.startsWith(d + ' ') || lc.startsWith(d + 's'));
 }
@@ -71,7 +85,7 @@ export function formatCount(count: number, discrete = false): string {
 export function snapToDiscreteUnit(food: Food, grams: number): number {
   if (!food.unites || food.unites.length === 0) return grams;
   const def = food.unites[0];
-  if (!isDiscreteUnit(def) || def.g <= 0) return grams;
+  if (!isDiscreteUnit(def, food) || def.g <= 0) return grams;
   const count = Math.max(1, Math.round(grams / def.g));
   return count * def.g;
 }
@@ -84,7 +98,7 @@ export function describeQuantity(food: Food, grams: number): string | null {
   const u = bestUnitForGrams(food, grams);
   if (!u) return null;
   const count = grams / u.g;
-  const discrete = isDiscreteUnit(u);
+  const discrete = isDiscreteUnit(u, food);
   const displayCount = discrete ? Math.max(1, Math.round(count)) : count;
   return `${formatCount(count, discrete)} ${pluralize(u.label, displayCount)}`;
 }

@@ -352,11 +352,20 @@ export function Today() {
                   setDragOverMealId(null);
                   return;
                 }
-                // Calcule la nouvelle liste ordonnée d'ids
+                const fromIdx = current.meals.findIndex((m) => m.id === draggingMealId);
+                const toIdx = current.meals.findIndex((m) => m.id === targetId);
+                if (fromIdx === -1 || toIdx === -1) {
+                  setDraggingMealId(null);
+                  setDragOverMealId(null);
+                  return;
+                }
+                // Quand on drag vers le BAS (from < to), on veut que l'item
+                // se retrouve APRÈS la cible. Vers le haut (from > to), AVANT.
                 const currentIds = current.meals.map((m) => m.id);
                 const filtered = currentIds.filter((id) => id !== draggingMealId);
-                const targetIdx = filtered.indexOf(targetId);
-                filtered.splice(targetIdx, 0, draggingMealId);
+                const targetIdxInFiltered = filtered.indexOf(targetId);
+                const insertAt = fromIdx < toIdx ? targetIdxInFiltered + 1 : targetIdxInFiltered;
+                filtered.splice(insertAt, 0, draggingMealId);
                 reorderMeals(filtered);
                 setDraggingMealId(null);
                 setDragOverMealId(null);

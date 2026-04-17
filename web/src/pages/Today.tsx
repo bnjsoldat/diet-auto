@@ -92,6 +92,8 @@ export function Today() {
   const [tplOpen, setTplOpen] = useState(false);
   const [draggingMealId, setDraggingMealId] = useState<string | null>(null);
   const [dragOverMealId, setDragOverMealId] = useState<string | null>(null);
+  /** Input inline "Ajouter un repas" : null quand fermé, valeur saisie sinon. */
+  const [newMealName, setNewMealName] = useState<string | null>(null);
   const reorderMeals = useDayPlan((s) => s.reorderMeals);
 
   /**
@@ -364,15 +366,52 @@ export function Today() {
             />
           ))}
 
-          <button
-            className="btn-outline mx-auto"
-            onClick={() => {
-              const nom = prompt('Nom du repas :', 'Collation');
-              if (nom?.trim()) addMeal(nom.trim());
-            }}
-          >
-            <ListPlus size={14} /> Ajouter un repas
-          </button>
+          {/* Input inline + bouton (le prompt() natif ne s'affiche pas
+              toujours sur mobile, en plus d'être visuellement daté). */}
+          {newMealName === null ? (
+            <button
+              className="btn-outline mx-auto"
+              onClick={() => setNewMealName('Collation')}
+            >
+              <ListPlus size={14} /> Ajouter un repas
+            </button>
+          ) : (
+            <div className="card p-3 flex flex-wrap items-center gap-2 animate-fade-in-up mx-auto max-w-md w-full">
+              <input
+                autoFocus
+                className="input flex-1 min-w-[120px]"
+                placeholder="Nom du repas"
+                value={newMealName}
+                onChange={(e) => setNewMealName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const v = newMealName.trim();
+                    if (v) addMeal(v);
+                    setNewMealName(null);
+                  } else if (e.key === 'Escape') {
+                    setNewMealName(null);
+                  }
+                }}
+              />
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  const v = (newMealName ?? '').trim();
+                  if (v) addMeal(v);
+                  setNewMealName(null);
+                }}
+                disabled={!newMealName?.trim()}
+              >
+                Ajouter
+              </button>
+              <button
+                className="btn-outline"
+                onClick={() => setNewMealName(null)}
+              >
+                Annuler
+              </button>
+            </div>
+          )}
 
           <div className="card p-5 mt-2">
             <div className="text-xs font-semibold uppercase tracking-wider muted mb-2">

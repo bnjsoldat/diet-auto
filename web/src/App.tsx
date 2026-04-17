@@ -17,6 +17,7 @@ import { useReminderScheduler } from './hooks/useReminderScheduler';
 // Home reste en import statique (c'est la landing, donc toujours utile tôt).
 const Setup = lazy(() => import('./pages/Setup').then((m) => ({ default: m.Setup })));
 const Today = lazy(() => import('./pages/Today').then((m) => ({ default: m.Today })));
+const Week = lazy(() => import('./pages/Week').then((m) => ({ default: m.Week })));
 const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
 const Profiles = lazy(() => import('./pages/Profiles').then((m) => ({ default: m.Profiles })));
 const Favorites = lazy(() => import('./pages/Favorites').then((m) => ({ default: m.Favorites })));
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/today" element={<Today />} />
+            <Route path="/week" element={<Week />} />
             <Route path="/history" element={<History />} />
             <Route path="/profiles" element={<Profiles />} />
             <Route path="/favorites" element={<Favorites />} />

@@ -1,5 +1,14 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { CalendarDays, ChefHat, History as HistoryIcon, ShoppingCart, Star, User, Utensils } from 'lucide-react';
+import {
+  CalendarDays,
+  CalendarRange,
+  ChefHat,
+  History as HistoryIcon,
+  ShoppingCart,
+  Star,
+  User,
+  Utensils,
+} from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { InstallButton } from './InstallButton';
@@ -7,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 const nav = [
   { to: '/today', label: 'Aujourd\u2019hui', icon: CalendarDays },
+  { to: '/week', label: 'Semaine', icon: CalendarRange },
   { to: '/shopping', label: 'Courses', icon: ShoppingCart },
   { to: '/recipes', label: 'Recettes', icon: ChefHat },
   { to: '/history', label: 'Historique', icon: HistoryIcon },

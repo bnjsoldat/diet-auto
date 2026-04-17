@@ -25,6 +25,11 @@ interface DayPlanState {
   removeMeal: (mealId: string) => void;
 
   replaceCurrentPlan: (plan: DayPlan) => void;
+
+  /** Duplique un repas au sein du plan courant (quantités et verrous préservés). */
+  duplicateMeal: (mealId: string) => void;
+  /** Remplace le plan du jour par un clone des repas d'une autre date. */
+  duplicateFromDate: (sourceDate: string) => void;
 }
 
 function makeEmptyPlan(date: string, profileId: string): DayPlan {
@@ -164,6 +169,42 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
 
     replaceCurrentPlan(plan) {
       set({ plans: { ...get().plans, [plan.date]: plan } });
+      _persist?.();
+    },
+
+    duplicateMeal(mealId) {
+      const plan = get().ensurePlan();
+      const src = plan.meals.find((m) => m.id === mealId);
+      if (!src) return;
+      const copy: Meal = {
+        id: uid('meal'),
+        nom: `${src.nom} (copie)`,
+        items: src.items.map((it) => ({ ...it, id: uid('itm') })),
+      };
+      // Insère la copie juste après la source pour rester visuellement proche.
+      const idx = plan.meals.findIndex((m) => m.id === mealId);
+      const meals = [...plan.meals.slice(0, idx + 1), copy, ...plan.meals.slice(idx + 1)];
+      const updated: DayPlan = { ...plan, meals, updatedAt: Date.now() };
+      set({ plans: { ...get().plans, [plan.date]: updated } });
+      _persist?.();
+    },
+
+    duplicateFromDate(sourceDate) {
+      const { date, plans, profileId } = get();
+      if (!profileId) return;
+      const src = plans[sourceDate];
+      if (!src) return;
+      const cloned: DayPlan = {
+        date,
+        profileId,
+        meals: src.meals.map((m) => ({
+          id: uid('meal'),
+          nom: m.nom,
+          items: m.items.map((it) => ({ ...it, id: uid('itm') })),
+        })),
+        updatedAt: Date.now(),
+      };
+      set({ plans: { ...plans, [date]: cloned } });
       _persist?.();
     },
   };

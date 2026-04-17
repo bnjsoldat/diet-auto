@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FileDown, ListPlus, Sparkles, Wand2 } from 'lucide-react';
+import { CalendarDays, FileDown, LayoutTemplate, ListPlus, Sparkles, Wand2 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
@@ -14,6 +14,8 @@ import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
+import { TemplatePicker } from '@/components/TemplatePicker';
+import { buildMealsFromTemplate } from '@/lib/templates';
 import type { MealFoodItem, OptimizeResult, OptimizerMode } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
 
@@ -67,8 +69,10 @@ export function Today() {
 
   const ensurePlan = useDayPlan((s) => s.ensurePlan);
   const current = useDayPlan((s) => s.current());
+  const plans = useDayPlan((s) => s.plans);
   const addMeal = useDayPlan((s) => s.addMeal);
   const replacePlan = useDayPlan((s) => s.replaceCurrentPlan);
+  const duplicateFromDate = useDayPlan((s) => s.duplicateFromDate);
 
   const optimizerMode = useSettings((s) => s.optimizerMode);
   const updateSettings = useSettings((s) => s.update);
@@ -76,6 +80,20 @@ export function Today() {
   const [result, setResult] = useState<OptimizeResult | null>(null);
   const [open, setOpen] = useState(false);
   const [autoBusy, setAutoBusy] = useState(false);
+  const [tplOpen, setTplOpen] = useState(false);
+
+  /**
+   * Dates précédentes (hors aujourd'hui) avec un plan non vide, triées de
+   * la plus récente à la plus ancienne. Sert au menu "Dupliquer une
+   * journée précédente".
+   */
+  const previousDates = useMemo(() => {
+    const today = current?.date;
+    return Object.values(plans)
+      .filter((p) => p.date !== today && p.meals.some((m) => m.items.length > 0))
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 7); // 7 plus récents
+  }, [plans, current]);
 
   useEffect(() => {
     if (profilesLoaded && !profile) {
@@ -232,6 +250,27 @@ export function Today() {
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            className="btn-outline"
+            onClick={() => setTplOpen(true)}
+            title="Charger un plan pré-fait (petit-déj / déjeuner / dîner prêts à optimiser)"
+          >
+            <LayoutTemplate size={14} /> Modèle
+          </button>
+          {previousDates.length > 0 && (
+            <DuplicateFromPrevious
+              previousDates={previousDates}
+              onPick={(date) => {
+                if (
+                  current &&
+                  current.meals.some((m) => m.items.length > 0) &&
+                  !confirm('Remplacer le plan du jour par la copie de cette journée ?')
+                )
+                  return;
+                duplicateFromDate(date);
+              }}
+            />
+          )}
           <ShareButton plan={current} />
           <button className="btn-outline" onClick={handleExportPDF}>
             <FileDown size={14} /> PDF
@@ -340,6 +379,68 @@ export function Today() {
         mode={optimizerMode}
         onClose={() => setOpen(false)}
       />
+
+      <TemplatePicker
+        open={tplOpen}
+        onClose={() => setTplOpen(false)}
+        willReplace={current.meals.some((m) => m.items.length > 0)}
+        onPick={(tpl) => {
+          if (!current) return;
+          const meals = buildMealsFromTemplate(tpl, foodsByName);
+          replacePlan({ ...current, meals, updatedAt: Date.now() });
+          if (tpl.mode) updateSettings({ optimizerMode: tpl.mode });
+        }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Petit menu déroulant "Dupliquer d'une journée" : la date la plus récente
+ * est un clic direct ; les autres sont dans un <details>.
+ */
+function DuplicateFromPrevious({
+  previousDates,
+  onPick,
+}: {
+  previousDates: { date: string }[];
+  onPick: (date: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const latest = previousDates[0];
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="btn-outline"
+        onClick={() => setOpen((o) => !o)}
+        title="Copier le plan d'une journée passée"
+      >
+        <CalendarDays size={14} /> Dupliquer
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-50 min-w-[220px] rounded-md border bg-[var(--card)] shadow-lg">
+            {previousDates.map((p, i) => (
+              <button
+                key={p.date}
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--bg-subtle)] border-b last:border-0 flex justify-between gap-2"
+                onClick={() => {
+                  onPick(p.date);
+                  setOpen(false);
+                }}
+              >
+                <span className="capitalize">{friendlyDate(p.date)}</span>
+                {i === 0 && latest && (
+                  <span className="text-[10px] text-emerald-600">+ récent</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit2, Plus, ScanBarcode, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Edit2, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import type { Meal, MealFoodItem } from '@/types';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
@@ -27,6 +27,7 @@ export function MealSection({ meal, canRemove }: Props) {
   const addRecipe = useDayPlan((s) => s.addRecipe);
   const renameMeal = useDayPlan((s) => s.renameMeal);
   const removeMeal = useDayPlan((s) => s.removeMeal);
+  const duplicateMeal = useDayPlan((s) => s.duplicateMeal);
 
   const totals = totalsForItems(meal.items, foodsByName);
 
@@ -83,6 +84,17 @@ export function MealSection({ meal, canRemove }: Props) {
             title="Renommer le repas"
           >
             <Edit2 size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              duplicateMeal(meal.id);
+            }}
+            className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+            title="Dupliquer le repas"
+          >
+            <Copy size={13} />
           </button>
           {canRemove && (
             <button

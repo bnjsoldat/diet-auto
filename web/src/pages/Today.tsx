@@ -10,7 +10,6 @@ import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
-import { exportDayPlanPDF } from '@/lib/pdf';
 import type { OptimizeResult } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
 
@@ -71,8 +70,11 @@ export function Today() {
     setOpen(true);
   }
 
-  function handleExportPDF() {
+  async function handleExportPDF() {
     if (!current || !profile || !targets) return;
+    // Import dynamique : jsPDF + html2canvas (~400 KB) ne sont téléchargés
+    // qu'au premier clic sur "PDF", pas à l'ouverture de la page.
+    const { exportDayPlanPDF } = await import('@/lib/pdf');
     exportDayPlanPDF(current, profile, targets);
   }
 

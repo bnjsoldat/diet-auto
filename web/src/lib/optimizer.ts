@@ -1,5 +1,45 @@
 import type { Food, MealFoodItem, OptimizeResult } from '@/types';
-import { OPTIMIZER_CONFIG, QUANTITY_BOUNDS } from './constants';
+import {
+  OPTIMIZER_CONFIG,
+  PORTION_BOUNDS_BY_GROUPE,
+  PORTION_BOUNDS_BY_NAME_PATTERN,
+  QUANTITY_BOUNDS,
+} from './constants';
+
+/**
+ * Retourne les bornes réalistes (min, max en grammes) pour un aliment donné.
+ * Priorité : pattern de nom > groupe CIQUAL > bornes par défaut.
+ * Les overrides optionnels (UI, option globale) peuvent resserrer la borne max.
+ */
+export function boundsForFood(
+  food: Food,
+  overrides?: { min?: number; max?: number }
+): { min: number; max: number } {
+  let min = QUANTITY_BOUNDS.min;
+  let max = QUANTITY_BOUNDS.max;
+
+  const byGroupe = PORTION_BOUNDS_BY_GROUPE[food.groupe?.toLowerCase?.() ?? ''];
+  if (byGroupe) {
+    min = byGroupe.min;
+    max = byGroupe.max;
+  }
+
+  for (const { pattern, bounds } of PORTION_BOUNDS_BY_NAME_PATTERN) {
+    if (pattern.test(food.nom)) {
+      min = bounds.min;
+      max = bounds.max;
+      break;
+    }
+  }
+
+  if (overrides?.min != null) min = Math.max(min, overrides.min);
+  if (overrides?.max != null) max = Math.min(max, overrides.max);
+
+  // Toujours garder min < max et min >= 0
+  if (min < 0) min = 0;
+  if (max < min) max = min;
+  return { min, max };
+}
 
 interface Line {
   item: MealFoodItem; // référence partagée, muter q écrira la quantité dans le plan
@@ -89,22 +129,20 @@ export function optimizeQuantities(
   cibles: Cibles,
   options?: { qmin?: number; qmax?: number }
 ): OptimizeResult {
-  const qmin = options?.qmin ?? QUANTITY_BOUNDS.min;
-  const qmax = options?.qmax ?? QUANTITY_BOUNDS.max;
-
   // Construire les lignes à partir des items reconnus
   const lignes: Line[] = [];
   for (const item of items) {
     const food = foodsByName.get(item.nom.toLowerCase());
     if (!food) continue;
+    const b = boundsForFood(food, { min: options?.qmin, max: options?.qmax });
     lignes.push({
       item,
       kcal100: food.kcal,
       prot100: food.prot,
       gluc100: food.gluc,
       lip100: food.lip,
-      qmin,
-      qmax,
+      qmin: b.min,
+      qmax: b.max,
     });
   }
 

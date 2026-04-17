@@ -41,11 +41,71 @@ export const KCAL_PER_GRAM = {
   lip: 9,
 };
 
-/** Bornes de quantité par défaut (g) */
+/** Bornes de quantité par défaut (g) si aucune borne spécifique ne s'applique. */
 export const QUANTITY_BOUNDS = {
   min: 10,
   max: 400,
 };
+
+/**
+ * Bornes réalistes par groupe CIQUAL (g pour une portion raisonnable dans un repas).
+ * Empêche l'optimiseur de pondre des portions délirantes (ex : 150 g de miel).
+ * min bas = on accepte une petite quantité ; max = plafond d'une portion humaine normale.
+ */
+export const PORTION_BOUNDS_BY_GROUPE: Record<string, { min: number; max: number }> = {
+  'viandes, œufs, poissons et assimilés': { min: 20, max: 300 },
+  'produits laitiers': { min: 20, max: 400 },
+  'fromages': { min: 10, max: 80 },
+  'céréales et produits à base de céréales': { min: 15, max: 250 },
+  'féculents': { min: 30, max: 350 },
+  'plats composés': { min: 50, max: 500 },
+  'légumes': { min: 20, max: 400 },
+  'fruits': { min: 30, max: 300 },
+  'légumineuses': { min: 20, max: 250 },
+  'fruits à coque': { min: 5, max: 50 },
+  'matières grasses': { min: 2, max: 30 },
+  'sucres et produits sucrés': { min: 2, max: 30 },
+  'boissons': { min: 50, max: 750 },
+  'sauces et condiments': { min: 2, max: 50 },
+  'compléments': { min: 1, max: 30 },
+  'perso': { min: 5, max: 400 },
+};
+
+/**
+ * Surcharges par motif de nom — s'applique si le nom (lowercased) contient la clé.
+ * Utile pour les aliments très concentrés ou très légers dont la portion diffère
+ * nettement du reste de leur groupe.
+ */
+export const PORTION_BOUNDS_BY_NAME_PATTERN: { pattern: RegExp; bounds: { min: number; max: number } }[] = [
+  // Sucres/sirops purs : une c. à café suffit, rarement plus de 2 c. à soupe
+  { pattern: /\b(miel|sirop|confiture|mélasse|sucre)\b/i, bounds: { min: 2, max: 25 } },
+  // Huiles : 1 c. à café (~5 g) à 2 c. à soupe (~25 g)
+  { pattern: /\bhuile\b/i, bounds: { min: 2, max: 25 } },
+  // Beurre, margarine, saindoux
+  { pattern: /\b(beurre|margarine|saindoux)\b/i, bounds: { min: 2, max: 30 } },
+  // Sel, épices, poivre (on n'en met jamais plus d'une pincée)
+  { pattern: /\b(sel|poivre|épice|épices|cannelle|cumin|curry|paprika|muscade)\b/i, bounds: { min: 0.5, max: 10 } },
+  // Vinaigres, jus de citron
+  { pattern: /\b(vinaigre|jus de citron)\b/i, bounds: { min: 2, max: 30 } },
+  // Moutardes, mayos, ketchups
+  { pattern: /\b(moutarde|mayonnaise|ketchup|sauce tomate)\b/i, bounds: { min: 2, max: 40 } },
+  // Extraits / concentrés
+  { pattern: /\b(extrait|concentré|cube|bouillon)\b/i, bounds: { min: 0.5, max: 15 } },
+  // Café, thé (infusés) — le poids reste raisonnable
+  { pattern: /\b(café\b|thé\b|tisane|infusion)/i, bounds: { min: 100, max: 500 } },
+  // Eau, boissons très diluées
+  { pattern: /\beau\b/i, bounds: { min: 100, max: 1000 } },
+  // Alcools forts
+  { pattern: /\b(whisky|vodka|rhum|gin|cognac|liqueur|eau-de-vie)\b/i, bounds: { min: 5, max: 50 } },
+  // Vins
+  { pattern: /\bvin\b/i, bounds: { min: 50, max: 200 } },
+  // Œufs (un œuf ~50-60 g)
+  { pattern: /\bœuf\b/i, bounds: { min: 30, max: 180 } },
+  // Fromages très gras ou à pâte dure
+  { pattern: /\b(parmesan|roquefort|comté|beaufort|mimolette|bleu)\b/i, bounds: { min: 5, max: 50 } },
+  // Charcuteries grasses
+  { pattern: /\b(lardon|lard|chorizo|saucisson|rillette|foie gras)\b/i, bounds: { min: 10, max: 80 } },
+];
 
 /** Paramètres de l'optimiseur */
 export const OPTIMIZER_CONFIG = {

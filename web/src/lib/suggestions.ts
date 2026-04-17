@@ -231,7 +231,20 @@ export function suggestComplements(opts: {
     // Les produits "secs" à reconstituer (café moulu/soluble, thé, cacao
     // en poudre, lait en poudre, levures, épices, bouillons) ne se
     // consomment jamais tels quels en quantité suggérée. On les écarte.
-    if (/café|thé\b|tisane|infusion|poudre|cacao|levure|bouillon|épices?\b|herbes? sèches?|aromates|paprika|curry|cumin|cannelle|muscade|à reconstituer/i.test(food.nom)) continue;
+    // Note : JS \b ne fonctionne pas autour des lettres accentuées (é, è, à).
+    // On utilise des lookarounds explicites (début/fin/séparateur non-lettre).
+    const nonWord = '(?:^|[^a-zA-ZÀ-ÿ])';
+    const endWord = '(?:$|[^a-zA-ZÀ-ÿ])';
+    const blockWords = [
+      'café', 'thé', 'tisane', 'infusion', 'poudre', 'cacao', 'levure',
+      'bouillon', 'épice', 'épices', 'aromates', 'paprika', 'curry',
+      'cumin', 'cannelle', 'muscade',
+    ];
+    const blockRe = new RegExp(
+      nonWord + '(?:' + blockWords.join('|') + ')' + endWord + '|à reconstituer|herbes? sèches?',
+      'i'
+    );
+    if (blockRe.test(food.nom)) continue;
 
     const b = boundsForFood(food);
     // Plafond "portion suggérée" spécifique aux suggestions : plus serré que

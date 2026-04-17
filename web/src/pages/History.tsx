@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Download } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
@@ -8,6 +9,35 @@ import { totalsForItems } from '@/lib/optimizer';
 import { calcTargets } from '@/lib/calculations';
 import { friendlyDate } from '@/lib/utils';
 import { WeightTracker } from '@/components/WeightTracker';
+
+/**
+ * Sérialise la liste des entrées d'historique en CSV RFC 4180.
+ * Une ligne par jour avec date, totaux macros et nombre d'items.
+ * L'utilisateur peut l'ouvrir dans Excel/LibreOffice/Google Sheets pour
+ * ses propres analyses.
+ */
+function buildHistoryCsv(
+  entries: { date: string; kcal: number; prot: number; gluc: number; lip: number; items: number; meals: number }[]
+): string {
+  const header = ['Date', 'Calories (kcal)', 'Protéines (g)', 'Glucides (g)', 'Lipides (g)', 'Repas', 'Aliments'];
+  const lines = [header.join(',')];
+  for (const e of entries) {
+    lines.push([e.date, e.kcal, e.prot, e.gluc, e.lip, e.meals, e.items].join(','));
+  }
+  return lines.join('\r\n');
+}
+
+function triggerDownload(filename: string, content: string, mime = 'text/csv;charset=utf-8') {
+  const blob = new Blob(['\ufeff', content], { type: mime }); // BOM UTF-8 pour Excel
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 export function History() {
   const profile = useProfile((s) => s.getActive());
@@ -40,13 +70,28 @@ export function History() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Historique</h1>
-        <p className="muted mt-1">
-          {entries.length === 0
-            ? 'Aucun plan enregistré pour l\u2019instant.'
-            : `${entries.length} jour${entries.length > 1 ? 's' : ''} de données pour ${profile.nom}.`}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Historique</h1>
+          <p className="muted mt-1">
+            {entries.length === 0
+              ? 'Aucun plan enregistré pour l\u2019instant.'
+              : `${entries.length} jour${entries.length > 1 ? 's' : ''} de données pour ${profile.nom}.`}
+          </p>
+        </div>
+        {entries.length > 0 && (
+          <button
+            className="btn-outline"
+            onClick={() => {
+              const csv = buildHistoryCsv(entries);
+              const date = new Date().toISOString().slice(0, 10);
+              triggerDownload(`diet-auto-${profile.nom}-${date}.csv`, csv);
+            }}
+            title="Télécharger toutes les lignes au format CSV (ouvrable dans Excel)"
+          >
+            <Download size={14} /> Export CSV
+          </button>
+        )}
       </div>
 
       <div className="mb-6">

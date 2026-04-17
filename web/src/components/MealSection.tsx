@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Copy, Edit2, Plus, ScanBarcode, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Edit2, GripVertical, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import type { Meal, MealFoodItem } from '@/types';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
@@ -13,9 +13,14 @@ import { cn, formatNumber } from '@/lib/utils';
 interface Props {
   meal: Meal;
   canRemove: boolean;
+  /** Callbacks de drag & drop pour réordonner les repas. */
+  onDragStart?: (mealId: string) => void;
+  onDragOver?: (mealId: string) => void;
+  onDrop?: (mealId: string) => void;
+  isDragTarget?: boolean;
 }
 
-export function MealSection({ meal, canRemove }: Props) {
+export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, isDragTarget }: Props) {
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nomEdit, setNomEdit] = useState(meal.nom);
@@ -36,12 +41,45 @@ export function MealSection({ meal, canRemove }: Props) {
   }
 
   return (
-    <section className="card p-4">
+    <section
+      className={cn(
+        'card p-4 transition-colors',
+        isDragTarget && 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-transparent'
+      )}
+      onDragOver={
+        onDragOver
+          ? (e) => {
+              e.preventDefault();
+              onDragOver(meal.id);
+            }
+          : undefined
+      }
+      onDrop={
+        onDrop
+          ? (e) => {
+              e.preventDefault();
+              onDrop(meal.id);
+            }
+          : undefined
+      }
+    >
       <div className="flex items-center justify-between gap-2 mb-3">
+        {onDragStart && (
+          <button
+            type="button"
+            draggable
+            onDragStart={() => onDragStart(meal.id)}
+            className="muted hover:text-[var(--text)] cursor-grab active:cursor-grabbing touch-none"
+            title="Glisser pour réordonner"
+            aria-label="Réordonner le repas"
+          >
+            <GripVertical size={14} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-2 text-left"
+          className="flex items-center gap-2 text-left flex-1"
         >
           {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           {editing ? (

@@ -30,6 +30,8 @@ interface DayPlanState {
   duplicateMeal: (mealId: string) => void;
   /** Remplace le plan du jour par un clone des repas d'une autre date. */
   duplicateFromDate: (sourceDate: string) => void;
+  /** Réordonne les repas du plan courant. */
+  reorderMeals: (orderedIds: string[]) => void;
 }
 
 function makeEmptyPlan(date: string, profileId: string): DayPlan {
@@ -185,6 +187,25 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       const idx = plan.meals.findIndex((m) => m.id === mealId);
       const meals = [...plan.meals.slice(0, idx + 1), copy, ...plan.meals.slice(idx + 1)];
       const updated: DayPlan = { ...plan, meals, updatedAt: Date.now() };
+      set({ plans: { ...get().plans, [plan.date]: updated } });
+      _persist?.();
+    },
+
+    reorderMeals(orderedIds) {
+      const plan = get().ensurePlan();
+      const map = new Map(plan.meals.map((m) => [m.id, m]));
+      const next: typeof plan.meals = [];
+      // D'abord on place les repas dans l'ordre passé, puis on ajoute ceux
+      // oubliés à la fin pour rester défensif (si l'UI envoie une liste partielle).
+      for (const id of orderedIds) {
+        const m = map.get(id);
+        if (m) {
+          next.push(m);
+          map.delete(id);
+        }
+      }
+      for (const m of map.values()) next.push(m);
+      const updated: DayPlan = { ...plan, meals: next, updatedAt: Date.now() };
       set({ plans: { ...get().plans, [plan.date]: updated } });
       _persist?.();
     },

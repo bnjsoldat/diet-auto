@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Camera, Loader2, ScanBarcode, X } from 'lucide-react';
-import { createDetector, isBarcodeDetectorSupported } from '@/lib/barcode';
+import { isBarcodeDetectorSupported, startScanner, type ScannerStopFn } from '@/lib/barcode';
 import { fetchOpenFoodFactsProduct } from '@/lib/openfoodfacts';
 import { useCustomFoods } from '@/store/useCustomFoods';
 import type { Food } from '@/types';
@@ -23,7 +23,7 @@ type Status = 'idle' | 'scanning' | 'searching' | 'found' | 'not-found' | 'error
 export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const loopRef = useRef<number | null>(null);
+  const stopScannerRef = useRef<ScannerStopFn | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [manualCode, setManualCode] = useState('');
@@ -31,23 +31,17 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
   const [grams, setGrams] = useState<number>(100);
   const addCustom = useCustomFoods((s) => s.addOrUpdate);
 
-  const supported = isBarcodeDetectorSupported();
+  // On tente toujours la caméra : si BarcodeDetector natif est absent,
+  // @zxing/browser prend le relais via lib/barcode.ts.
+  const native = isBarcodeDetectorSupported();
 
-  // Démarrage caméra + boucle de détection
   useEffect(() => {
-    if (!open || !supported) return;
+    if (!open) return;
 
     let cancelled = false;
     setStatus('scanning');
     setErrorMsg('');
     setFoundFood(null);
-
-    const detector = createDetector();
-    if (!detector) {
-      setStatus('error');
-      setErrorMsg('Détection de code-barres non disponible.');
-      return;
-    }
 
     (async () => {
       try {
@@ -63,24 +57,17 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
-        }
 
-        const tick = async () => {
-          if (cancelled || !videoRef.current) return;
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              const code = barcodes[0].rawValue;
-              stopCamera();
-              await lookup(code);
-              return;
-            }
-          } catch {
-            /* ignore ticks silently */
+          const stop = await startScanner(videoRef.current, (barcode) => {
+            stopCamera();
+            void lookup(barcode.rawValue);
+          });
+          if (cancelled) {
+            stop();
+            return;
           }
-          loopRef.current = window.setTimeout(tick, 400);
-        };
-        tick();
+          stopScannerRef.current = stop;
+        }
       } catch (e: any) {
         if (cancelled) return;
         setStatus('error');
@@ -97,7 +84,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
       stopCamera();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, supported]);
+  }, [open]);
 
   // Quand la modal se ferme, reset complet
   useEffect(() => {
@@ -112,9 +99,9 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
   }, [open]);
 
   function stopCamera() {
-    if (loopRef.current) {
-      clearTimeout(loopRef.current);
-      loopRef.current = null;
+    if (stopScannerRef.current) {
+      stopScannerRef.current();
+      stopScannerRef.current = null;
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((t) => t.stop());
@@ -156,7 +143,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
   function handleRestart() {
     setFoundFood(null);
     setManualCode('');
-    setStatus(supported ? 'scanning' : 'idle');
+    setStatus('scanning');
     setErrorMsg('');
   }
 
@@ -188,7 +175,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
 
         <div className="p-4 space-y-3">
           {/* Video preview + indicator */}
-          {supported && !foundFood && status !== 'error' && (
+          {!foundFood && status !== 'error' && (
             <div className="relative aspect-[4/3] bg-black rounded-md overflow-hidden">
               <video
                 ref={videoRef}
@@ -202,7 +189,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
               </div>
               {status === 'scanning' && (
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white bg-black/50 px-2 py-1 rounded flex items-center gap-1">
-                  <Camera size={12} /> En attente d’un code-barres…
+                  <Camera size={12} /> {native ? 'En attente d’un code-barres…' : 'Scan iOS/Firefox — tiens stable…'}
                 </div>
               )}
               {status === 'searching' && (
@@ -215,15 +202,9 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
           )}
 
           {/* Manual input / fallback */}
-          {!foundFood && (status === 'error' || !supported) && (
+          {!foundFood && status === 'error' && (
             <div className="space-y-2">
               {errorMsg && <p className="text-xs text-amber-600">{errorMsg}</p>}
-              {!supported && (
-                <p className="text-xs muted">
-                  Ton navigateur ne prend pas en charge la détection automatique. Saisis le code
-                  à la main — il est imprimé sous le code-barres.
-                </p>
-              )}
               <div className="flex gap-2">
                 <input
                   className="input flex-1"
@@ -237,16 +218,16 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
                   type="button"
                   className="btn btn-primary"
                   onClick={handleManualSearch}
-                  disabled={manualCode.length < 6 || status === 'searching'}
+                  disabled={manualCode.length < 6}
                 >
-                  {status === 'searching' ? <Loader2 size={14} className="animate-spin" /> : 'OK'}
+                  OK
                 </button>
               </div>
             </div>
           )}
 
           {/* Manual entry toggle when camera is running */}
-          {supported && !foundFood && status !== 'error' && (
+          {!foundFood && status !== 'error' && (
             <details className="text-xs muted">
               <summary className="cursor-pointer">Saisir le code à la main</summary>
               <div className="flex gap-2 mt-2">

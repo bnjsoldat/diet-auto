@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, FileDown, LayoutTemplate, ListPlus, Sparkles, Wand2 } from 'lucide-react';
+import {
+  CalendarDays,
+  Eraser,
+  FileDown,
+  LayoutTemplate,
+  ListPlus,
+  Sparkles,
+  Wand2,
+} from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
@@ -81,6 +89,9 @@ export function Today() {
   const [open, setOpen] = useState(false);
   const [autoBusy, setAutoBusy] = useState(false);
   const [tplOpen, setTplOpen] = useState(false);
+  const [draggingMealId, setDraggingMealId] = useState<string | null>(null);
+  const [dragOverMealId, setDragOverMealId] = useState<string | null>(null);
+  const reorderMeals = useDayPlan((s) => s.reorderMeals);
 
   /**
    * Dates précédentes (hors aujourd'hui) avec un plan non vide, triées de
@@ -257,6 +268,22 @@ export function Today() {
           >
             <LayoutTemplate size={14} /> Modèle
           </button>
+          {current.meals.some((m) => m.items.length > 0) && (
+            <button
+              className="btn-outline"
+              onClick={() => {
+                if (!confirm('Vider tous les aliments du plan du jour ? (les repas restent)')) return;
+                replacePlan({
+                  ...current,
+                  meals: current.meals.map((m) => ({ ...m, items: [] })),
+                  updatedAt: Date.now(),
+                });
+              }}
+              title="Supprime tous les aliments en gardant la structure des repas"
+            >
+              <Eraser size={14} /> Vider
+            </button>
+          )}
           {previousDates.length > 0 && (
             <DuplicateFromPrevious
               previousDates={previousDates}
@@ -313,7 +340,29 @@ export function Today() {
       <div className="grid lg:grid-cols-[1fr_320px] gap-5">
         <div className="grid gap-4 order-2 lg:order-1">
           {current.meals.map((meal) => (
-            <MealSection key={meal.id} meal={meal} canRemove={current.meals.length > 1} />
+            <MealSection
+              key={meal.id}
+              meal={meal}
+              canRemove={current.meals.length > 1}
+              onDragStart={(id) => setDraggingMealId(id)}
+              onDragOver={(id) => setDragOverMealId(id)}
+              onDrop={(targetId) => {
+                if (!draggingMealId || draggingMealId === targetId) {
+                  setDraggingMealId(null);
+                  setDragOverMealId(null);
+                  return;
+                }
+                // Calcule la nouvelle liste ordonnée d'ids
+                const currentIds = current.meals.map((m) => m.id);
+                const filtered = currentIds.filter((id) => id !== draggingMealId);
+                const targetIdx = filtered.indexOf(targetId);
+                filtered.splice(targetIdx, 0, draggingMealId);
+                reorderMeals(filtered);
+                setDraggingMealId(null);
+                setDragOverMealId(null);
+              }}
+              isDragTarget={dragOverMealId === meal.id && draggingMealId !== meal.id}
+            />
           ))}
 
           <button

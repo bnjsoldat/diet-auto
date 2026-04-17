@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, Copy, Plus } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Copy, Plus, ShoppingCart } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
@@ -60,7 +60,14 @@ export function Week() {
             {Math.round(tolKcal * 100)}% ({optimizerMode})
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/shopping"
+            className="btn-outline"
+            title="Voir la liste de courses agrégée pour cette période"
+          >
+            <ShoppingCart size={14} /> Liste de courses
+          </Link>
           <button
             className="btn-outline"
             onClick={() => setAnchor(shiftDate(anchor, -7))}

@@ -9,6 +9,7 @@ import { totalsForItems } from '@/lib/optimizer';
 import type { Recipe, RecipeIngredient } from '@/types';
 import { formatNumber } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/EmptyState';
 
 export function Recipes() {
   const navigate = useNavigate();
@@ -188,13 +189,21 @@ export function Recipes() {
           </div>
         </div>
       ) : recipes.length === 0 ? (
-        <div className="card p-10 text-center">
-          <BookOpen size={32} className="mx-auto mb-3 opacity-50" />
-          <p className="muted">
-            Tu n'as aucune recette pour l'instant. Clique sur <strong>Nouvelle recette</strong> pour
-            en créer une — tu pourras l'ajouter ensuite à n'importe quel repas en 1 clic.
-          </p>
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="Aucune recette enregistrée"
+          description={
+            <>
+              Groupe plusieurs aliments en une seule entrée (ex : <em>Salade poulet-quinoa</em>)
+              pour les ajouter en un clic à n'importe quel repas.
+            </>
+          }
+          cta={
+            <button className="btn-primary" onClick={startNew}>
+              <Plus size={14} /> Créer ma première recette
+            </button>
+          }
+        />
       ) : (
         <div className="grid gap-3">
           {recipes.map((r) => {

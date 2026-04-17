@@ -3,6 +3,7 @@ import { useFavorites } from '@/store/useFavorites';
 import { foodsByName } from '@/lib/foods';
 import { FoodSearch } from '@/components/FoodSearch';
 import { formatNumber } from '@/lib/utils';
+import { EmptyState } from '@/components/EmptyState';
 
 export function Favorites() {
   const favs = useFavorites((s) => s.favorites);
@@ -31,10 +32,12 @@ export function Favorites() {
       </div>
 
       {items.length === 0 ? (
-        <div className="card p-10 text-center muted">
-          <Star size={32} className="mx-auto mb-3 opacity-50" />
-          <p>Aucun favori pour l'instant. Ajoute-en via la recherche ci-dessus, ou en cliquant sur l'étoile à côté d'un aliment dans ton plan du jour.</p>
-        </div>
+        <EmptyState
+          icon={Star}
+          title="Pas encore de favoris"
+          description="Ajoute des aliments via la recherche ci-dessus, ou clique sur l'étoile ⭐ d'un aliment dans ton plan — ils apparaîtront ici et en tête de la recherche."
+          tone="amber"
+        />
       ) : (
         <div className="grid gap-2">
           {items.map((f) => (

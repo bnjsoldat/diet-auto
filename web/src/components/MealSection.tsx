@@ -9,6 +9,7 @@ import { RecipePicker } from './RecipePicker';
 import { BarcodeScanner } from './BarcodeScanner';
 import { useDayPlan } from '@/store/useDayPlan';
 import { cn, formatNumber } from '@/lib/utils';
+import { emojiForMeal } from '@/lib/mealEmoji';
 
 interface Props {
   meal: Meal;
@@ -102,7 +103,12 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
-            <h3 className="font-semibold">{meal.nom}</h3>
+            <h3 className="font-semibold flex items-center gap-1.5">
+              <span aria-hidden className="text-base leading-none">
+                {emojiForMeal(meal.nom)}
+              </span>
+              {meal.nom}
+            </h3>
           )}
         </button>
 

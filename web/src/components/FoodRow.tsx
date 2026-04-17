@@ -48,7 +48,7 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
   return (
     <div
       className={cn(
-        'grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-2 border-b last:border-0',
+        'grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-2 border-b last:border-0 animate-fade-in-up',
         item.verrou && 'bg-amber-50/50 dark:bg-amber-950/20 -mx-4 px-4'
       )}
     >

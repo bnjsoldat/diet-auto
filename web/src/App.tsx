@@ -24,9 +24,28 @@ const Favorites = lazy(() => import('./pages/Favorites').then((m) => ({ default:
 const Shopping = lazy(() => import('./pages/Shopping').then((m) => ({ default: m.Shopping })));
 const Recipes = lazy(() => import('./pages/Recipes').then((m) => ({ default: m.Recipes })));
 
+/**
+ * Skeleton affiché pendant le chargement d'une route lazy. Utilise les
+ * classes .skeleton / .animate-fade-in-up définies dans index.css.
+ * Plus élégant qu'un simple "Chargement…" et donne à l'utilisateur une
+ * idée de la structure qui arrive.
+ */
 function RouteFallback() {
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-20 text-center muted">Chargement…</div>
+    <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8 animate-fade-in-up">
+      <div className="skeleton h-8 w-48 mb-3" />
+      <div className="skeleton h-4 w-64 mb-6" />
+      <div className="grid lg:grid-cols-[1fr_320px] gap-5">
+        <div className="grid gap-4">
+          <div className="skeleton h-32 w-full" />
+          <div className="skeleton h-32 w-full" />
+          <div className="skeleton h-32 w-full" />
+        </div>
+        <div className="hidden lg:block">
+          <div className="skeleton h-64 w-full" />
+        </div>
+      </div>
+    </div>
   );
 }
 

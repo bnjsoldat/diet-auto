@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { OptimizerMode, Targets } from '@/types';
 import { AlertTriangle, Camera, Check, RotateCcw, X } from 'lucide-react';
 import { OPTIMIZER_MODES } from '@/lib/constants';
-import { MacrosDonut } from './MacrosDonut';
+import { ProgressRings } from './ProgressRings';
 
 interface Props {
   targets: Targets;
@@ -41,6 +41,14 @@ function statusForRatio(ratio: number, tol: number): 'ok' | 'warn' | 'bad' {
   return 'bad';
 }
 
+/** Palette cohérente avec ProgressRings pour un repère visuel instantané. */
+const MACRO_COLOR: Record<string, string> = {
+  Calories: '#10b981',
+  'Protéines': '#f97316',
+  'Glucides': '#3b82f6',
+  'Lipides': '#a855f7',
+};
+
 function Row({
   label,
   current,
@@ -63,8 +71,10 @@ function Row({
   const status: 'ok' | 'warn' | 'bad' | 'empty' = hasCurrent
     ? statusForRatio((current! - target) / target, tolerance)
     : 'empty';
+  // Barre : couleur macro en mode OK, couleur alerte en mode warn/bad.
+  const macroColor = MACRO_COLOR[label] ?? '#10b981';
   const barColor =
-    status === 'ok' ? '#10b981' : status === 'warn' ? '#f59e0b' : status === 'bad' ? '#ef4444' : '#10b981';
+    status === 'ok' ? macroColor : status === 'warn' ? '#f59e0b' : status === 'bad' ? '#ef4444' : macroColor;
   const badge =
     status === 'ok' ? (
       <span className="inline-flex items-center text-emerald-600 dark:text-emerald-500" aria-label="dans la tolérance">
@@ -135,13 +145,17 @@ export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, cu
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted mb-1">
-            Cible du jour
+            Progression du jour
           </div>
-          <div className="flex items-baseline gap-2">
-            <div className="text-3xl font-bold text-emerald-600">{targets.kcalCible}</div>
-            <div className="muted text-sm">kcal</div>
-          </div>
-          <div className="text-xs muted mt-1">
+          <ProgressRings
+            targets={targets}
+            currentKcal={currentKcal ?? 0}
+            currentProt={currentProt ?? 0}
+            currentGluc={currentGluc ?? 0}
+            currentLip={currentLip ?? 0}
+            size={160}
+          />
+          <div className="text-xs muted mt-3">
             Maintenance {targets.kcalMaintenance} kcal
             {targets.deltaKcal !== 0 && (
               <>
@@ -152,13 +166,6 @@ export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, cu
             )}
           </div>
         </div>
-        <MacrosDonut
-          prot={targets.prot}
-          gluc={targets.gluc}
-          lip={targets.lip}
-          kcalTotal={targets.kcalCible}
-          compact
-        />
       </div>
 
       <div className="mt-5 grid gap-3">

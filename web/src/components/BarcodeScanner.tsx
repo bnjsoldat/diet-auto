@@ -3,6 +3,7 @@ import { Camera, Loader2, ScanBarcode, X } from 'lucide-react';
 import { isBarcodeDetectorSupported, startScanner, type ScannerStopFn } from '@/lib/barcode';
 import { fetchOpenFoodFactsProduct } from '@/lib/openfoodfacts';
 import { useCustomFoods } from '@/store/useCustomFoods';
+import { vibrate } from '@/lib/haptic';
 import type { Food } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -59,6 +60,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
           await videoRef.current.play().catch(() => {});
 
           const stop = await startScanner(videoRef.current, (barcode) => {
+            vibrate('medium');
             stopCamera();
             void lookup(barcode.rawValue);
           });

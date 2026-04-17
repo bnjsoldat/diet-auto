@@ -95,3 +95,87 @@
     @apply inline-flex h-5 items-center justify-center rounded border px-1.5 text-[10px] font-medium muted;
   }
 }
+
+@layer utilities {
+  /* Entrée subtile pour les lignes d'aliment, cartes et suggestions.
+     Durée courte (180 ms) pour que l'interface reste vive. */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 180ms ease-out both;
+  }
+
+  /* Pulse ponctuel pour attirer l'attention sur un changement de badge
+     (statut ok/warn/bad qui vient de passer à une nouvelle couleur). */
+  @keyframes soft-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  .animate-soft-pulse {
+    animation: soft-pulse 320ms ease-in-out;
+  }
+
+  /* Slide-down pour les panneaux qui s'ouvrent (dialogs, dropdowns,
+     empty states). */
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-down {
+    animation: slide-down 200ms ease-out both;
+  }
+
+  /* Shimmer pour les skeleton loaders. */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--bg-subtle) 0%,
+      var(--border) 50%,
+      var(--bg-subtle) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+    border-radius: 6px;
+  }
+
+  /* Respect utilisateur : désactive les animations si prefers-reduced-motion. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up,
+    .animate-soft-pulse,
+    .animate-slide-down,
+    .skeleton {
+      animation: none !important;
+    }
+  }
+}

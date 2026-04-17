@@ -7,6 +7,7 @@ import { foodsByName } from '@/lib/foods';
 import { bestUnitForGrams, formatCount, pluralize } from '@/lib/units';
 import { formatNumber, todayKey } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/EmptyState';
 
 type Range = 'week' | 'month' | 'custom';
 
@@ -167,19 +168,18 @@ export function Shopping() {
       </div>
 
       {aggregated.nbFoods === 0 ? (
-        <div className="card p-10 text-center muted">
-          <ShoppingCart size={32} className="mx-auto mb-3 opacity-50" />
-          <p>
-            Aucun aliment dans ton historique sur cette période. Va sur la page{' '}
-            <button
-              className="underline text-emerald-600"
-              onClick={() => navigate('/today')}
-            >
-              Aujourd'hui
-            </button>{' '}
-            pour composer des repas — ils seront automatiquement pris en compte ici.
-          </p>
-        </div>
+        <EmptyState
+          icon={ShoppingCart}
+          title="Pas encore de courses à prévoir"
+          description={
+            <>Compose un plan sur <strong>Aujourd'hui</strong> puis reviens ici — tes aliments seront automatiquement agrégés sur la période choisie.</>
+          }
+          cta={
+            <button className="btn-primary" onClick={() => navigate('/today')}>
+              Aller composer un repas
+            </button>
+          }
+        />
       ) : (
         <div className="grid gap-4">
           {aggregated.groupes.map(([groupe, items]) => (

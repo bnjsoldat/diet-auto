@@ -18,6 +18,8 @@ import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { suggestComplements } from '@/lib/suggestions';
 import { categorieOfFood } from '@/lib/categories';
+import { vibrate } from '@/lib/haptic';
+import { celebrateTargetIfFirstTime } from '@/lib/celebrate';
 import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
@@ -124,6 +126,21 @@ export function Today() {
   );
   const totals = useMemo(() => totalsForItems(allItems, foodsByName), [allItems]);
 
+  /**
+   * Déclenche l'animation de célébration quand kcal et macros atteignent
+   * la cible en mode normal (±5 %). Se joue une seule fois par jour.
+   */
+  useEffect(() => {
+    if (!targets || !current) return;
+    const withinKcal = Math.abs(totals.kcal - targets.kcalCible) / targets.kcalCible <= 0.05;
+    const withinP = Math.abs(totals.prot - targets.prot) / targets.prot <= 0.1;
+    const withinG = Math.abs(totals.gluc - targets.gluc) / targets.gluc <= 0.1;
+    const withinL = Math.abs(totals.lip - targets.lip) / targets.lip <= 0.1;
+    if (withinKcal && withinP && withinG && withinL && allItems.length >= 3) {
+      void celebrateTargetIfFirstTime(current.date);
+    }
+  }, [totals, targets, current, allItems.length]);
+
   if (!profile || !current || !targets) {
     return (
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-20 text-center muted">Chargement…</div>
@@ -153,6 +170,7 @@ export function Today() {
     replacePlan({ ...clone, updatedAt: Date.now() });
     setResult(res);
     setOpen(true);
+    vibrate('medium');
   }
 
   /**
@@ -235,6 +253,7 @@ export function Today() {
     setResult(lastRes);
     setOpen(true);
     setAutoBusy(false);
+    vibrate(addedLog.length > 0 ? 'success' : 'medium');
     // Petit log dans le title de la modale en mettant les ajouts dans la console
     if (addedLog.length) console.log('Optimiser+ a ajouté :', addedLog);
   }

@@ -24,6 +24,14 @@ const nav = [
   { to: '/profiles', label: 'Profils', icon: User },
 ];
 
+/** 4 onglets principaux pour la bottom bar mobile (les autres sont dans un menu "Plus"). */
+const mobileBottom = [
+  { to: '/today', label: 'Jour', icon: CalendarDays },
+  { to: '/week', label: 'Semaine', icon: CalendarRange },
+  { to: '/shopping', label: 'Courses', icon: ShoppingCart },
+  { to: '/profiles', label: 'Profils', icon: User },
+];
+
 export function Layout() {
   const location = useLocation();
   const isLanding = location.pathname === '/';
@@ -68,32 +76,68 @@ export function Layout() {
           </div>
         </div>
 
+        {/* En mobile, on affiche une barre de raccourcis horizontaux pour les
+            pages secondaires (les 4 principales sont en bottom bar).  */}
         {!isLanding && (
           <nav className="md:hidden border-t overflow-x-auto">
             <div className="flex min-w-max">
-              {nav.map((n) => (
-                <NavLink
-                  key={n.to}
-                  to={n.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex-1 min-w-[90px] text-center px-4 py-2 text-sm font-medium',
-                      isActive ? 'text-emerald-600' : 'muted'
-                    )
-                  }
-                >
-                  <n.icon size={16} className="inline mr-1" />
-                  {n.label}
-                </NavLink>
-              ))}
+              {nav
+                .filter((n) => !mobileBottom.some((b) => b.to === n.to))
+                .map((n) => (
+                  <NavLink
+                    key={n.to}
+                    to={n.to}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex-1 min-w-[90px] text-center px-4 py-2 text-sm font-medium',
+                        isActive ? 'text-emerald-600' : 'muted'
+                      )
+                    }
+                  >
+                    <n.icon size={16} className="inline mr-1" />
+                    {n.label}
+                  </NavLink>
+                ))}
             </div>
           </nav>
         )}
       </header>
 
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         <Outlet />
       </main>
+
+      {/* Bottom tab bar iOS-style, mobile uniquement */}
+      {!isLanding && (
+        <nav className="fixed bottom-0 inset-x-0 z-30 md:hidden border-t bg-[var(--bg)]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+          <div className="grid grid-cols-4">
+            {mobileBottom.map((n) => (
+              <NavLink
+                key={n.to}
+                to={n.to}
+                className={({ isActive }) =>
+                  cn(
+                    'flex flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-medium transition-colors',
+                    isActive
+                      ? 'text-emerald-600'
+                      : 'muted hover:text-[var(--text)]'
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <n.icon
+                      size={20}
+                      className={cn('transition-transform', isActive && 'scale-110')}
+                    />
+                    <span>{n.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        </nav>
+      )}
 
       <footer className="border-t py-6 text-center text-xs muted">
         <p>

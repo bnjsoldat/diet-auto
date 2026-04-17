@@ -9,6 +9,8 @@ import { totalsForItems } from '@/lib/optimizer';
 import { calcTargets } from '@/lib/calculations';
 import { friendlyDate } from '@/lib/utils';
 import { WeightTracker } from '@/components/WeightTracker';
+import { EmptyState } from '@/components/EmptyState';
+import { History as HistoryIcon } from 'lucide-react';
 
 /**
  * Sérialise la liste des entrées d'historique en CSV RFC 4180.
@@ -99,13 +101,21 @@ export function History() {
       </div>
 
       {entries.length === 0 ? (
-        <div className="card p-10 text-center">
-          <p className="muted">
-            Va sur <Link className="underline text-emerald-600" to="/today">Aujourd'hui</Link>{' '}
-            pour commencer à construire ton plan. Tes journées seront automatiquement sauvegardées
-            ici.
-          </p>
-        </div>
+        <EmptyState
+          icon={HistoryIcon}
+          title="Pas encore d'historique"
+          description={
+            <>
+              Compose ton premier plan sur <strong>Aujourd'hui</strong> — chaque journée est
+              automatiquement sauvegardée et viendra enrichir la courbe.
+            </>
+          }
+          cta={
+            <Link className="btn-primary" to="/today">
+              Créer un plan
+            </Link>
+          }
+        />
       ) : (
         <>
           <div className="card p-5 mb-6">

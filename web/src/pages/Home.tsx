@@ -96,11 +96,11 @@ export function Home() {
               <span className="h-6 w-6 rounded bg-emerald-600 text-white grid place-items-center">
                 <Wand2 size={12} />
               </span>
-              <div className="text-sm font-semibold">Optimiseur +</div>
+              <div className="text-sm font-semibold">Optimiseur</div>
             </div>
             <p className="text-xs muted">
-              Ajuste toutes les quantités et ajoute les aliments manquants pour atteindre ta
-              cible au pourcent près.
+              Ajuste toutes les quantités et complète ton plan pour atteindre ta cible au
+              pourcent près.
             </p>
           </div>
 
@@ -119,8 +119,8 @@ export function Home() {
       <section className="mt-24 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Feature
           icon={Wand2}
-          title="Optimiseur + intelligent"
-          desc="Ajuste les quantités et ajoute les aliments manquants en un clic pour atteindre précisément ta cible."
+          title="Optimiseur intelligent"
+          desc="Ajuste les quantités et complète automatiquement ton plan en un clic pour atteindre ta cible."
         />
         <Feature
           icon={ScanBarcode}
@@ -177,8 +177,9 @@ export function Home() {
             produit emballé, ou charge un modèle : équilibré, sportif, perte, végétarien.
           </Step>
           <Step n={3} title="Optimise en un clic">
-            <strong>Optimiseur +</strong> : ajuste les quantités, ajoute les aliments manquants et
-            repasse jusqu'à atteindre ta cible.
+            <strong>Optimiser</strong> : ajuste les quantités, ajoute les aliments manquants et
+            repasse jusqu'à atteindre ta cible. Verrouille 🔒 les aliments que tu ne veux pas
+            voir bouger.
           </Step>
           <Step n={4} title="Suis tes progrès">
             Historique avec courbe des calories, suivi pondéral, vue hebdomadaire, liste de

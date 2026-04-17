@@ -6,7 +6,6 @@ import {
   FileDown,
   LayoutTemplate,
   ListPlus,
-  Sparkles,
   Wand2,
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
@@ -147,43 +146,18 @@ export function Today() {
     );
   }
 
-  function handleOptimize() {
-    if (!current || !targets) return;
-    // Muter en place sur une copie profonde
-    const clone = JSON.parse(JSON.stringify(current)) as typeof current;
-    const allItemsClone = clone.meals.flatMap((m) => m.items);
-    if (allItemsClone.length === 0) {
-      alert('Ajoute au moins un aliment avant d\u2019optimiser.');
-      return;
-    }
-    const res = optimizeQuantities(
-      allItemsClone,
-      foodsByName,
-      {
-        kcal: targets.kcalCible,
-        prot: targets.prot,
-        gluc: targets.gluc,
-        lip: targets.lip,
-      },
-      { mode: optimizerMode }
-    );
-    replacePlan({ ...clone, updatedAt: Date.now() });
-    setResult(res);
-    setOpen(true);
-    vibrate('medium');
-  }
-
   /**
-   * "Optimiser+" : cycle automatique jusqu'à ce que le plan rentre dans la
-   * tolérance du mode actif (max 3 passes). À chaque itération :
-   *  1. Optimise les quantités.
-   *  2. Si encore hors tolérance, calcule les suggestions, puis insère
-   *     chacune dans le repas le plus pertinent selon la catégorie
-   *     (déjeuner = plat principal, petit-déj = sucré/fruits/laitiers).
+   * Cycle d'optimisation unique et complet (max 3 passes). À chaque itération :
+   *  1. Optimise les quantités des aliments présents.
+   *  2. Si encore hors tolérance, calcule les suggestions et les insère
+   *     dans le repas le plus pertinent selon la catégorie (petit-déj =
+   *     fruits/laitiers, midi/soir = protéines/féculents, etc.).
    *  3. Recommence.
-   * Le dialogue final montre l'écart résiduel et la liste des ajouts.
+   * L'utilisateur peut toujours verrouiller un aliment (🔒) pour empêcher
+   * que sa quantité bouge, ou retirer les ajouts qu'il n'aime pas depuis
+   * le plan — les suggestions sont toujours une aide, jamais une obligation.
    */
-  async function handleOptimizePlus() {
+  async function handleOptimize() {
     if (!current || !targets || autoBusy) return;
     const clone = JSON.parse(JSON.stringify(current)) as typeof current;
     if (clone.meals.flatMap((m) => m.items).length === 0) {
@@ -342,16 +316,13 @@ export function Today() {
               </button>
             ))}
           </div>
-          <button className="btn-outline" onClick={handleOptimize} disabled={autoBusy}>
-            <Sparkles size={14} /> Optimiser
-          </button>
           <button
             className="btn-primary"
-            onClick={handleOptimizePlus}
+            onClick={handleOptimize}
             disabled={autoBusy}
-            title="Optimise, ajoute automatiquement les aliments qui manquent, puis réoptimise — en un clic."
+            title="Ajuste les quantités et complète ton plan pour atteindre ta cible. Les aliments verrouillés 🔒 restent figés."
           >
-            <Wand2 size={14} /> {autoBusy ? 'En cours…' : 'Optimiser +'}
+            <Wand2 size={14} /> {autoBusy ? 'En cours…' : 'Optimiser'}
           </button>
         </div>
       </div>

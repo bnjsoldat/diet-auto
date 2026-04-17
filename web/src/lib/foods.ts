@@ -33,6 +33,15 @@ function findUnitsByPattern(nom: string): Unite[] | null {
   for (const p of SORTED_PATTERNS) {
     const pref = normalize(p.prefix);
     if (!n.startsWith(pref)) continue;
+    // Frontière de mot : le préfixe doit être suivi d'une limite (espace,
+    // virgule, début de ponctuation) pour éviter "sel" → "Selles-sur-Cher"
+    // ou "noix" → "noixotte". Si le préfixe se termine déjà par un
+    // séparateur (ex : "oeuf,") la vérif est contournée.
+    const lastCharIsSep = /[^a-z0-9]/.test(pref.slice(-1));
+    if (!lastCharIsSep && n.length > pref.length) {
+      const nextChar = n[pref.length];
+      if (/[a-z0-9]/.test(nextChar)) continue;
+    }
     if (p.excludes && p.excludes.some((ex) => n.includes(normalize(ex)))) continue;
     return p.unites;
   }

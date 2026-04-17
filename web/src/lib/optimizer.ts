@@ -6,6 +6,7 @@ import {
   PORTION_BOUNDS_BY_NAME_PATTERN,
   QUANTITY_BOUNDS,
 } from './constants';
+import { isDiscreteUnit } from './units';
 
 /**
  * Retourne les bornes réalistes (min, max en grammes) pour un aliment donné.
@@ -44,6 +45,7 @@ export function boundsForFood(
 
 interface Line {
   item: MealFoodItem; // référence partagée, muter q écrira la quantité dans le plan
+  food: Food;
   kcal100: number;
   prot100: number;
   gluc100: number;
@@ -149,6 +151,7 @@ export function optimizeQuantities(
     const b = boundsForFood(food, { min: options?.qmin, max: options?.qmax });
     lignes.push({
       item,
+      food,
       kcal100: food.kcal,
       prot100: food.prot,
       gluc100: food.gluc,
@@ -226,13 +229,19 @@ export function optimizeQuantities(
     }
   }
 
-  // Arrondi final au multiple (sauf verrouillés)
-  if (roundingGrams > 0) {
-    for (const l of lignes) {
-      if (l.item.verrou) continue;
+  // Arrondi final (sauf verrouillés). Pour les aliments dont l'unité par
+  // défaut est discrète (œuf, pomme, tranche…), on aligne sur un multiple
+  // entier de cette unité — sinon sur roundingGrams (5 g).
+  for (const l of lignes) {
+    if (l.item.verrou) continue;
+    const defUnit = l.food.unites?.[0];
+    if (defUnit && isDiscreteUnit(defUnit) && defUnit.g > 0) {
+      const count = Math.max(1, Math.round(l.item.quantite / defUnit.g));
+      l.item.quantite = count * defUnit.g;
+    } else if (roundingGrams > 0) {
       l.item.quantite = Math.round(l.item.quantite / roundingGrams) * roundingGrams;
-      l.item.quantite = Math.max(l.qmin, Math.min(l.qmax, l.item.quantite));
     }
+    l.item.quantite = Math.max(l.qmin, Math.min(l.qmax, l.item.quantite));
   }
 
   const apres = calcTotaux(lignes);

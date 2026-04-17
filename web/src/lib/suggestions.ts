@@ -1,6 +1,7 @@
 import type { DayPlan, Food, MealFoodItem } from '@/types';
 import { boundsForFood } from './optimizer';
 import { categorieOfFood } from './categories';
+import { isDiscreteUnit } from './units';
 
 export interface Totals {
   kcal: number;
@@ -272,7 +273,16 @@ export function suggestComplements(opts: {
     }
     // Filet de sécurité : pas plus qu'une portion réaliste, jamais sous le min.
     qRaw = Math.max(b.min, Math.min(suggestMax, qRaw));
-    const q = Math.max(b.min, Math.min(suggestMax, Math.round(qRaw / 5) * 5));
+    let q: number;
+    const defUnit = food.unites?.[0];
+    if (defUnit && isDiscreteUnit(defUnit) && defUnit.g > 0) {
+      // Aliment discret (œuf, pomme, tranche…) : aligner sur un multiple
+      // entier de l'unité par défaut.
+      const count = Math.max(1, Math.round(qRaw / defUnit.g));
+      q = Math.max(b.min, Math.min(suggestMax, count * defUnit.g));
+    } else {
+      q = Math.max(b.min, Math.min(suggestMax, Math.round(qRaw / 5) * 5));
+    }
 
     const s = scoreFood(food, q, opts.totals, opts.cibles, poids);
     if (s <= 0) continue;

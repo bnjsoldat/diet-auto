@@ -1,6 +1,29 @@
 import type { Food, Unite } from '@/types';
 
 /**
+ * Unités "discrètes" : un aliment ne se coupe pas en 2,3 (ex : œuf, pomme,
+ * tranche, noisette, morceau, pot, yaourt…). Pour celles-ci, on affiche
+ * toujours des entiers et on aligne la quantité en grammes sur un multiple
+ * exact du poids unitaire. À l'inverse, les unités de mesure (c. à soupe,
+ * pincée, filet) peuvent rester fractionnaires.
+ */
+const DISCRETE_UNIT_LABELS = [
+  'œuf', 'oeuf', 'pomme', 'orange', 'banane', 'poire', 'kiwi', 'abricot',
+  'pêche', 'peche', 'prune', 'clémentine', 'clementine', 'mandarine',
+  'tomate', 'tranche', 'rondelle', 'morceau', 'carré', 'carre',
+  'noisette', 'yaourt', 'pot', 'biscuit', 'galette', 'crêpe', 'crepe',
+  'gaufre', 'muffin', 'croissant', 'pain au chocolat', 'viennoiserie',
+  'steak', 'escalope', 'filet', 'saucisse', 'knack', 'merguez',
+  'gousse', 'noix', 'amande', 'cerneau', 'portion',
+];
+
+export function isDiscreteUnit(u: Unite | null | undefined): boolean {
+  if (!u) return false;
+  const lc = u.label.toLowerCase();
+  return DISCRETE_UNIT_LABELS.some((d) => lc === d || lc.startsWith(d + ' ') || lc.startsWith(d + 's'));
+}
+
+/**
  * Pour une quantité en grammes, trouve la meilleure unité parmi celles
  * définies pour l'aliment. Critère : celle qui donne un nombre le plus
  * proche d'un entier ≥ 1 (avec tolérance 0.2).
@@ -31,12 +54,26 @@ export function bestUnitForGrams(food: Food, grams: number): Unite | null {
 }
 
 /** Formatte un nombre d'unités : 1 → "1", 1.5 → "1,5", 2 → "2". */
-export function formatCount(count: number): string {
+export function formatCount(count: number, discrete = false): string {
+  if (discrete) return String(Math.max(1, Math.round(count)));
   if (count === Math.round(count)) return String(count);
   // 1 décimale, sauf si proche d'un entier (tolérance 0.05)
   const r1 = Math.round(count * 10) / 10;
   if (Math.abs(r1 - Math.round(r1)) < 0.01) return String(Math.round(r1));
   return r1.toFixed(1).replace('.', ',');
+}
+
+/**
+ * Aligne une quantité en grammes sur un multiple entier de l'unité
+ * "discrète" par défaut de l'aliment. Renvoie les grammes inchangés si
+ * l'aliment n'a pas d'unité discrète.
+ */
+export function snapToDiscreteUnit(food: Food, grams: number): number {
+  if (!food.unites || food.unites.length === 0) return grams;
+  const def = food.unites[0];
+  if (!isDiscreteUnit(def) || def.g <= 0) return grams;
+  const count = Math.max(1, Math.round(grams / def.g));
+  return count * def.g;
 }
 
 /**
@@ -47,7 +84,9 @@ export function describeQuantity(food: Food, grams: number): string | null {
   const u = bestUnitForGrams(food, grams);
   if (!u) return null;
   const count = grams / u.g;
-  return `${formatCount(count)} ${pluralize(u.label, count)}`;
+  const discrete = isDiscreteUnit(u);
+  const displayCount = discrete ? Math.max(1, Math.round(count)) : count;
+  return `${formatCount(count, discrete)} ${pluralize(u.label, displayCount)}`;
 }
 
 /**

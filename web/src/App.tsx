@@ -1,7 +1,9 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ImportPlanPrompt } from './components/ImportPlanPrompt';
+import { CommandPalette } from './components/CommandPalette';
+import { emit } from './lib/eventBus';
 import { Home } from './pages/Home';
 import { useProfile } from './store/useProfile';
 import { useDayPlan } from './store/useDayPlan';
@@ -62,6 +64,36 @@ export default function App() {
 
   useReminderScheduler();
 
+  // Command palette (Cmd/Ctrl+K) — raccourci global qui fonctionne sur
+  // toutes les pages.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const inField =
+        target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((p) => !p);
+        return;
+      }
+      // "/" focus la recherche d'aliment de la page courante (si pas dans un input)
+      if (e.key === '/' && !inField) {
+        const input = document.querySelector<HTMLInputElement>(
+          'input[placeholder*="Ajouter un aliment"], input[placeholder*="aliment"]'
+        );
+        if (input) {
+          e.preventDefault();
+          input.focus();
+          input.select();
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   useEffect(() => {
     loadProfiles();
     loadSettings();
@@ -81,6 +113,11 @@ export default function App() {
   return (
     <>
       <ImportPlanPrompt />
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        onOptimize={() => emit('optimize:run')}
+      />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route element={<Layout />}>

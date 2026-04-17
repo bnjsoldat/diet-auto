@@ -19,6 +19,7 @@ import { suggestComplements } from '@/lib/suggestions';
 import { categorieOfFood } from '@/lib/categories';
 import { vibrate } from '@/lib/haptic';
 import { celebrateTargetIfFirstTime } from '@/lib/celebrate';
+import { on as onEvent } from '@/lib/eventBus';
 import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
@@ -131,6 +132,14 @@ export function Today() {
    * Déclenche l'animation de célébration quand kcal et macros atteignent
    * la cible en mode normal (±5 %). Se joue une seule fois par jour.
    */
+  /** Abonnement au bus global : la command palette peut déclencher l'optim. */
+  useEffect(() => {
+    return onEvent('optimize:run', () => {
+      void handleOptimize();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, targets, optimizerMode, autoBusy]);
+
   useEffect(() => {
     if (!targets || !current) return;
     const withinKcal = Math.abs(totals.kcal - targets.kcalCible) / targets.kcalCible <= 0.05;

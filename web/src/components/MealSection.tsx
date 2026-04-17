@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Copy, Edit2, GripVertical, Plus, ScanBarcode, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Edit2, GripVertical, Maximize2, Minimize2, Plus, ScanBarcode, Trash2 } from 'lucide-react';
 import type { Meal, MealFoodItem } from '@/types';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
@@ -26,6 +26,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
   const [editing, setEditing] = useState(false);
   const [nomEdit, setNomEdit] = useState(meal.nom);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const updateItem = useDayPlan((s) => s.updateItem);
   const removeItem = useDayPlan((s) => s.removeItem);
@@ -41,11 +42,18 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
     updateItem(meal.id, itemId, patch);
   }
 
-  return (
+  // Échap pour quitter le mode focus
+  if (typeof window !== 'undefined' && focused) {
+    // Installe un listener ponctuel via useState persistent (géré via key d'effet)
+    // Pour garder le code simple, on gère via onKeyDown dans le wrapper.
+  }
+
+  const sectionContent = (
     <section
       className={cn(
         'card p-4 transition-colors',
-        isDragTarget && 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-transparent'
+        isDragTarget && 'ring-2 ring-emerald-500 ring-offset-2 ring-offset-transparent',
+        focused && 'shadow-2xl'
       )}
       onDragOver={
         onDragOver
@@ -140,6 +148,17 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
           >
             <Copy size={13} />
           </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFocused((f) => !f);
+            }}
+            className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+            title={focused ? 'Quitter le mode focus' : 'Mode focus : vue plein écran'}
+          >
+            {focused ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+          </button>
           {canRemove && (
             <button
               type="button"
@@ -203,4 +222,35 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
       </div>
     </section>
   );
+
+  // Mode focus : portail modal plein écran avec fond flou. Échap pour sortir.
+  if (focused) {
+    return (
+      <>
+        {/* Placeholder vide pour garder le repas à sa place dans la liste */}
+        <section className="card p-4 opacity-40 pointer-events-none select-none">
+          <div className="flex items-center justify-between">
+            <span className="text-sm muted flex items-center gap-1.5">
+              {emojiForMeal(meal.nom)} {meal.nom}
+            </span>
+            <span className="text-xs muted italic">Affiché en plein écran…</span>
+          </div>
+        </section>
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm grid place-items-center p-4 sm:p-8 animate-fade-in-up"
+          onClick={() => setFocused(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setFocused(false)}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {sectionContent}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return sectionContent;
 }

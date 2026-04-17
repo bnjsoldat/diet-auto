@@ -3,6 +3,7 @@ import type { OptimizerMode, Targets } from '@/types';
 import { AlertTriangle, Camera, Check, RotateCcw, X } from 'lucide-react';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { ProgressRings } from './ProgressRings';
+import { InfoTip } from './InfoTip';
 
 interface Props {
   targets: Targets;
@@ -155,13 +156,35 @@ export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, cu
             currentLip={currentLip ?? 0}
             size={160}
           />
-          <div className="text-xs muted mt-3">
-            Maintenance {targets.kcalMaintenance} kcal
+          <div className="text-xs muted mt-3 flex items-center gap-1 flex-wrap">
+            <span>Maintenance {targets.kcalMaintenance} kcal</span>
+            <InfoTip>
+              <strong>Maintenance</strong> = nombre de calories pour maintenir ton poids, sans
+              perdre ni gagner. Calculé à partir du <em>métabolisme de base</em> (Harris-Benedict
+              genre/taille/poids/âge) multiplié par ton coefficient d'activité.
+            </InfoTip>
             {targets.deltaKcal !== 0 && (
               <>
-                {' '}
-                · écart {targets.deltaKcal > 0 ? '+' : ''}
-                {targets.deltaKcal} kcal
+                <span>
+                  · écart {targets.deltaKcal > 0 ? '+' : ''}
+                  {targets.deltaKcal} kcal
+                </span>
+                <InfoTip>
+                  {targets.deltaKcal < 0 ? (
+                    <>
+                      <strong>Déficit</strong> pour perdre du poids. Un déficit de{' '}
+                      {Math.abs(targets.deltaKcal)} kcal/j correspond à environ{' '}
+                      {Math.round((Math.abs(targets.deltaKcal) * 7) / 7700)} kg perdu par
+                      semaine (1 kg ≈ 7 700 kcal stockés).
+                    </>
+                  ) : (
+                    <>
+                      <strong>Surplus</strong> pour prendre du poids ou de la masse. Un surplus
+                      maîtrisé de 400 kcal/j donne environ 250 g/semaine de gain — idéal pour
+                      limiter la prise de gras.
+                    </>
+                  )}
+                </InfoTip>
               </>
             )}
           </div>

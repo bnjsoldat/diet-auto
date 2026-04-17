@@ -31,6 +31,23 @@
     --ring: #10b981;
   }
 
+  /* Thème pastel : fond crème chaud, accents saumon/émeraude doux.
+     Plus reposant que le blanc pur, plus lisible que le dark.
+     Contrastes validés WCAG AA (≥ 4.5:1 pour le texte, ≥ 3:1 pour muted). */
+  .pastel {
+    --bg: #fdf8f3;
+    --bg-subtle: #f5ede3;
+    --border: #d9cbb8;
+    --text: #2e241c;
+    --text-muted: #6b5c4d;
+    --accent: #047857;
+    --accent-hover: #065f46;
+    --warn: #b45309;
+    --error: #b91c1c;
+    --card: #fffaf4;
+    --ring: #047857;
+  }
+
   html, body, #root {
     height: 100%;
   }

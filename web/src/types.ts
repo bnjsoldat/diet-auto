@@ -121,7 +121,7 @@ export interface OptimizeResult {
   cibles: { kcal: number; prot: number; gluc: number; lip: number };
 }
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'pastel' | 'system';
 
 /**
  * Mode d'optimisation : resserre ou relâche la tolérance d'écart à la cible.

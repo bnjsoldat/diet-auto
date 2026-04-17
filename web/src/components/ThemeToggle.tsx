@@ -1,4 +1,4 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Coffee, Moon, Sun, Monitor } from 'lucide-react';
 import { useSettings } from '@/store/useSettings';
 import type { Theme } from '@/types';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ export function ThemeToggle() {
 
   const options: { value: Theme; icon: typeof Sun; label: string }[] = [
     { value: 'light', icon: Sun, label: 'Clair' },
+    { value: 'pastel', icon: Coffee, label: 'Pastel' },
     { value: 'dark', icon: Moon, label: 'Sombre' },
     { value: 'system', icon: Monitor, label: 'Système' },
   ];

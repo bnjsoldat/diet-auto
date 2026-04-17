@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Activite, Genre, Objectif, Profile } from '@/types';
 import { ACTIVITY_COEFS, ACTIVITY_DESCRIPTIONS, OBJECTIVE_DELTA_KCAL } from '@/lib/constants';
 import { calcTargets } from '@/lib/calculations';
+import { InfoTip } from './InfoTip';
 
 interface Props {
   initial?: Partial<Profile>;
@@ -139,7 +140,14 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Niveau d'activité</label>
+        <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
+          Niveau d'activité
+          <InfoTip>
+            Multiplie ton <strong>métabolisme de base</strong> pour donner le nombre de calories
+            brûlées en moyenne sur une journée. Sédentaire = × 1.2, Actif = × 1.55, Très actif
+            = × 1.725, Extrêmement actif = × 1.9. Compte le travail + l'entraînement.
+          </InfoTip>
+        </label>
         <select
           className="input"
           value={activite}
@@ -155,7 +163,14 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1.5">Objectif</label>
+        <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
+          Objectif
+          <InfoTip>
+            Applique un <strong>déficit</strong> ou un <strong>surplus</strong> calorique à ta
+            maintenance. Perte = -400/-750 kcal/j (≈ 0.4 à 0.7 kg/semaine). Prise de masse = +400
+            à +750 kcal/j. Maintien = 0.
+          </InfoTip>
+        </label>
         <select
           className="input"
           value={objectif}
@@ -176,7 +191,17 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
             Aperçu des cibles
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-sm">
-            <Stat label="MB" value={`${previewTargets.mb} kcal`} />
+            <Stat
+              label="MB"
+              value={`${previewTargets.mb} kcal`}
+              tip={
+                <>
+                  <strong>Métabolisme de base</strong> : énergie consommée par ton corps au
+                  repos complet (cœur, cerveau, organes) sans activité physique. Calculé par la
+                  formule de Harris-Benedict selon ton âge, genre, taille et poids.
+                </>
+              }
+            />
             <Stat label="Cible" value={`${previewTargets.kcalCible} kcal`} accent />
             <Stat label="Protéines" value={`${previewTargets.prot} g`} />
             <Stat label="Glucides" value={`${previewTargets.gluc} g`} />
@@ -199,10 +224,23 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  accent,
+  tip,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  tip?: React.ReactNode;
+}) {
   return (
     <div>
-      <div className="text-xs muted">{label}</div>
+      <div className="text-xs muted flex items-center gap-1">
+        {label}
+        {tip && <InfoTip>{tip}</InfoTip>}
+      </div>
       <div className={accent ? 'font-semibold text-emerald-600' : 'font-medium'}>{value}</div>
     </div>
   );

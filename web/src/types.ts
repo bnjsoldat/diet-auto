@@ -123,8 +123,17 @@ export interface OptimizeResult {
 
 export type Theme = 'light' | 'dark' | 'system';
 
+/**
+ * Mode d'optimisation : resserre ou relâche la tolérance d'écart à la cible.
+ * - strict : pour un suivi précis (athlète, sèche). Plafond d'écart acceptable ±3 % kcal.
+ * - normal : par défaut, ±5 % kcal.
+ * - souple : objectif bien-être, ±10 % kcal.
+ */
+export type OptimizerMode = 'strict' | 'normal' | 'souple';
+
 export interface Settings {
   theme: Theme;
   weightKcal: number;
   weightMacro: number;
+  optimizerMode: OptimizerMode;
 }

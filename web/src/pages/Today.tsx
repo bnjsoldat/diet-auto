@@ -3,14 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FileDown, ListPlus, Sparkles } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
+import { useSettings } from '@/store/useSettings';
 import { calcTargets } from '@/lib/calculations';
 import { foodsByName } from '@/lib/foods';
 import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
+import { OPTIMIZER_MODES } from '@/lib/constants';
 import { TargetsCard } from '@/components/TargetsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
-import type { OptimizeResult } from '@/types';
+import type { OptimizeResult, OptimizerMode } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
 
 export function Today() {
@@ -22,6 +24,9 @@ export function Today() {
   const current = useDayPlan((s) => s.current());
   const addMeal = useDayPlan((s) => s.addMeal);
   const replacePlan = useDayPlan((s) => s.replaceCurrentPlan);
+
+  const optimizerMode = useSettings((s) => s.optimizerMode);
+  const updateSettings = useSettings((s) => s.update);
 
   const [result, setResult] = useState<OptimizeResult | null>(null);
   const [open, setOpen] = useState(false);
@@ -59,12 +64,17 @@ export function Today() {
       alert('Ajoute au moins un aliment avant d\u2019optimiser.');
       return;
     }
-    const res = optimizeQuantities(allItemsClone, foodsByName, {
-      kcal: targets.kcalCible,
-      prot: targets.prot,
-      gluc: targets.gluc,
-      lip: targets.lip,
-    });
+    const res = optimizeQuantities(
+      allItemsClone,
+      foodsByName,
+      {
+        kcal: targets.kcalCible,
+        prot: targets.prot,
+        gluc: targets.gluc,
+        lip: targets.lip,
+      },
+      { mode: optimizerMode }
+    );
     replacePlan({ ...clone, updatedAt: Date.now() });
     setResult(res);
     setOpen(true);
@@ -91,11 +101,32 @@ export function Today() {
             {friendlyDate(current.date)}
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ShareButton plan={current} />
           <button className="btn-outline" onClick={handleExportPDF}>
             <FileDown size={14} /> PDF
           </button>
+          <div className="inline-flex items-center rounded-md border overflow-hidden h-10">
+            <span className="px-2 text-xs muted border-r h-full grid place-items-center">
+              Mode
+            </span>
+            {(['strict', 'normal', 'souple'] as OptimizerMode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => updateSettings({ optimizerMode: m })}
+                className={
+                  'px-2.5 text-xs h-full border-r last:border-r-0 transition-colors ' +
+                  (optimizerMode === m
+                    ? 'bg-emerald-600 text-white'
+                    : 'hover:bg-[var(--bg-subtle)]')
+                }
+                title={OPTIMIZER_MODES[m].description}
+              >
+                {OPTIMIZER_MODES[m].label}
+              </button>
+            ))}
+          </div>
           <button className="btn-primary" onClick={handleOptimize}>
             <Sparkles size={14} /> Optimiser
           </button>
@@ -163,7 +194,13 @@ export function Today() {
         </aside>
       </div>
 
-      <OptimizeDialog open={open} result={result} onClose={() => setOpen(false)} />
+      <OptimizeDialog
+        open={open}
+        result={result}
+        plan={current}
+        mode={optimizerMode}
+        onClose={() => setOpen(false)}
+      />
     </div>
   );
 }

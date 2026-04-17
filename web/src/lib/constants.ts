@@ -1,4 +1,4 @@
-import type { Activite, Objectif } from '@/types';
+import type { Activite, Objectif, OptimizerMode } from '@/types';
 
 /** Multiplicateur du métabolisme basal selon le niveau d'activité */
 export const ACTIVITY_COEFS: Record<Activite, number> = {
@@ -118,6 +118,48 @@ export const OPTIMIZER_CONFIG = {
   roundingGrams: 5,
   poidsKcal: 2.0,
   poidsMacro: 1.0,
+};
+
+/**
+ * Profils de tolérance pour l'optimiseur.
+ * - tolKcal / tolMacro : écart relatif acceptable vs cible (pour l'affichage).
+ * - poidsKcal / poidsMacro : poids dans la fonction de coût (plus élevé = plus contraignant).
+ */
+export const OPTIMIZER_MODES: Record<
+  OptimizerMode,
+  {
+    label: string;
+    description: string;
+    tolKcal: number;
+    tolMacro: number;
+    poidsKcal: number;
+    poidsMacro: number;
+  }
+> = {
+  strict: {
+    label: 'Strict',
+    description: 'Précis : ±3 % kcal, ±5 % macros. Pour sèche ou prépa.',
+    tolKcal: 0.03,
+    tolMacro: 0.05,
+    poidsKcal: 3.0,
+    poidsMacro: 1.5,
+  },
+  normal: {
+    label: 'Normal',
+    description: 'Équilibré : ±5 % kcal, ±10 % macros. Recommandé.',
+    tolKcal: 0.05,
+    tolMacro: 0.1,
+    poidsKcal: 2.0,
+    poidsMacro: 1.0,
+  },
+  souple: {
+    label: 'Souple',
+    description: 'Bien-être : ±10 % kcal, ±15 % macros. Débutant.',
+    tolKcal: 0.1,
+    tolMacro: 0.15,
+    poidsKcal: 1.5,
+    poidsMacro: 0.8,
+  },
 };
 
 /** Repas par défaut (nouveau plan) */

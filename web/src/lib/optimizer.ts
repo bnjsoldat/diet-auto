@@ -1,6 +1,7 @@
-import type { Food, MealFoodItem, OptimizeResult } from '@/types';
+import type { Food, MealFoodItem, OptimizeResult, OptimizerMode } from '@/types';
 import {
   OPTIMIZER_CONFIG,
+  OPTIMIZER_MODES,
   PORTION_BOUNDS_BY_GROUPE,
   PORTION_BOUNDS_BY_NAME_PATTERN,
   QUANTITY_BOUNDS,
@@ -78,15 +79,23 @@ function erreurs(totaux: ReturnType<typeof calcTotaux>, cibles: Cibles) {
   };
 }
 
-function fonctionObjectif(lignes: Line[], cibles: Cibles): number {
+function fonctionObjectif(
+  lignes: Line[],
+  cibles: Cibles,
+  poids: { poidsKcal: number; poidsMacro: number }
+): number {
   const e = erreurs(calcTotaux(lignes), cibles);
-  const { poidsKcal, poidsMacro } = OPTIMIZER_CONFIG;
+  const { poidsKcal, poidsMacro } = poids;
   return poidsKcal * e.eK * e.eK + poidsMacro * (e.eP * e.eP + e.eG * e.eG + e.eL * e.eL);
 }
 
-function gradient(lignes: Line[], cibles: Cibles): number[] {
+function gradient(
+  lignes: Line[],
+  cibles: Cibles,
+  poids: { poidsKcal: number; poidsMacro: number }
+): number[] {
   const e = erreurs(calcTotaux(lignes), cibles);
-  const { poidsKcal, poidsMacro } = OPTIMIZER_CONFIG;
+  const { poidsKcal, poidsMacro } = poids;
   const g = new Array<number>(lignes.length);
   for (let i = 0; i < lignes.length; i++) {
     const l = lignes[i];
@@ -127,8 +136,11 @@ export function optimizeQuantities(
   items: MealFoodItem[],
   foodsByName: Map<string, Food>,
   cibles: Cibles,
-  options?: { qmin?: number; qmax?: number }
+  options?: { qmin?: number; qmax?: number; mode?: OptimizerMode }
 ): OptimizeResult {
+  const modeConfig = OPTIMIZER_MODES[options?.mode ?? 'normal'];
+  const poids = { poidsKcal: modeConfig.poidsKcal, poidsMacro: modeConfig.poidsMacro };
+
   // Construire les lignes à partir des items reconnus
   const lignes: Line[] = [];
   for (const item of items) {
@@ -160,7 +172,7 @@ export function optimizeQuantities(
   clampQuantities(lignes);
 
   const avant = calcTotaux(lignes);
-  let f = fonctionObjectif(lignes, cibles);
+  let f = fonctionObjectif(lignes, cibles, poids);
   let iter = 0;
   let converge = false;
 
@@ -175,7 +187,7 @@ export function optimizeQuantities(
   } = OPTIMIZER_CONFIG;
 
   for (; iter < maxIterations; iter++) {
-    const g = gradient(lignes, cibles);
+    const g = gradient(lignes, cibles, poids);
     const nG = norme(g);
     if (nG < toleranceGradient) {
       converge = true;
@@ -197,7 +209,7 @@ export function optimizeQuantities(
         const nv = qBack[i] - alpha * g[i];
         l.item.quantite = Math.max(l.qmin, Math.min(l.qmax, nv));
       }
-      const fNew = fonctionObjectif(lignes, cibles);
+      const fNew = fonctionObjectif(lignes, cibles, poids);
       if (fNew < f - 1e-12) {
         f = fNew;
         trouve = true;

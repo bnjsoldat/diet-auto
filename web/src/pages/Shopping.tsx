@@ -9,6 +9,7 @@ import { formatNumber, todayKey } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
 import { InfoTip } from '@/components/InfoTip';
+import { shortName } from '@/lib/shortNames';
 
 type Range = 'week' | 'month' | 'custom';
 
@@ -220,8 +221,9 @@ export function Shopping() {
                             'text-sm',
                             isChecked && 'line-through'
                           )}
+                          title={nom}
                         >
-                          {nom}
+                          {shortName(nom)}
                         </div>
                         <div className="text-xs muted">{describeLine(nom, grams)}</div>
                       </div>

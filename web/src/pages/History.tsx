@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
+import { useToast } from '@/store/useToast';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { calcTargets } from '@/lib/calculations';
@@ -80,6 +81,8 @@ export function History() {
   const plans = useDayPlan((s) => s.plans);
   const switchDate = useDayPlan((s) => s.switchDate);
   const removePlanForDate = useDayPlan((s) => s.removePlanForDate);
+  const restorePlan = useDayPlan((s) => s.restorePlan);
+  const showToast = useToast((s) => s.show);
   const [range, setRange] = useState<7 | 30 | 90>(30);
 
   const targets = useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
@@ -468,9 +471,14 @@ export function History() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Supprimer définitivement le plan du ${friendlyDate(e.date)} ?`)) {
-                          removePlanForDate(e.date);
-                        }
+                        const snapshot = plans[e.date];
+                        if (!snapshot) return;
+                        removePlanForDate(e.date);
+                        showToast({
+                          message: `Plan du ${friendlyDate(e.date)} supprimé`,
+                          actionLabel: 'Annuler',
+                          onAction: () => restorePlan(snapshot),
+                        });
                       }}
                       className="h-7 w-7 grid place-items-center rounded muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                       title="Supprimer ce jour"

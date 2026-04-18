@@ -34,6 +34,8 @@ interface DayPlanState {
   reorderMeals: (orderedIds: string[]) => void;
   /** Supprime complètement le plan d'une date donnée (action destructive). */
   removePlanForDate: (date: string) => void;
+  /** Réinsère un snapshot de plan (utilisé par l'undo toast). */
+  restorePlan: (plan: DayPlan) => void;
   /** Duplique le plan courant sur plusieurs dates en même temps (ex : toute la semaine). */
   duplicateToDates: (targetDates: string[]) => void;
 }
@@ -220,6 +222,12 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       const next = { ...plans };
       delete next[date];
       set({ plans: next });
+      _persist?.();
+    },
+
+    restorePlan(plan) {
+      const { plans } = get();
+      set({ plans: { ...plans, [plan.date]: plan } });
       _persist?.();
     },
 

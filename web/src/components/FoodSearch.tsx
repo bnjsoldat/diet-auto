@@ -10,6 +10,7 @@ import { totalsForItems } from '@/lib/optimizer';
 import type { Food } from '@/types';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, categorieOfFood, foodsByCategorie } from '@/lib/categories';
+import { shortName } from '@/lib/shortNames';
 
 interface Props {
   onSelect: (food: Food) => void;
@@ -240,7 +241,7 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="text-sm truncate flex items-center gap-2">
-                        <span>{f.nom}</span>
+                        <span title={f.nom}>{shortName(f.nom)}</span>
                         {f.unites && f.unites[0] && (
                           <span className="shrink-0 text-[10px] uppercase tracking-wide muted border rounded px-1 py-0.5">
                             1 {f.unites[0].label} ≈ {f.unites[0].g} g

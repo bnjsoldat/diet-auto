@@ -3,6 +3,10 @@ import { Route, Routes, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ImportPlanPrompt } from './components/ImportPlanPrompt';
 import { CommandPalette } from './components/CommandPalette';
+import { ToastContainer } from './components/ToastContainer';
+import { Onboarding } from './components/Onboarding';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { emit } from './lib/eventBus';
 import { useAuth } from './store/useAuth';
 import { syncOnLogin, schedulePush } from './lib/cloudSync';
@@ -205,6 +209,13 @@ export default function App() {
         onClose={() => setPaletteOpen(false)}
         onOptimize={() => emit('optimize:run')}
       />
+      <ToastContainer />
+      <Onboarding />
+      {/* Analytics Vercel : 100 % cookie-free, conforme RGPD, pas de PII.
+          Active automatiquement en production quand Vercel Analytics est
+          activé dans le dashboard Vercel. */}
+      <Analytics />
+      <SpeedInsights />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route element={<Layout />}>

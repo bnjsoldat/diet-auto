@@ -4,6 +4,7 @@ import { foodsByName } from '@/lib/foods';
 import { FoodSearch } from '@/components/FoodSearch';
 import { formatNumber } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
+import { shortName } from '@/lib/shortNames';
 
 export function Favorites() {
   const favs = useFavorites((s) => s.favorites);
@@ -48,7 +49,7 @@ export function Favorites() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <Star size={12} className="text-amber-500 shrink-0" fill="currentColor" />
-                  <div className="font-medium truncate">{f.nom}</div>
+                  <div className="font-medium truncate" title={f.nom}>{shortName(f.nom)}</div>
                 </div>
                 <div className="text-xs muted">
                   {f.groupe} · {formatNumber(f.kcal)} kcal · P {f.prot.toFixed(1)} · G{' '}

@@ -4,6 +4,7 @@ import { useFavorites } from '@/store/useFavorites';
 import type { MealFoodItem } from '@/types';
 import { cn, formatNumber } from '@/lib/utils';
 import { bestUnitForGrams, formatCount, isDiscreteUnit, pluralize } from '@/lib/units';
+import { shortName } from '@/lib/shortNames';
 
 interface Props {
   item: MealFoodItem;
@@ -65,7 +66,9 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
           >
             <Star size={12} fill={isFav ? 'currentColor' : 'none'} />
           </button>
-          <span className="text-sm truncate">{item.nom}</span>
+          <span className="text-sm truncate" title={item.nom}>
+            {shortName(item.nom)}
+          </span>
         </div>
         <div className="text-xs muted">
           {formatNumber(kcal)} kcal · P {prot.toFixed(1)} · G {gluc.toFixed(1)} · L {lip.toFixed(1)}

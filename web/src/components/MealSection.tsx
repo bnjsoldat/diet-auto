@@ -10,6 +10,8 @@ import { BarcodeScanner } from './BarcodeScanner';
 import { useDayPlan } from '@/store/useDayPlan';
 import { cn, formatNumber } from '@/lib/utils';
 import { emojiForMeal } from '@/lib/mealEmoji';
+import { shortName } from '@/lib/shortNames';
+import { useToast } from '@/store/useToast';
 
 interface Props {
   meal: Meal;
@@ -35,6 +37,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
   const renameMeal = useDayPlan((s) => s.renameMeal);
   const removeMeal = useDayPlan((s) => s.removeMeal);
   const duplicateMeal = useDayPlan((s) => s.duplicateMeal);
+  const showToast = useToast((s) => s.show);
 
   const totals = totalsForItems(meal.items, foodsByName);
 
@@ -187,7 +190,16 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
                 key={item.id}
                 item={item}
                 onUpdate={(patch) => handleUpdate(item.id, patch)}
-                onRemove={() => removeItem(meal.id, item.id)}
+                onRemove={() => {
+                  // Capture l'item avant suppression pour pouvoir le restaurer
+                  const snapshot = { ...item };
+                  removeItem(meal.id, item.id);
+                  showToast({
+                    message: `${shortName(snapshot.nom)} supprimé`,
+                    actionLabel: 'Annuler',
+                    onAction: () => addFood(meal.id, snapshot.nom, snapshot.quantite),
+                  });
+                }}
               />
             ))}
           </div>

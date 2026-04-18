@@ -89,6 +89,7 @@ export function Today() {
   const profilesLoaded = useProfile((s) => s.loaded);
 
   const ensurePlan = useDayPlan((s) => s.ensurePlan);
+  const currentDate = useDayPlan((s) => s.date);
   const current = useDayPlan((s) => s.current());
   const plans = useDayPlan((s) => s.plans);
   const addMeal = useDayPlan((s) => s.addMeal);
@@ -129,9 +130,13 @@ export function Today() {
     }
   }, [profilesLoaded, profile, navigate]);
 
+  // ensurePlan() est appelé à chaque fois que la date courante change
+  // (navigation ‹/›) ou au changement de profil. Sans ça, naviguer vers
+  // un jour qui n'a jamais eu de plan laisse `current` à null et bloque
+  // la page sur "Chargement…".
   useEffect(() => {
     if (profile) ensurePlan();
-  }, [profile, ensurePlan]);
+  }, [profile, ensurePlan, currentDate]);
 
   const targets = useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
 

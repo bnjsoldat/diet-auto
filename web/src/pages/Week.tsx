@@ -5,6 +5,8 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Clipboard,
+  ClipboardPaste,
   Copy,
   CopyCheck,
   MoreHorizontal,
@@ -12,6 +14,7 @@ import {
   Plus,
   ShoppingCart,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
@@ -44,12 +47,15 @@ export function Week() {
   const profile = useProfile((s) => s.getActive());
   const plans = useDayPlan((s) => s.plans);
   const switchDate = useDayPlan((s) => s.switchDate);
-  const duplicateFromDate = useDayPlan((s) => s.duplicateFromDate);
   const duplicateToDates = useDayPlan((s) => s.duplicateToDates);
   const removePlanForDate = useDayPlan((s) => s.removePlanForDate);
   const addCustomTemplate = useCustomTemplates((s) => s.add);
   const optimizerMode = useSettings((s) => s.optimizerMode);
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  /** Date actuellement dans le "presse-papier interne" pour le collage. */
+  const [clipboardDate, setClipboardDate] = useState<string | null>(null);
+  /** Modale "Enregistrer comme plan" — stocke la date source quand ouverte. */
+  const [saveAsModal, setSaveAsModal] = useState<{ date: string; name: string } | null>(null);
 
   // Ancre = dimanche le plus proche ≥ aujourd'hui (on montre la semaine en cours)
   const [anchor, setAnchor] = useState<string>(() => todayKey());
@@ -65,10 +71,59 @@ export function Week() {
     return Array.from({ length: 7 }, (_, i) => shiftDate(monday, i));
   }, [anchor]);
 
+  /**
+   * Colle le plan actuellement en presse-papier sur la date cible.
+   * Si la cible n'est pas vide, confirm avant écrasement. Si la source
+   * n'a plus de plan (supprimé depuis le copier), no-op.
+   */
+  function pasteTo(targetDate: string) {
+    if (!clipboardDate) return;
+    const src = plans[clipboardDate];
+    if (!src || !src.meals.flatMap((m) => m.items).length) {
+      setClipboardDate(null);
+      return;
+    }
+    if (clipboardDate === targetDate) return; // coller sur soi-même = no-op
+    const targetPlan = plans[targetDate];
+    const targetHasContent =
+      targetPlan && targetPlan.meals.some((m) => m.items.length > 0);
+    if (
+      targetHasContent &&
+      !confirm(
+        `Le ${shortWeekday(targetDate)} contient déjà un plan. Le remplacer par la copie du ${shortWeekday(clipboardDate)} ?`
+      )
+    )
+      return;
+    // duplicateToDates utilise la date courante comme source : on la place
+    // temporairement sur clipboardDate pour la copie, puis on restaure.
+    switchDate(clipboardDate);
+    duplicateToDates([targetDate]);
+    setClipboardDate(null);
+  }
+
   if (!profile) return null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+      {/* Bandeau "presse-papier actif" — apparaît dès qu'un plan est copié */}
+      {clipboardDate && (
+        <div className="mb-4 rounded-md border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center gap-3 animate-slide-down">
+          <Clipboard size={16} className="text-emerald-600 shrink-0" />
+          <div className="text-sm flex-1">
+            <span className="font-medium">Plan du {shortWeekday(clipboardDate)}</span>{' '}
+            <span className="muted">en mémoire — clique sur un autre jour pour le coller.</span>
+          </div>
+          <button
+            type="button"
+            className="btn-outline h-7 px-2 text-xs"
+            onClick={() => setClipboardDate(null)}
+            title="Annuler la copie"
+          >
+            <X size={12} /> Annuler
+          </button>
+        </div>
+      )}
+
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted">Ma semaine</div>
@@ -172,12 +227,11 @@ export function Week() {
                     </button>
                     {menuOpenFor === date && (
                       <>
-                        {/* Overlay invisible pour capturer les clics dehors */}
                         <div
                           className="fixed inset-0 z-40"
                           onClick={() => setMenuOpenFor(null)}
                         />
-                        <div className="absolute right-0 top-full mt-1 z-50 min-w-[220px] rounded-md border bg-[var(--card)] shadow-lg py-1 animate-slide-down">
+                        <div className="absolute right-0 top-full mt-1 z-50 min-w-[240px] rounded-md border bg-[var(--card)] shadow-lg py-1 animate-slide-down">
                           <MenuItem
                             icon={Pencil}
                             label="Modifier ce jour"
@@ -189,20 +243,22 @@ export function Week() {
                           />
                           <MenuItem
                             icon={Copy}
-                            label="Copier vers aujourd'hui"
+                            label="Copier ce plan"
                             onClick={() => {
                               setMenuOpenFor(null);
-                              if (
-                                plans[todayKey()] &&
-                                plans[todayKey()].meals.some((m) => m.items.length > 0) &&
-                                !confirm('Remplacer le plan d\u2019aujourd\u2019hui par la copie de ce jour ?')
-                              )
-                                return;
-                              switchDate(todayKey());
-                              duplicateFromDate(date);
-                              navigate('/today');
+                              setClipboardDate(date);
                             }}
                           />
+                          {clipboardDate && clipboardDate !== date && (
+                            <MenuItem
+                              icon={ClipboardPaste}
+                              label={`Coller le plan du ${shortWeekday(clipboardDate)} ici`}
+                              onClick={() => {
+                                setMenuOpenFor(null);
+                                pasteTo(date);
+                              }}
+                            />
+                          )}
                           <MenuItem
                             icon={CopyCheck}
                             label="Appliquer à toute la semaine"
@@ -228,25 +284,10 @@ export function Week() {
                               setMenuOpenFor(null);
                               const src = plans[date];
                               if (!src) return;
-                              const label = window.prompt(
-                                'Nom du plan :',
-                                `Plan du ${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR')}`
-                              );
-                              if (!label?.trim()) return;
-                              const tpl: PlanTemplate = {
-                                id: 'custom_' + Date.now().toString(36),
-                                label: label.trim(),
-                                emoji: '👤',
-                                description: 'Mon modèle personnel.',
-                                mode: optimizerMode,
-                                meals: src.meals.map((m) => ({
-                                  nom: m.nom,
-                                  items: m.items
-                                    .filter((it) => it.quantite > 0)
-                                    .map((it) => [it.nom, it.quantite] as [string, number]),
-                                })),
-                              };
-                              void addCustomTemplate(tpl);
+                              setSaveAsModal({
+                                date,
+                                name: `Plan du ${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR')}`,
+                              });
                             }}
                           />
                           <div className="border-t my-1" />
@@ -285,6 +326,17 @@ export function Week() {
                     ))}
                   </ul>
                 </>
+              ) : clipboardDate && clipboardDate !== date ? (
+                // Journée vide mais presse-papier actif : bouton direct pour coller
+                <button
+                  type="button"
+                  onClick={() => pasteTo(date)}
+                  className="flex-1 grid place-items-center min-h-[90px] border border-dashed border-emerald-400 text-emerald-700 dark:text-emerald-400 rounded-md text-xs hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                  title={`Coller le plan du ${shortWeekday(clipboardDate)}`}
+                >
+                  <ClipboardPaste size={14} />
+                  <span className="mt-1">Coller ici</span>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -308,6 +360,90 @@ export function Week() {
         les actions rapides (modifier, copier, appliquer à toute la semaine, enregistrer comme plan, supprimer).{' '}
         <Link to="/history" className="underline">Voir mon suivi complet</Link>.
       </div>
+
+      {/* Modale "Enregistrer comme plan" avec input inline (prompt() bloqué
+          sur Chrome Android) */}
+      {saveAsModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setSaveAsModal(null)}
+        >
+          <div
+            className="card p-5 w-full max-w-md animate-slide-down"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="font-semibold">Enregistrer comme plan</h3>
+                <p className="text-xs muted mt-0.5">
+                  Crée un modèle réutilisable à partir du plan du{' '}
+                  <strong>{shortWeekday(saveAsModal.date)}</strong>. Tu pourras le charger en un
+                  clic depuis « Mes plans ».
+                </p>
+              </div>
+              <button
+                className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+                onClick={() => setSaveAsModal(null)}
+                aria-label="Fermer"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <label className="block text-xs font-medium mb-1.5">Nom du plan</label>
+            <input
+              autoFocus
+              className="input"
+              placeholder="ex : Ma journée type semaine"
+              value={saveAsModal.name}
+              maxLength={60}
+              onChange={(e) => setSaveAsModal((s) => (s ? { ...s, name: e.target.value } : s))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  (e.currentTarget.nextElementSibling?.querySelector('button[data-primary]') as HTMLButtonElement | null)?.click();
+                } else if (e.key === 'Escape') {
+                  setSaveAsModal(null);
+                }
+              }}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button className="btn-outline" onClick={() => setSaveAsModal(null)}>
+                Annuler
+              </button>
+              <button
+                data-primary
+                className="btn-primary"
+                disabled={!saveAsModal.name.trim()}
+                onClick={() => {
+                  const src = plans[saveAsModal.date];
+                  if (!src) {
+                    setSaveAsModal(null);
+                    return;
+                  }
+                  const tpl: PlanTemplate = {
+                    id: 'custom_' + Date.now().toString(36),
+                    label: saveAsModal.name.trim(),
+                    emoji: '👤',
+                    description: 'Mon modèle personnel.',
+                    mode: optimizerMode,
+                    meals: src.meals.map((m) => ({
+                      nom: m.nom,
+                      items: m.items
+                        .filter((it) => it.quantite > 0)
+                        .map((it) => [it.nom, it.quantite] as [string, number]),
+                    })),
+                  };
+                  void addCustomTemplate(tpl);
+                  setSaveAsModal(null);
+                }}
+              >
+                <BookmarkPlus size={14} /> Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

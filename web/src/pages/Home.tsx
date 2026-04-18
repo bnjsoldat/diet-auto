@@ -66,7 +66,7 @@ export function Home() {
               <Check size={12} className="text-emerald-600" /> Hors-ligne
             </span>
             <span className="flex items-center gap-1">
-              <Check size={12} className="text-emerald-600" /> {nbAliments.toLocaleString('fr-FR')} aliments CIQUAL
+              <Check size={12} className="text-emerald-600" /> {nbAliments.toLocaleString('fr-FR')} aliments référencés
             </span>
             <span className="flex items-center gap-1">
               <Check size={12} className="text-emerald-600" /> Scan code-barres
@@ -155,12 +155,12 @@ export function Home() {
         <Feature
           icon={Share2}
           title="Partage & PDF"
-          desc="Envoie un plan par lien (base64url) ou exporte un PDF A4 mise en page pour l'imprimer."
+          desc="Envoie un plan par lien ou exporte un PDF A4 mise en page pour l'imprimer."
         />
         <Feature
           icon={Moon}
-          title="Mode sombre + PWA"
-          desc="Installable sur ton téléphone, utilisable hors-ligne, avec un mode nuit soigné."
+          title="Mobile & hors-ligne"
+          desc="Installable sur ton écran d'accueil comme une vraie app, utilisable sans connexion, avec un mode nuit soigné."
         />
       </section>
 
@@ -173,7 +173,8 @@ export function Home() {
             de maintenance et macros calculés instantanément.
           </Step>
           <Step n={2} title="Construis ou charge un modèle">
-            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments (CIQUAL 2020), scanne un
+            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments issus de la base
+            officielle française de composition nutritionnelle (ANSES/CIQUAL 2020), scanne un
             produit emballé, ou charge un modèle : équilibré, sportif, perte, végétarien.
           </Step>
           <Step n={3} title="Optimise en un clic">

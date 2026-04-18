@@ -56,9 +56,10 @@ export function RemindersCard() {
           <h3 className="font-semibold flex items-center gap-1.5">
             Rappels quotidiens
             <InfoTip>
-              Les rappels sont déclenchés par ton navigateur. Installe l'app en PWA et garde-la
-              active en arrière-plan pour une meilleure fiabilité — sans serveur, impossible de
-              pousser une notification quand l'app est totalement fermée.
+              Les rappels sont déclenchés par ton navigateur. Pour une meilleure fiabilité,
+              installe l'app sur ton écran d'accueil (bouton « Installer ») et garde-la ouverte
+              en arrière-plan — tes données restent sur ton appareil, il n'y a aucun serveur
+              qui puisse pousser une notification quand l'app est totalement fermée.
             </InfoTip>
           </h3>
         </div>
@@ -78,8 +79,8 @@ export function RemindersCard() {
       ) : !granted ? (
         <div className="rounded-md border bg-[var(--bg-subtle)] p-3 text-xs mb-3">
           <p className="mb-2">
-            Autorise les notifications pour recevoir les rappels — l’app doit rester ouverte ou
-            installée en PWA sur mobile.
+            Autorise les notifications pour recevoir les rappels — l'app doit rester ouverte, ou
+            installée sur ton écran d'accueil via le bouton « Installer » en haut à droite.
           </p>
           <button type="button" className="btn-primary text-xs" onClick={handleEnableAsk}>
             <Bell size={12} /> Autoriser les notifications

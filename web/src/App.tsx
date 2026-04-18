@@ -21,6 +21,7 @@ import { useRecipes } from './store/useRecipes';
 import { useCustomFoods } from './store/useCustomFoods';
 import { useReminders } from './store/useReminders';
 import { useCustomTemplates } from './store/useCustomTemplates';
+import { useWater } from './store/useWater';
 import { useReminderScheduler } from './hooks/useReminderScheduler';
 
 // Pages chargées à la demande : réduit le bundle initial de ~60 %.
@@ -29,6 +30,7 @@ const Setup = lazy(() => import('./pages/Setup').then((m) => ({ default: m.Setup
 const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
 const Account = lazy(() => import('./pages/Account').then((m) => ({ default: m.Account })));
 const Legal = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Legal })));
+const Help = lazy(() => import('./pages/Help').then((m) => ({ default: m.Help })));
 const Today = lazy(() => import('./pages/Today').then((m) => ({ default: m.Today })));
 const Week = lazy(() => import('./pages/Week').then((m) => ({ default: m.Week })));
 const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
@@ -73,6 +75,7 @@ export default function App() {
   const loadCustomFoods = useCustomFoods((s) => s.load);
   const loadReminders = useReminders((s) => s.load);
   const loadCustomTemplates = useCustomTemplates((s) => s.load);
+  const loadWater = useWater((s) => s.load);
   const initAuth = useAuth((s) => s.init);
   const user = useAuth((s) => s.user);
   const setSyncing = useAuth((s) => s.setSyncing);
@@ -171,7 +174,8 @@ export default function App() {
     loadCustomFoods();
     loadReminders();
     loadCustomTemplates();
-  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates]);
+    loadWater();
+  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, loadWater]);
 
   useEffect(() => {
     if (activeId) {
@@ -225,6 +229,7 @@ export default function App() {
             <Route path="/cgu" element={<Legal section="cgu" />} />
             <Route path="/confidentialite" element={<Legal section="confidentialite" />} />
             <Route path="/mentions-legales" element={<Legal section="mentions" />} />
+            <Route path="/aide" element={<Help />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/today" element={<Today />} />
             <Route path="/week" element={<Week />} />

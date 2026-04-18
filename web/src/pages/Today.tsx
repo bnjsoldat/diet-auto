@@ -24,6 +24,7 @@ import { vibrate } from '@/lib/haptic';
 import { celebrateTargetIfFirstTime } from '@/lib/celebrate';
 import { on as onEvent } from '@/lib/eventBus';
 import { TargetsCard } from '@/components/TargetsCard';
+import { WaterTracker } from '@/components/WaterTracker';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
@@ -513,6 +514,9 @@ export function Today() {
               currentLip={totals.lip}
               mode={optimizerMode}
             />
+            <div className="mt-3">
+              <WaterTracker profileId={profile.id} date={current.date} />
+            </div>
             <div className="mt-3 text-xs muted">
               Profil :{' '}
               <Link to="/profiles" className="underline">

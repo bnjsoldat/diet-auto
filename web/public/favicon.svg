@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#10b981"/><path d="M10 16.5l3.5 3.5L22 11.5" stroke="#fff" stroke-width="2.75" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Fourchette végétale : 3 dents dont la centrale est une feuille -->
+  <g fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Manche vertical -->
+    <path d="M32 52 V36"/>
+    <!-- Barre reliant les dents -->
+    <path d="M23 36 H41"/>
+    <!-- Dent gauche -->
+    <path d="M23 36 V24"/>
+    <!-- Dent droite -->
+    <path d="M41 36 V24"/>
+  </g>
+  <!-- Feuille centrale (remplace la dent du milieu pour évoquer le végétal) -->
+  <path d="M32 36 C25 30 25 20 32 13 C39 20 39 30 32 36 Z" fill="white"/>
+  <path d="M32 13 V36" stroke="#10b981" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

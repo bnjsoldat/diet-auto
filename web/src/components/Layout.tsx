@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Star,
   User,
-  Utensils,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
@@ -44,9 +43,12 @@ export function Layout() {
       <header className="sticky top-0 z-20 border-b bg-[var(--bg)]/80 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to={isLanding ? '/' : '/today'} className="flex items-center gap-2">
-            <span className="h-8 w-8 rounded-md bg-emerald-600 text-white grid place-items-center">
-              <Utensils size={16} />
-            </span>
+            <img
+              src="/favicon.svg"
+              alt=""
+              className="h-8 w-8 rounded-md"
+              aria-hidden
+            />
             <span className="font-semibold">Ma Diét</span>
           </Link>
 
@@ -153,6 +155,8 @@ export function Layout() {
       <footer className="border-t py-6 text-center text-xs muted">
         <p>Ma Diét · calcule ton besoin, optimise tes quantités.</p>
         <div className="mt-2 flex justify-center gap-3 flex-wrap">
+          <Link to="/aide" className="hover:text-[var(--text)]">Aide</Link>
+          <span>·</span>
           <Link to="/cgu" className="hover:text-[var(--text)]">CGU</Link>
           <span>·</span>
           <Link to="/confidentialite" className="hover:text-[var(--text)]">Confidentialité</Link>

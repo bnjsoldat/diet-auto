@@ -1,10 +1,10 @@
-/* Diét Auto — Service worker minimal
+/* Ma Diét — Service worker minimal
  * Stratégie :
  *  - Navigation (HTML) : network-first avec fallback cache (pour récupérer les mises à jour)
  *  - Assets (js/css/img/json/police) : cache-first + mise en cache au vol
  * La version du cache est bumpée à chaque build (injection via vite-plugin ou manuel).
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `diet-auto-${VERSION}`;
 const CORE = ['/', '/index.html', '/favicon.svg', '/manifest.webmanifest', '/icon-192.svg', '/icon-512.svg'];
 

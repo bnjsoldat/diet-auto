@@ -44,7 +44,7 @@ export function Layout() {
             <span className="h-8 w-8 rounded-md bg-emerald-600 text-white grid place-items-center">
               <Utensils size={16} />
             </span>
-            <span className="font-semibold">Diét Auto</span>
+            <span className="font-semibold">Ma Diét</span>
           </Link>
 
           {!isLanding && (
@@ -141,7 +141,7 @@ export function Layout() {
 
       <footer className="border-t py-6 text-center text-xs muted">
         <p>
-          Diét Auto · calcule ton besoin, optimise tes quantités · données stockées uniquement sur
+          Ma Diét · calcule ton besoin, optimise tes quantités · données stockées uniquement sur
           ton appareil.
         </p>
       </footer>

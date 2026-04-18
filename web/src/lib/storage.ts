@@ -4,7 +4,7 @@ import type { DayPlan, Food, Profile, Reminder, Settings, WeightEntry } from '@/
 localforage.config({
   name: 'diet-auto',
   storeName: 'main',
-  description: 'Diét Auto - données utilisateur',
+  description: 'Ma Diét - données utilisateur',
 });
 
 const K = {

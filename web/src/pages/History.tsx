@@ -87,7 +87,7 @@ export function History() {
             onClick={() => {
               const csv = buildHistoryCsv(entries);
               const date = new Date().toISOString().slice(0, 10);
-              triggerDownload(`diet-auto-${profile.nom}-${date}.csv`, csv);
+              triggerDownload(`ma-diet-${profile.nom}-${date}.csv`, csv);
             }}
             title="Télécharger toutes les lignes au format CSV (ouvrable dans Excel)"
           >

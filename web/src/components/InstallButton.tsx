@@ -22,7 +22,7 @@ export function InstallButton() {
       type="button"
       onClick={promptInstall}
       className="inline-flex items-center gap-1.5 text-xs px-2.5 h-8 rounded-md border hover:bg-[var(--bg-subtle)] muted"
-      title="Installer Diét Auto comme une app"
+      title="Installer Ma Diét comme une app"
     >
       <Download size={14} />
       <span className="hidden sm:inline">Installer</span>

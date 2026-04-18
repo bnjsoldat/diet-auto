@@ -14,7 +14,7 @@ export function exportDayPlanPDF(plan: DayPlan, profile: Profile, targets: Targe
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.setTextColor(16, 185, 129);
-  doc.text('Diét Auto', 20, y);
+  doc.text('Ma Diét', 20, y);
 
   doc.setFontSize(10);
   doc.setTextColor(100);

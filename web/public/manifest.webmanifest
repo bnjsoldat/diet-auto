@@ -1,6 +1,6 @@
 {
-  "name": "Diét Auto",
-  "short_name": "Diét Auto",
+  "name": "Ma Diét",
+  "short_name": "Ma Diét",
   "description": "Calcule ton besoin calorique et optimise automatiquement tes quantités d'aliments.",
   "start_url": "/",
   "scope": "/",

@@ -33,7 +33,7 @@ export function ShareButton({ plan }: Props) {
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await (navigator as Navigator & { share: (data: { title: string; text: string; url: string }) => Promise<void> }).share({
-          title: 'Mon plan Diét Auto',
+          title: 'Mon plan Ma Diét',
           text: 'Voici le plan alimentaire que je te partage :',
           url: link,
         });

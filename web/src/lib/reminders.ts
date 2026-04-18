@@ -17,7 +17,7 @@ export function isNotificationGranted(): boolean {
 
 /** Affiche la notification (via SW si dispo pour meilleure compatibilité mobile, sinon directe). */
 export async function showReminder(reminder: Reminder) {
-  const title = 'Diét Auto';
+  const title = 'Ma Diét';
   const body = reminder.message || `C’est l’heure de ${reminder.label.toLowerCase()} !`;
   const options: NotificationOptions = {
     body,

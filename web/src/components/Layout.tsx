@@ -18,12 +18,12 @@ import { cn } from '@/lib/utils';
 
 const nav = [
   { to: '/today', label: 'Aujourd\u2019hui', icon: CalendarDays },
-  { to: '/week', label: 'Semaine', icon: CalendarRange },
-  { to: '/shopping', label: 'Courses', icon: ShoppingCart },
+  { to: '/week', label: 'Ma semaine', icon: CalendarRange },
+  { to: '/shopping', label: 'Mes courses', icon: ShoppingCart },
   { to: '/recipes', label: 'Mes recettes', icon: ChefHat },
   { to: '/history', label: 'Mon suivi', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
-  { to: '/profiles', label: 'Profils', icon: User },
+  { to: '/profiles', label: 'Mon profil', icon: User },
 ];
 
 /** 4 onglets principaux pour la bottom bar mobile (les autres sont dans un menu "Plus"). */
@@ -31,7 +31,7 @@ const mobileBottom = [
   { to: '/today', label: 'Jour', icon: CalendarDays },
   { to: '/week', label: 'Semaine', icon: CalendarRange },
   { to: '/shopping', label: 'Courses', icon: ShoppingCart },
-  { to: '/profiles', label: 'Profils', icon: User },
+  { to: '/profiles', label: 'Profil', icon: User },
 ];
 
 export function Layout() {

@@ -9,7 +9,7 @@ interface RecipeState {
   loaded: boolean;
 
   load: (profileId: string) => Promise<void>;
-  create: (nom: string, ingredients: RecipeIngredient[]) => Recipe;
+  create: (nom: string, ingredients: RecipeIngredient[], etapes?: string[]) => Recipe;
   update: (id: string, patch: Partial<Recipe>) => void;
   remove: (id: string) => void;
   duplicate: (id: string) => Recipe | null;
@@ -30,13 +30,14 @@ export const useRecipes = create<RecipeState>((set, get) => ({
     set({ profileId, recipes, loaded: true });
   },
 
-  create(nom, ingredients) {
+  create(nom, ingredients, etapes) {
     const { profileId, recipes } = get();
     const now = Date.now();
     const recipe: Recipe = {
       id: uid('rec'),
       nom: nom.trim(),
       ingredients,
+      etapes: etapes && etapes.length > 0 ? etapes : undefined,
       portionG: computePortion(ingredients),
       createdAt: now,
       updatedAt: now,

@@ -99,14 +99,16 @@ export interface RecipeIngredient {
 }
 
 /**
- * Recette composée : liste d'ingrédients + portion par défaut.
- * Quand on l'ajoute à un repas, elle est "explosée" en items individuels
- * proportionnels à la portion demandée.
+ * Recette composée : liste d'ingrédients + portion par défaut + étapes
+ * de préparation optionnelles. Quand on l'ajoute à un repas, elle est
+ * "explosée" en items individuels proportionnels à la portion demandée.
  */
 export interface Recipe {
   id: string;
   nom: string;
   ingredients: RecipeIngredient[];
+  /** Étapes numérotées de préparation (optionnel). */
+  etapes?: string[];
   /** Portion standard totale en grammes (somme des quantités par défaut). Calculé à partir des ingrédients. */
   portionG: number;
   createdAt: number;

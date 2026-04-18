@@ -1,14 +1,28 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, Copy, CopyCheck, Plus, ShoppingCart } from 'lucide-react';
+import {
+  BookmarkPlus,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  CopyCheck,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  ShoppingCart,
+  Trash2,
+} from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
+import { useCustomTemplates } from '@/store/useCustomTemplates';
 import { calcTargets } from '@/lib/calculations';
 import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { friendlyDate, todayKey } from '@/lib/utils';
+import type { PlanTemplate } from '@/lib/templates';
 
 /** Ajoute un nombre de jours à une date 'YYYY-MM-DD' et renvoie le résultat. */
 function shiftDate(isoDate: string, days: number): string {
@@ -32,7 +46,10 @@ export function Week() {
   const switchDate = useDayPlan((s) => s.switchDate);
   const duplicateFromDate = useDayPlan((s) => s.duplicateFromDate);
   const duplicateToDates = useDayPlan((s) => s.duplicateToDates);
+  const removePlanForDate = useDayPlan((s) => s.removePlanForDate);
+  const addCustomTemplate = useCustomTemplates((s) => s.add);
   const optimizerMode = useSettings((s) => s.optimizerMode);
+  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
 
   // Ancre = dimanche le plus proche ≥ aujourd'hui (on montre la semaine en cours)
   const [anchor, setAnchor] = useState<string>(() => todayKey());
@@ -54,8 +71,8 @@ export function Week() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider muted">Vue hebdo</div>
-          <h1 className="text-2xl sm:text-3xl font-bold mt-1">Semaine du {friendlyDate(weekDates[0])}</h1>
+          <div className="text-xs font-semibold uppercase tracking-wider muted">Ma semaine</div>
+          <h1 className="text-2xl sm:text-3xl font-bold mt-1 capitalize">Du {friendlyDate(weekDates[0])}</h1>
           <p className="muted text-sm mt-1">
             {profile.nom} · cible {targets?.kcalCible} kcal/j · tolérance ±
             {Math.round(tolKcal * 100)}% ({optimizerMode})
@@ -65,9 +82,9 @@ export function Week() {
           <Link
             to="/shopping"
             className="btn-outline"
-            title="Voir la liste de courses agrégée pour cette période"
+            title="Voir mes courses agrégées pour cette période"
           >
-            <ShoppingCart size={14} /> Liste de courses
+            <ShoppingCart size={14} /> Mes courses
           </Link>
           <button
             className="btn-outline"
@@ -139,51 +156,114 @@ export function Week() {
                   {isToday && <span className="ml-1 text-emerald-600">•</span>}
                 </button>
                 {hasPlan && (
-                  <div className="flex items-center gap-0.5">
+                  <div className="relative">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (
-                          plans[todayKey()] &&
-                          plans[todayKey()].meals.some((m) => m.items.length > 0) &&
-                          !confirm('Remplacer le plan d\u2019aujourd\u2019hui par la copie de ce jour ?')
-                        )
-                          return;
-                        switchDate(todayKey());
-                        duplicateFromDate(date);
-                        navigate('/today');
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenFor((cur) => (cur === date ? null : date));
                       }}
                       className="h-6 w-6 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
-                      title="Copier vers aujourd'hui"
-                      aria-label={`Copier vers aujourd'hui le plan du ${shortWeekday(date)}`}
+                      title="Actions"
+                      aria-label={`Actions pour ${shortWeekday(date)}`}
+                      aria-expanded={menuOpenFor === date}
                     >
-                      <Copy size={11} />
+                      <MoreHorizontal size={13} />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Applique ce plan aux 6 autres jours de la semaine affichée
-                        // (conserve le jour source tel quel ; écrase les autres).
-                        const othersWithPlan = weekDates.filter(
-                          (d) => d !== date && plans[d] && plans[d].meals.some((m) => m.items.length > 0)
-                        );
-                        const msg =
-                          othersWithPlan.length > 0
-                            ? `Ce plan va remplacer ${othersWithPlan.length} journée${othersWithPlan.length > 1 ? 's' : ''} déjà existante${othersWithPlan.length > 1 ? 's' : ''} cette semaine. Continuer ?`
-                            : `Appliquer ce plan aux 6 autres jours de la semaine ?`;
-                        if (!confirm(msg)) return;
-                        // On passe la date source en "date courante" pour que
-                        // duplicateToDates l'utilise comme source.
-                        switchDate(date);
-                        const targets = weekDates.filter((d) => d !== date);
-                        duplicateToDates(targets);
-                      }}
-                      className="h-6 w-6 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
-                      title="Appliquer à toute la semaine"
-                      aria-label={`Appliquer à toute la semaine le plan du ${shortWeekday(date)}`}
-                    >
-                      <CopyCheck size={11} />
-                    </button>
+                    {menuOpenFor === date && (
+                      <>
+                        {/* Overlay invisible pour capturer les clics dehors */}
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setMenuOpenFor(null)}
+                        />
+                        <div className="absolute right-0 top-full mt-1 z-50 min-w-[220px] rounded-md border bg-[var(--card)] shadow-lg py-1 animate-slide-down">
+                          <MenuItem
+                            icon={Pencil}
+                            label="Modifier ce jour"
+                            onClick={() => {
+                              setMenuOpenFor(null);
+                              switchDate(date);
+                              navigate('/today');
+                            }}
+                          />
+                          <MenuItem
+                            icon={Copy}
+                            label="Copier vers aujourd'hui"
+                            onClick={() => {
+                              setMenuOpenFor(null);
+                              if (
+                                plans[todayKey()] &&
+                                plans[todayKey()].meals.some((m) => m.items.length > 0) &&
+                                !confirm('Remplacer le plan d\u2019aujourd\u2019hui par la copie de ce jour ?')
+                              )
+                                return;
+                              switchDate(todayKey());
+                              duplicateFromDate(date);
+                              navigate('/today');
+                            }}
+                          />
+                          <MenuItem
+                            icon={CopyCheck}
+                            label="Appliquer à toute la semaine"
+                            onClick={() => {
+                              setMenuOpenFor(null);
+                              const othersWithPlan = weekDates.filter(
+                                (d) => d !== date && plans[d] && plans[d].meals.some((m) => m.items.length > 0)
+                              );
+                              const msg =
+                                othersWithPlan.length > 0
+                                  ? `Ce plan va remplacer ${othersWithPlan.length} journée${othersWithPlan.length > 1 ? 's' : ''} déjà existante${othersWithPlan.length > 1 ? 's' : ''} cette semaine. Continuer ?`
+                                  : `Appliquer ce plan aux 6 autres jours de la semaine ?`;
+                              if (!confirm(msg)) return;
+                              switchDate(date);
+                              const targets = weekDates.filter((d) => d !== date);
+                              duplicateToDates(targets);
+                            }}
+                          />
+                          <MenuItem
+                            icon={BookmarkPlus}
+                            label="Enregistrer comme plan"
+                            onClick={() => {
+                              setMenuOpenFor(null);
+                              const src = plans[date];
+                              if (!src) return;
+                              const label = window.prompt(
+                                'Nom du plan :',
+                                `Plan du ${new Date(date + 'T12:00:00').toLocaleDateString('fr-FR')}`
+                              );
+                              if (!label?.trim()) return;
+                              const tpl: PlanTemplate = {
+                                id: 'custom_' + Date.now().toString(36),
+                                label: label.trim(),
+                                emoji: '👤',
+                                description: 'Mon modèle personnel.',
+                                mode: optimizerMode,
+                                meals: src.meals.map((m) => ({
+                                  nom: m.nom,
+                                  items: m.items
+                                    .filter((it) => it.quantite > 0)
+                                    .map((it) => [it.nom, it.quantite] as [string, number]),
+                                })),
+                              };
+                              void addCustomTemplate(tpl);
+                            }}
+                          />
+                          <div className="border-t my-1" />
+                          <MenuItem
+                            icon={Trash2}
+                            label="Supprimer ce jour"
+                            danger
+                            onClick={() => {
+                              setMenuOpenFor(null);
+                              if (confirm(`Supprimer définitivement le plan du ${shortWeekday(date)} ?`)) {
+                                removePlanForDate(date);
+                              }
+                            }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -224,10 +304,37 @@ export function Week() {
       </div>
 
       <div className="mt-6 text-xs muted">
-        Cliquer sur un jour ouvre le plan correspondant. Le bouton{' '}
-        <Copy size={11} className="inline" aria-hidden /> copie la journée dans le plan du jour
-        actuel. <Link to="/history" className="underline">Voir l’historique complet</Link>.
+        Clique sur un jour pour l'éditer. L'icône <MoreHorizontal size={11} className="inline" aria-hidden /> ouvre
+        les actions rapides (modifier, copier, appliquer à toute la semaine, enregistrer comme plan, supprimer).{' '}
+        <Link to="/history" className="underline">Voir mon suivi complet</Link>.
       </div>
     </div>
+  );
+}
+
+/** Élément d'un menu déroulant compact. */
+function MenuItem({
+  icon: Icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: typeof Copy;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        'w-full text-left px-3 py-2 flex items-center gap-2 text-sm transition-colors hover:bg-[var(--bg-subtle)] ' +
+        (danger ? 'text-red-600' : '')
+      }
+    >
+      <Icon size={13} />
+      {label}
+    </button>
   );
 }

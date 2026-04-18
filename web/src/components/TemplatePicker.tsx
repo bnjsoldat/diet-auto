@@ -36,7 +36,7 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
       <div className="w-full max-w-2xl card p-5 my-6 animate-slide-down" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-2">
           <div>
-            <h2 className="text-lg font-semibold">Charger un plan pré-fait</h2>
+            <h2 className="text-lg font-semibold">Charger un plan</h2>
             <p className="text-sm muted">
               Un squelette de journée prêt à l'emploi. Tu pourras éditer et optimiser après.
             </p>
@@ -50,7 +50,7 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
           <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3 text-xs text-amber-800 dark:text-amber-200">
             <AlertTriangle size={14} className="shrink-0 mt-0.5" />
             <div>
-              Le plan du jour contient déjà des aliments. Charger un template{' '}
+              Le plan du jour contient déjà des aliments. Charger un plan{' '}
               <strong>remplacera complètement</strong> la journée en cours.
             </div>
           </div>
@@ -60,7 +60,7 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
         {customs.length > 0 && (
           <div className="mt-4">
             <div className="text-xs font-semibold uppercase tracking-wider muted mb-2 flex items-center gap-1">
-              <User size={11} /> Mes modèles
+              <User size={11} /> Mes plans
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               {customs.map((tpl) => (
@@ -89,11 +89,11 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`Supprimer le modèle « ${tpl.label} » ?`)) removeCustom(tpl.id);
+                      if (confirm(`Supprimer le plan « ${tpl.label} » ?`)) removeCustom(tpl.id);
                     }}
                     className="absolute top-2 right-2 h-6 w-6 grid place-items-center rounded opacity-0 group-hover:opacity-100 muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-opacity"
-                    title="Supprimer ce modèle"
-                    aria-label={`Supprimer le modèle ${tpl.label}`}
+                    title="Supprimer ce plan"
+                    aria-label={`Supprimer le plan ${tpl.label}`}
                   >
                     <Trash2 size={11} />
                   </button>
@@ -106,7 +106,7 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
         {/* Modèles par défaut */}
         <div className="mt-4">
           {customs.length > 0 && (
-            <div className="text-xs font-semibold uppercase tracking-wider muted mb-2">Modèles par défaut</div>
+            <div className="text-xs font-semibold uppercase tracking-wider muted mb-2">Plans suggérés</div>
           )}
           <div className="grid sm:grid-cols-2 gap-3">
             {PLAN_TEMPLATES.map((tpl) => (

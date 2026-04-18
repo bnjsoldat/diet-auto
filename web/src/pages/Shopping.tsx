@@ -94,7 +94,8 @@ export function Shopping() {
           <div className="flex items-center gap-2 muted text-xs font-semibold uppercase tracking-wider">
             <ShoppingCart size={12} /> Liste de courses
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold mt-1">{profile.nom}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mt-1">Mes courses</h1>
+          <p className="muted text-xs mt-0.5">{profile.nom}</p>
           <p className="muted text-sm mt-1">
             {aggregated.nbDays} jour{aggregated.nbDays > 1 ? 's' : ''} couvert
             {aggregated.nbDays > 1 ? 's' : ''} · {aggregated.nbFoods} aliment

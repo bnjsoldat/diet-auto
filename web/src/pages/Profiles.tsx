@@ -68,8 +68,8 @@ export function Profiles() {
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8">
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Profils</h1>
-          <p className="muted mt-1">Gère tous les profils enregistrés sur cet appareil.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Mon profil</h1>
+          <p className="muted mt-1">Ton profil et tes paramètres. Tu peux en créer plusieurs si plusieurs personnes utilisent l'appareil.</p>
         </div>
         <button className="btn-primary" onClick={() => setCreating(true)}>
           <Plus size={14} /> Nouveau profil

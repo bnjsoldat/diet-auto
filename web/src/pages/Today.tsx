@@ -271,9 +271,9 @@ export function Today() {
           <button
             className="btn-outline"
             onClick={() => setTplOpen(true)}
-            title="Charger un plan pré-fait ou un de tes modèles sauvegardés"
+            title="Charger un plan pré-fait ou un de tes plans sauvegardés"
           >
-            <LayoutTemplate size={14} /> Modèle
+            <LayoutTemplate size={14} /> Mes plans
           </button>
           {current.meals.some((m) => m.items.length > 0) && (
             <button

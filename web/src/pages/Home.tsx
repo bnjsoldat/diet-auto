@@ -34,7 +34,7 @@ export function Home() {
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium mb-6 animate-fade-in-up">
             <Sparkles size={12} className="text-emerald-600" />
-            <span>Un site, pas de compte, 100 % local.</span>
+            <span>Sans compte ou avec sync multi-appareil — c'est toi qui choisis.</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-fade-in-up">
             Ton plan alimentaire,{' '}
@@ -161,6 +161,11 @@ export function Home() {
           icon={Moon}
           title="Mobile & hors-ligne"
           desc="Installable sur ton écran d'accueil comme une vraie app, utilisable sans connexion, avec un mode nuit soigné."
+        />
+        <Feature
+          icon={Lock}
+          title="Privé par défaut"
+          desc="Utilise-le sans compte (données 100 % locales) ou crée un compte pour synchroniser tes plans sur tous tes appareils. Jamais de pub, jamais de tracking."
         />
       </section>
 

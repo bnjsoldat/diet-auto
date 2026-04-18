@@ -14,6 +14,7 @@ import {
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { InstallButton } from './InstallButton';
+import { AuthButton } from './AuthButton';
 import { cn } from '@/lib/utils';
 
 const nav = [
@@ -72,6 +73,7 @@ export function Layout() {
           )}
 
           <div className="flex items-center gap-2">
+            <AuthButton />
             {!isLanding && <ProfileSwitcher />}
             <InstallButton />
             <ThemeToggle />
@@ -149,10 +151,14 @@ export function Layout() {
       )}
 
       <footer className="border-t py-6 text-center text-xs muted">
-        <p>
-          Ma Diét · calcule ton besoin, optimise tes quantités · données stockées uniquement sur
-          ton appareil.
-        </p>
+        <p>Ma Diét · calcule ton besoin, optimise tes quantités.</p>
+        <div className="mt-2 flex justify-center gap-3 flex-wrap">
+          <Link to="/cgu" className="hover:text-[var(--text)]">CGU</Link>
+          <span>·</span>
+          <Link to="/confidentialite" className="hover:text-[var(--text)]">Confidentialité</Link>
+          <span>·</span>
+          <Link to="/mentions-legales" className="hover:text-[var(--text)]">Mentions légales</Link>
+        </div>
       </footer>
     </div>
   );

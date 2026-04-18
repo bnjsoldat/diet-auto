@@ -1,0 +1,189 @@
+import { Link } from 'react-router-dom';
+
+/**
+ * Trois pages légales réunies dans un seul composant (routing par prop).
+ * Textes minimaux mais conformes RGPD / CGU auto-entrepreneur France.
+ * À adapter avec tes vraies coordonnées légales dans mentions-legales.
+ */
+interface Props {
+  section: 'cgu' | 'confidentialite' | 'mentions';
+}
+
+export function Legal({ section }: Props) {
+  return (
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-10 prose-sm">
+      <nav className="flex gap-4 text-xs muted mb-6 flex-wrap">
+        <Link to="/cgu" className={section === 'cgu' ? 'text-emerald-600 font-medium' : 'hover:text-[var(--text)]'}>
+          Conditions d'utilisation
+        </Link>
+        <Link
+          to="/confidentialite"
+          className={section === 'confidentialite' ? 'text-emerald-600 font-medium' : 'hover:text-[var(--text)]'}
+        >
+          Confidentialité
+        </Link>
+        <Link
+          to="/mentions-legales"
+          className={section === 'mentions' ? 'text-emerald-600 font-medium' : 'hover:text-[var(--text)]'}
+        >
+          Mentions légales
+        </Link>
+      </nav>
+
+      {section === 'cgu' && <CGU />}
+      {section === 'confidentialite' && <Privacy />}
+      {section === 'mentions' && <Mentions />}
+    </div>
+  );
+}
+
+function CGU() {
+  return (
+    <article>
+      <h1 className="text-2xl font-bold mb-4">Conditions générales d'utilisation</h1>
+      <p className="muted text-xs">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+
+      <h2 className="font-semibold mt-6 mb-2">1. Objet</h2>
+      <p className="text-sm muted leading-relaxed">
+        Ma Diét est une application web de planification alimentaire qui permet de calculer ses
+        besoins nutritionnels et d'optimiser les quantités de ses repas. L'utilisation du service
+        est gratuite (sauf abonnement premium à venir).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">2. Compte utilisateur</h2>
+      <p className="text-sm muted leading-relaxed">
+        La création d'un compte est facultative (l'app fonctionne en mode 100 % local). Elle
+        permet la synchronisation multi-appareil. L'utilisateur s'engage à fournir une adresse
+        email valide et à protéger son mot de passe.
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">3. Nature du service</h2>
+      <p className="text-sm muted leading-relaxed">
+        <strong>Ma Diét n'est pas un conseil médical ni un avis diététique professionnel.</strong>{' '}
+        Les calculs (métabolisme de base, besoins caloriques, répartition des macros) sont
+        purement indicatifs et fondés sur des formules standards (Harris-Benedict). Pour tout
+        suivi personnalisé ou pathologique, consulte un professionnel de santé (diététicien,
+        nutritionniste, médecin).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">4. Données et contenu</h2>
+      <p className="text-sm muted leading-relaxed">
+        La base nutritionnelle provient de CIQUAL 2020 (ANSES), publiée en licence ouverte. Les
+        informations produits scannées proviennent d'Open Food Facts (licence ODbL). Les
+        utilisateurs restent seuls responsables du contenu qu'ils créent (recettes, notes).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">5. Responsabilité</h2>
+      <p className="text-sm muted leading-relaxed">
+        Le service est fourni « tel quel », sans garantie de disponibilité ni d'exactitude des
+        données. Ma Diét ne pourra être tenu responsable des conséquences d'une utilisation
+        inappropriée des recommandations alimentaires.
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">6. Modification des CGU</h2>
+      <p className="text-sm muted leading-relaxed">
+        Ces CGU peuvent être modifiées. Les utilisateurs seront informés par email des
+        changements significatifs.
+      </p>
+    </article>
+  );
+}
+
+function Privacy() {
+  return (
+    <article>
+      <h1 className="text-2xl font-bold mb-4">Politique de confidentialité</h1>
+      <p className="muted text-xs">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+
+      <h2 className="font-semibold mt-6 mb-2">1. Données collectées</h2>
+      <p className="text-sm muted leading-relaxed">
+        En mode <strong>sans compte</strong> (par défaut) : aucune donnée ne sort de ton appareil.
+        Tout est stocké localement dans ton navigateur (IndexedDB).
+      </p>
+      <p className="text-sm muted leading-relaxed mt-2">
+        En mode <strong>avec compte</strong> : email (identification) et données utilisateur
+        synchronisées avec notre base Supabase (plans alimentaires, recettes, profils, suivi
+        pondéral, rappels, paramètres).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">2. Finalités</h2>
+      <ul className="text-sm muted leading-relaxed list-disc ml-5 space-y-1">
+        <li>Permettre la synchronisation de tes données sur plusieurs appareils</li>
+        <li>Te renvoyer ton mot de passe en cas d'oubli</li>
+        <li>T'informer d'éventuels changements de CGU (rares)</li>
+      </ul>
+      <p className="text-sm muted leading-relaxed mt-2">
+        <strong>Ma Diét ne fait aucun profilage, aucune revente, aucune publicité, aucun tracking
+        tiers.</strong> Pas de Google Analytics, pas de cookies marketing.
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">3. Hébergement</h2>
+      <p className="text-sm muted leading-relaxed">
+        L'application est hébergée par Vercel (États-Unis, clauses contractuelles types UE→US
+        appliquées). La base de données et l'authentification sont hébergées par Supabase
+        (Irlande, Union Européenne).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">4. Durée de conservation</h2>
+      <p className="text-sm muted leading-relaxed">
+        Tes données sont conservées tant que ton compte existe. Tu peux supprimer ton compte à
+        tout moment depuis la page <Link to="/compte" className="underline">Mon compte</Link> —
+        cela efface définitivement toutes tes données de notre serveur.
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">5. Tes droits (RGPD)</h2>
+      <p className="text-sm muted leading-relaxed">
+        Conformément au RGPD, tu peux :
+      </p>
+      <ul className="text-sm muted leading-relaxed list-disc ml-5 space-y-1 mt-1">
+        <li>Accéder à tes données (page <Link to="/compte" className="underline">Mon compte</Link>, bouton « Récupérer du cloud »)</li>
+        <li>Rectifier tes données (en les modifiant dans l'app)</li>
+        <li>Les supprimer (bouton « Supprimer mon compte »)</li>
+        <li>Les exporter au format CSV (page Mon suivi → Export CSV)</li>
+        <li>Adresser toute demande au contact ci-dessous</li>
+      </ul>
+
+      <h2 className="font-semibold mt-6 mb-2">6. Contact</h2>
+      <p className="text-sm muted leading-relaxed">
+        Pour toute question sur tes données : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>.
+        Tu peux aussi déposer une réclamation auprès de la CNIL (cnil.fr).
+      </p>
+    </article>
+  );
+}
+
+function Mentions() {
+  return (
+    <article>
+      <h1 className="text-2xl font-bold mb-4">Mentions légales</h1>
+      <p className="muted text-xs">Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}</p>
+
+      <h2 className="font-semibold mt-6 mb-2">Éditeur</h2>
+      <p className="text-sm muted leading-relaxed">
+        Ma Diét est édité par <strong>[Nom de ton auto-entreprise]</strong>, auto-entrepreneur
+        immatriculé en France.
+      </p>
+      <p className="text-sm muted leading-relaxed mt-2">
+        SIRET : <em>[à compléter]</em><br />
+        Adresse : <em>[à compléter]</em><br />
+        Email : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">Hébergement</h2>
+      <p className="text-sm muted leading-relaxed">
+        Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.
+      </p>
+      <p className="text-sm muted leading-relaxed mt-2">
+        Base de données : Supabase Inc., 970 Toa Payoh North #07-04, Singapore 318992 (serveurs UE).
+      </p>
+
+      <h2 className="font-semibold mt-6 mb-2">Propriété intellectuelle</h2>
+      <p className="text-sm muted leading-relaxed">
+        Le code source, le design et le contenu éditorial de Ma Diét sont la propriété de
+        l'éditeur. La base nutritionnelle CIQUAL est publiée par l'ANSES (France) en licence
+        ouverte. Les données produits scannées proviennent d'Open Food Facts, publiées en licence
+        ODbL.
+      </p>
+    </article>
+  );
+}

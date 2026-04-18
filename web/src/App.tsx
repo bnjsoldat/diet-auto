@@ -4,6 +4,9 @@ import { Layout } from './components/Layout';
 import { ImportPlanPrompt } from './components/ImportPlanPrompt';
 import { CommandPalette } from './components/CommandPalette';
 import { emit } from './lib/eventBus';
+import { useAuth } from './store/useAuth';
+import { syncOnLogin, schedulePush } from './lib/cloudSync';
+import { isCloudEnabled } from './lib/supabase';
 import { Home } from './pages/Home';
 import { useProfile } from './store/useProfile';
 import { useDayPlan } from './store/useDayPlan';
@@ -19,6 +22,9 @@ import { useReminderScheduler } from './hooks/useReminderScheduler';
 // Pages chargées à la demande : réduit le bundle initial de ~60 %.
 // Home reste en import statique (c'est la landing, donc toujours utile tôt).
 const Setup = lazy(() => import('./pages/Setup').then((m) => ({ default: m.Setup })));
+const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
+const Account = lazy(() => import('./pages/Account').then((m) => ({ default: m.Account })));
+const Legal = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Legal })));
 const Today = lazy(() => import('./pages/Today').then((m) => ({ default: m.Today })));
 const Week = lazy(() => import('./pages/Week').then((m) => ({ default: m.Week })));
 const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
@@ -63,6 +69,8 @@ export default function App() {
   const loadCustomFoods = useCustomFoods((s) => s.load);
   const loadReminders = useReminders((s) => s.load);
   const loadCustomTemplates = useCustomTemplates((s) => s.load);
+  const initAuth = useAuth((s) => s.init);
+  const user = useAuth((s) => s.user);
 
   useReminderScheduler();
 
@@ -97,6 +105,56 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // 1) Initialise la session Supabase (no-op si cloud pas configuré)
+    initAuth();
+  }, [initAuth]);
+
+  /**
+   * Au (re-)login, pull les données cloud vers IndexedDB, puis recharge
+   * les stores pour mettre à jour l'UI. Si cloud vide mais local plein,
+   * push pour initialiser la 1re sync.
+   */
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const result = await syncOnLogin(user.id);
+      if (result === 'pulled') {
+        // Recharger tous les stores depuis IndexedDB (qui vient d'être
+        // écrasé par le snapshot cloud).
+        await loadProfiles();
+        await loadSettings();
+        await loadCustomFoods();
+        await loadReminders();
+        await loadCustomTemplates();
+      }
+    })();
+  }, [user, loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates]);
+
+  /**
+   * Après chaque mutation importante dans un store, push léger vers le
+   * cloud (débouncé 1.5 s). On s'abonne à tous les stores qui contiennent
+   * des données utilisateur pour capter leurs changements.
+   */
+  useEffect(() => {
+    if (!user || !isCloudEnabled()) return;
+    // Zustand ne permet pas un listener global sur tous les stores ; on
+    // en liste les plus actifs et on push dès qu'ils changent.
+    const uid = user.id;
+    const unsub = [
+      useProfile.subscribe(() => schedulePush(uid)),
+      useDayPlan.subscribe(() => schedulePush(uid)),
+      useFavorites.subscribe(() => schedulePush(uid)),
+      useWeight.subscribe(() => schedulePush(uid)),
+      useRecipes.subscribe(() => schedulePush(uid)),
+      useCustomFoods.subscribe(() => schedulePush(uid)),
+      useReminders.subscribe(() => schedulePush(uid)),
+      useCustomTemplates.subscribe(() => schedulePush(uid)),
+      useSettings.subscribe(() => schedulePush(uid)),
+    ];
+    return () => unsub.forEach((u) => u());
+  }, [user]);
+
+  useEffect(() => {
     loadProfiles();
     loadSettings();
     loadCustomFoods();
@@ -125,6 +183,11 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/compte" element={<Account />} />
+            <Route path="/cgu" element={<Legal section="cgu" />} />
+            <Route path="/confidentialite" element={<Legal section="confidentialite" />} />
+            <Route path="/mentions-legales" element={<Legal section="mentions" />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/today" element={<Today />} />
             <Route path="/week" element={<Week />} />

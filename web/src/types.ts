@@ -19,7 +19,11 @@ export interface Profile {
   nom: string;
   poids: number; // kg
   taille: number; // m
+  /** Âge numérique (dérivé de birthDate si présent, sinon valeur libre). */
   age: number;
+  /** Date de naissance au format ISO 'YYYY-MM-DD'. Si présent, l'âge
+   *  est recalculé automatiquement au fil du temps (anniversaire). */
+  birthDate?: string;
   genre: Genre;
   activite: Activite;
   objectif: Objectif;

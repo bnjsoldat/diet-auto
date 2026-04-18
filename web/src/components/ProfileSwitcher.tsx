@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, Plus, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '@/store/useProfile';
+import { effectiveAge } from '@/lib/age';
 import { cn } from '@/lib/utils';
 
 export function ProfileSwitcher() {
@@ -50,7 +51,7 @@ export function ProfileSwitcher() {
                 >
                   {p.nom}
                   <div className="text-xs muted">
-                    {p.poids} kg · {Math.round(p.taille * 100)} cm · {p.age} ans
+                    {p.poids} kg · {Math.round(p.taille * 100)} cm · {effectiveAge(p)} ans
                   </div>
                 </button>
               ))}

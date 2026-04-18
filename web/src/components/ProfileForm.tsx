@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Activite, Genre, Objectif, Profile } from '@/types';
 import { ACTIVITY_COEFS, ACTIVITY_DESCRIPTIONS, OBJECTIVE_DELTA_KCAL } from '@/lib/constants';
 import { calcTargets } from '@/lib/calculations';
+import { ageFromBirthDate } from '@/lib/age';
 import { InfoTip } from './InfoTip';
 
 interface Props {
@@ -22,20 +23,30 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
   const [tailleCm, setTailleCm] = useState<NumLike>(
     initial?.taille ? Math.round(initial.taille * 100) : 175
   );
-  const [age, setAge] = useState<NumLike>(initial?.age ?? 30);
+  // Date de naissance : source de vérité pour l'âge. Si le profil existant
+  // n'en a pas mais a un âge, on ne présume pas (champ vide) — l'utilisateur
+  // pourra l'ajouter, sinon on retombe sur l'ancien champ age.
+  const [birthDate, setBirthDate] = useState<string>(initial?.birthDate ?? '');
+  const [ageFallback, setAgeFallback] = useState<NumLike>(initial?.age ?? 30);
   const [genre, setGenre] = useState<Genre>(initial?.genre ?? 'Homme');
   const [activite, setActivite] = useState<Activite>(initial?.activite ?? 'Actif');
   const [objectif, setObjectif] = useState<Objectif>(initial?.objectif ?? 'Maintien');
 
   const poidsNum = typeof poids === 'number' ? poids : 0;
   const tailleCmNum = typeof tailleCm === 'number' ? tailleCm : 0;
-  const ageNum = typeof age === 'number' ? age : 0;
+  /** Âge effectif : birthDate (recalculé) en priorité, sinon ageFallback. */
+  const ageNum = birthDate
+    ? ageFromBirthDate(birthDate)
+    : typeof ageFallback === 'number'
+      ? ageFallback
+      : 0;
 
   const previewProfile = {
     nom,
     poids: poidsNum,
     taille: tailleCmNum / 100,
     age: ageNum,
+    birthDate: birthDate || undefined,
     genre,
     activite,
     objectif,
@@ -63,6 +74,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       poids: poidsNum,
       taille: tailleCmNum / 100,
       age: ageNum,
+      birthDate: birthDate || undefined,
       genre,
       activite,
       objectif,
@@ -114,17 +126,40 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1.5">Âge</label>
+          <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
+            Date de naissance
+            <InfoTip>
+              Ta date de naissance sert à calculer ton âge automatiquement. Ton métabolisme
+              de base est ainsi toujours à jour — pas besoin de mettre à jour le profil à
+              chaque anniversaire.
+            </InfoTip>
+          </label>
           <input
-            type="number"
-            inputMode="numeric"
+            type="date"
             className="input"
-            value={age}
-            min={10}
-            max={100}
-            onChange={(e) => setAge(parseNum(e.target.value))}
-            onBlur={() => { if (age === '') setAge(0); }}
+            value={birthDate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setBirthDate(e.target.value)}
           />
+          {birthDate ? (
+            <p className="mt-1 text-xs muted">{ageFromBirthDate(birthDate)} ans aujourd'hui</p>
+          ) : (
+            <div className="mt-2">
+              <label className="block text-[11px] muted mb-1">
+                ou juste l'âge (si tu préfères ne pas renseigner la date)
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                className="input"
+                value={ageFallback}
+                min={10}
+                max={100}
+                onChange={(e) => setAgeFallback(parseNum(e.target.value))}
+                onBlur={() => { if (ageFallback === '') setAgeFallback(0); }}
+              />
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">Genre</label>

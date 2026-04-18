@@ -5,6 +5,7 @@ import { useProfile } from '@/store/useProfile';
 import { ProfileForm } from '@/components/ProfileForm';
 import { RemindersCard } from '@/components/RemindersCard';
 import { OptimizerSettingsCard } from '@/components/OptimizerSettingsCard';
+import { effectiveAge } from '@/lib/age';
 import { calcTargets } from '@/lib/calculations';
 import type { Profile } from '@/types';
 
@@ -102,7 +103,7 @@ export function Profiles() {
                   )}
                 </div>
                 <div className="text-sm muted mt-0.5">
-                  {p.poids} kg · {Math.round(p.taille * 100)} cm · {p.age} ans · {p.genre}
+                  {p.poids} kg · {Math.round(p.taille * 100)} cm · {effectiveAge(p)} ans · {p.genre}
                 </div>
                 <div className="text-xs muted">
                   {p.activite} · {p.objectif} → {t.kcalCible} kcal/j

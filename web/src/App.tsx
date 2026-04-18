@@ -71,6 +71,8 @@ export default function App() {
   const loadCustomTemplates = useCustomTemplates((s) => s.load);
   const initAuth = useAuth((s) => s.init);
   const user = useAuth((s) => s.user);
+  const setSyncing = useAuth((s) => s.setSyncing);
+  const syncing = useAuth((s) => s.syncing);
 
   useReminderScheduler();
 
@@ -117,18 +119,23 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const result = await syncOnLogin(user.id);
-      if (result === 'pulled') {
-        // Recharger tous les stores depuis IndexedDB (qui vient d'être
-        // écrasé par le snapshot cloud).
-        await loadProfiles();
-        await loadSettings();
-        await loadCustomFoods();
-        await loadReminders();
-        await loadCustomTemplates();
+      setSyncing(true);
+      try {
+        const result = await syncOnLogin(user.id);
+        if (result === 'pulled') {
+          // Recharger tous les stores depuis IndexedDB (qui vient d'être
+          // écrasé par le snapshot cloud).
+          await loadProfiles();
+          await loadSettings();
+          await loadCustomFoods();
+          await loadReminders();
+          await loadCustomTemplates();
+        }
+      } finally {
+        setSyncing(false);
       }
     })();
-  }, [user, loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates]);
+  }, [user, loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, setSyncing]);
 
   /**
    * Après chaque mutation importante dans un store, push léger vers le
@@ -170,6 +177,25 @@ export default function App() {
       loadRecipes(activeId);
     }
   }, [activeId, loadDayPlan, loadFavs, loadWeights, loadRecipes]);
+
+  // Overlay de sync au 1er login : empêche le flash /setup avant que les
+  // données cloud soient pullées et chargées dans les stores locaux.
+  if (syncing) {
+    return (
+      <div className="min-h-screen grid place-items-center p-8">
+        <div className="text-center animate-fade-in-up">
+          <div className="inline-flex h-14 w-14 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 grid place-items-center mb-4">
+            <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.2" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div className="text-lg font-semibold">Synchronisation…</div>
+          <div className="text-sm muted mt-1">On récupère tes plans depuis le cloud.</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

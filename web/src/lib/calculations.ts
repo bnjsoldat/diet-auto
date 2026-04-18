@@ -1,13 +1,18 @@
 import type { Profile, Targets } from '@/types';
 import { ACTIVITY_COEFS, KCAL_PER_GRAM, MACRO_SPLIT, OBJECTIVE_DELTA_KCAL } from './constants';
+import { effectiveAge } from './age';
 
 /** Métabolisme basal — formule utilisée dans le Sheet d'origine
  *  (variante Harris-Benedict avec la taille exprimée en MÈTRES) :
  *    Homme : 13.7516 × poids + 500.33 × taille(m) − 6.755 × âge + 66.473
  *    Femme :  9.5634 × poids + 184.96 × taille(m) − 4.6756 × âge + 665.0955
+ *
+ * Âge calculé depuis birthDate si présent (auto-updated chaque année),
+ * sinon fallback sur le champ age. Voir lib/age.ts.
  */
 export function calcMetabolismeBasal(profile: Profile): number {
-  const { poids, taille, age, genre } = profile;
+  const { poids, taille, genre } = profile;
+  const age = effectiveAge(profile);
   if (genre === 'Homme') {
     return 13.7516 * poids + 500.33 * taille - 6.755 * age + 66.473;
   }

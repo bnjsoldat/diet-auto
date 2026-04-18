@@ -13,8 +13,11 @@ interface AuthState {
   loading: boolean;
   /** true tant qu'on n'a pas eu le premier onAuthStateChange */
   initialized: boolean;
+  /** true pendant le pull cloud → local au login (évite le flash /setup). */
+  syncing: boolean;
 
   init: () => Promise<void>;
+  setSyncing: (v: boolean) => void;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInMagicLink: (email: string) => Promise<{ error: string | null }>;
@@ -29,6 +32,11 @@ export const useAuth = create<AuthState>((set) => ({
   user: null,
   loading: false,
   initialized: !isCloudEnabled(), // si pas de Supabase, on est déjà "initialisé"
+  syncing: false,
+
+  setSyncing(v) {
+    set({ syncing: v });
+  },
 
   async init() {
     if (!supabase) {

@@ -227,9 +227,14 @@ export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, cu
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2 text-[11px] muted">
-        <span>
-          Tol. ±{Math.round(m.tolKcal * 100)}% kcal, ±{Math.round(m.tolMacro * 100)}% macros
-        </span>
+        <InfoTip position="bottom">
+          <div className="font-semibold mb-1">
+            Tolérance ±{Math.round(m.tolKcal * 100)}% kcal, ±{Math.round(m.tolMacro * 100)}% macros (mode {mode})
+          </div>
+          Les icônes ✓/⚠/✗ à côté de chaque ligne indiquent si tu es dans
+          la tolérance du mode actif. Tu peux changer le mode depuis
+          <strong> Mon profil</strong>.
+        </InfoTip>
         <button
           type="button"
           onClick={handleToggleCompare}

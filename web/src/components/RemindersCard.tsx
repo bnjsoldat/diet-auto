@@ -7,6 +7,7 @@ import {
   showReminder,
 } from '@/lib/reminders';
 import type { Reminder } from '@/types';
+import { InfoTip } from './InfoTip';
 
 /**
  * Carte de gestion des rappels quotidiens. Affiche l'état de la permission,
@@ -52,7 +53,14 @@ export function RemindersCard() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Bell size={16} className="text-emerald-600" />
-          <h3 className="font-semibold">Rappels quotidiens</h3>
+          <h3 className="font-semibold flex items-center gap-1.5">
+            Rappels quotidiens
+            <InfoTip>
+              Les rappels sont déclenchés par ton navigateur. Installe l'app en PWA et garde-la
+              active en arrière-plan pour une meilleure fiabilité — sans serveur, impossible de
+              pousser une notification quand l'app est totalement fermée.
+            </InfoTip>
+          </h3>
         </div>
         <button
           type="button"
@@ -145,11 +153,6 @@ export function RemindersCard() {
         </div>
       )}
 
-      <p className="text-[11px] muted mt-3">
-        Note : les rappels sont déclenchés par ton navigateur. Installe l’app en PWA et garde-la
-        active en arrière-plan pour une meilleure fiabilité — sans serveur, impossible de pousser
-        une notif quand l’app est totalement fermée.
-      </p>
     </section>
   );
 }

@@ -26,6 +26,7 @@ import { totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { friendlyDate, todayKey } from '@/lib/utils';
 import type { PlanTemplate } from '@/lib/templates';
+import { InfoTip } from '@/components/InfoTip';
 
 /** Ajoute un nombre de jours à une date 'YYYY-MM-DD' et renvoie le résultat. */
 function shiftDate(isoDate: string, days: number): string {
@@ -128,9 +129,15 @@ export function Week() {
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted">Ma semaine</div>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1 capitalize">Du {friendlyDate(weekDates[0])}</h1>
-          <p className="muted text-sm mt-1">
-            {profile.nom} · cible {targets?.kcalCible} kcal/j · tolérance ±
-            {Math.round(tolKcal * 100)}% ({optimizerMode})
+          <p className="muted text-sm mt-1 flex items-center gap-1.5">
+            <span>{profile.nom} · cible {targets?.kcalCible} kcal/j</span>
+            <InfoTip>
+              <div className="font-semibold mb-1">Tolérance ±{Math.round(tolKcal * 100)}% (mode {optimizerMode})</div>
+              Les bordures colorées sur chaque jour indiquent si le total
+              calorique est dans la tolérance du mode actif (vert),
+              à ±2× (orange) ou au-delà (rouge). Tu peux changer le mode
+              depuis <strong>Mon profil</strong>.
+            </InfoTip>
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -359,10 +366,21 @@ export function Week() {
         })}
       </div>
 
-      <div className="mt-6 text-xs muted">
-        Clique sur un jour pour l'éditer. L'icône <MoreHorizontal size={11} className="inline" aria-hidden /> ouvre
-        les actions rapides (modifier, copier, appliquer à toute la semaine, enregistrer comme plan, supprimer).{' '}
-        <Link to="/history" className="underline">Voir mon suivi complet</Link>.
+      <div className="mt-4 text-xs muted flex items-center justify-between gap-2 flex-wrap">
+        <span className="flex items-center gap-1.5">
+          Astuce : l'icône <MoreHorizontal size={11} className="inline" aria-hidden /> ouvre les actions rapides
+          <InfoTip>
+            <div className="font-semibold mb-1">Actions rapides par jour</div>
+            <ul className="space-y-0.5">
+              <li>• <strong>Modifier</strong> : édite le plan</li>
+              <li>• <strong>Copier ce plan</strong> : met en mémoire pour coller sur un autre jour</li>
+              <li>• <strong>Appliquer à toute la semaine</strong> : copie sur les 6 autres jours</li>
+              <li>• <strong>Enregistrer comme plan</strong> : crée un modèle réutilisable</li>
+              <li>• <strong>Supprimer</strong> : retire définitivement ce jour</li>
+            </ul>
+          </InfoTip>
+        </span>
+        <Link to="/history" className="underline">Voir mon suivi complet</Link>
       </div>
 
       {/* Modale "Enregistrer comme plan" avec input inline (prompt() bloqué

@@ -8,6 +8,7 @@ import { bestUnitForGrams, formatCount, pluralize } from '@/lib/units';
 import { formatNumber, todayKey } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/EmptyState';
+import { InfoTip } from '@/components/InfoTip';
 
 type Range = 'week' | 'month' | 'custom';
 
@@ -149,7 +150,14 @@ export function Shopping() {
             </div>
           )}
           <div className="ml-auto flex items-center gap-2 text-sm">
-            <span className="muted">Marge :</span>
+            <span className="muted flex items-center gap-1">
+              Marge :
+              <InfoTip>
+                La marge de sécurité permet de prévoir un peu plus pour couvrir les pertes à la
+                cuisson ou les imprévus. Les quantités pratiques sont arrondies à la demi-unité
+                supérieure (1,5 œuf → 2 œufs, etc.).
+              </InfoTip>
+            </span>
             <div className="inline-flex rounded-md border p-0.5">
               {[0, 10, 20].map((m) => (
                 <button
@@ -226,10 +234,6 @@ export function Shopping() {
         </div>
       )}
 
-      <p className="muted text-xs mt-6 print:mt-3">
-        Astuce : la marge de sécurité permet de prévoir un peu plus pour couvrir les pertes à la
-        cuisson ou les imprévus. Les quantités pratiques sont arrondies à la demie-unité supérieure.
-      </p>
     </div>
   );
 }

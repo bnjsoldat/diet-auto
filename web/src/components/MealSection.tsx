@@ -134,6 +134,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
             }}
             className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
             title="Renommer le repas"
+            aria-label={`Renommer ${meal.nom}`}
           >
             <Edit2 size={13} />
           </button>
@@ -145,6 +146,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
             }}
             className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
             title="Dupliquer le repas"
+            aria-label={`Dupliquer ${meal.nom}`}
           >
             <Copy size={13} />
           </button>
@@ -156,6 +158,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
             }}
             className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
             title={focused ? 'Quitter le mode focus' : 'Mode focus : vue plein écran'}
+            aria-label={focused ? `Quitter le mode focus de ${meal.nom}` : `Afficher ${meal.nom} en plein écran`}
           >
             {focused ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
           </button>
@@ -168,6 +171,7 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
               }}
               className="h-7 w-7 grid place-items-center rounded muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
               title="Supprimer le repas"
+              aria-label={`Supprimer le repas ${meal.nom}`}
             >
               <Trash2 size={13} />
             </button>

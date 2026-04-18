@@ -1,4 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from './PageTransition';
 import {
   CalendarDays,
   CalendarRange,
@@ -104,7 +106,14 @@ export function Layout() {
       </header>
 
       <main className="flex-1 pb-20 md:pb-0">
-        <Outlet />
+        {/* AnimatePresence + PageTransition : anime l'entrée/sortie
+            de chaque route (fade + slide 8 px). La key pathname force
+            l'animation à chaque changement. */}
+        <AnimatePresence mode="wait">
+          <PageTransition key={location.pathname}>
+            <Outlet />
+          </PageTransition>
+        </AnimatePresence>
       </main>
 
       {/* Bottom tab bar iOS-style, mobile uniquement */}

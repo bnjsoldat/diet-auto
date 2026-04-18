@@ -7,12 +7,35 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#10b981" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Ma Diét" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="description" content="Ma Diét - calcule ton besoin calorique, choisis tes aliments, et ajuste les quantités automatiquement pour atteindre tes cibles macros." />
+    <meta name="robots" content="index, follow" />
+
     <title>Ma Diét — Plan alimentaire optimisé</title>
+    <meta name="description" content="Ma Diét — calcule ton besoin calorique, choisis tes aliments (3 010 aliments CIQUAL + scan code-barres), et ajuste les quantités automatiquement pour atteindre tes cibles macros. Gratuit, sans compte, 100 % local." />
+
+    <!-- Canonical : évite la duplication SEO avec l'ancienne URL Vercel -->
+    <link rel="canonical" href="https://madiet.lentreprise.ai/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Slack, Discord, WhatsApp…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ma Diét" />
+    <meta property="og:title" content="Ma Diét — Plan alimentaire optimisé" />
+    <meta property="og:description" content="Calcule ton besoin calorique, choisis tes aliments, et ajuste les quantités automatiquement pour atteindre tes cibles macros. Gratuit, sans compte." />
+    <meta property="og:url" content="https://madiet.lentreprise.ai/" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:image" content="https://madiet.lentreprise.ai/icon-512.svg" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ma Diét — Plan alimentaire optimisé" />
+    <meta name="twitter:description" content="Calcule ton besoin calorique, scanne des produits, optimise ton plan en un clic. Gratuit, sans compte." />
+    <meta name="twitter:image" content="https://madiet.lentreprise.ai/icon-512.svg" />
+
+    <!-- Fonts : preconnect + preload du woff2 critique pour minimiser le FCP -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />

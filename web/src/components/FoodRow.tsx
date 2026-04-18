@@ -138,6 +138,8 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
               : 'muted hover:bg-[var(--bg-subtle)]'
           )}
           title={item.verrou ? 'Verrouillé : quantité fixe' : 'Verrouiller la quantité'}
+          aria-label={item.verrou ? `Déverrouiller ${item.nom}` : `Verrouiller ${item.nom}`}
+          aria-pressed={item.verrou}
         >
           {item.verrou ? <Lock size={14} /> : <LockOpen size={14} />}
         </button>
@@ -147,6 +149,7 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
           onClick={onRemove}
           className="h-8 w-8 grid place-items-center rounded-md muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
           title="Supprimer"
+          aria-label={`Supprimer ${item.nom}`}
         >
           <Trash2 size={14} />
         </button>

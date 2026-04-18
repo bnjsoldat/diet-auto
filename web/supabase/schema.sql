@@ -25,10 +25,15 @@ create table if not exists public.user_data (
   custom_foods jsonb not null default '[]'::jsonb,
   custom_templates jsonb not null default '[]'::jsonb,
   reminders jsonb not null default '[]'::jsonb,
+  water jsonb not null default '{}'::jsonb,
   settings jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Ajout de la colonne water si la table existait déjà (idempotent)
+alter table public.user_data
+  add column if not exists water jsonb not null default '{}'::jsonb;
 
 -- 2) Index pour les requêtes les plus fréquentes
 create index if not exists user_data_updated_at_idx on public.user_data (updated_at desc);

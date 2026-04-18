@@ -31,6 +31,7 @@ const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login
 const Account = lazy(() => import('./pages/Account').then((m) => ({ default: m.Account })));
 const Legal = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Legal })));
 const Help = lazy(() => import('./pages/Help').then((m) => ({ default: m.Help })));
+const Integrations = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.Integrations })));
 const Today = lazy(() => import('./pages/Today').then((m) => ({ default: m.Today })));
 const Week = lazy(() => import('./pages/Week').then((m) => ({ default: m.Week })));
 const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
@@ -137,6 +138,7 @@ export default function App() {
           await loadCustomFoods();
           await loadReminders();
           await loadCustomTemplates();
+          await loadWater();
         }
       } finally {
         setSyncing(false);
@@ -163,6 +165,7 @@ export default function App() {
       useCustomFoods.subscribe(() => schedulePush(uid)),
       useReminders.subscribe(() => schedulePush(uid)),
       useCustomTemplates.subscribe(() => schedulePush(uid)),
+      useWater.subscribe(() => schedulePush(uid)),
       useSettings.subscribe(() => schedulePush(uid)),
     ];
     return () => unsub.forEach((u) => u());
@@ -230,6 +233,7 @@ export default function App() {
             <Route path="/confidentialite" element={<Legal section="confidentialite" />} />
             <Route path="/mentions-legales" element={<Legal section="mentions" />} />
             <Route path="/aide" element={<Help />} />
+            <Route path="/integrations" element={<Integrations />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/today" element={<Today />} />
             <Route path="/week" element={<Week />} />

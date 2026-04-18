@@ -157,6 +157,8 @@ export function Layout() {
         <div className="mt-2 flex justify-center gap-3 flex-wrap">
           <Link to="/aide" className="hover:text-[var(--text)]">Aide</Link>
           <span>·</span>
+          <Link to="/integrations" className="hover:text-[var(--text)]">Intégrations</Link>
+          <span>·</span>
           <Link to="/cgu" className="hover:text-[var(--text)]">CGU</Link>
           <span>·</span>
           <Link to="/confidentialite" className="hover:text-[var(--text)]">Confidentialité</Link>

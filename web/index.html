@@ -39,6 +39,85 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Schema.org structured data (WebApplication) pour SEO riche Google -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Ma Diét",
+        "url": "https://madiet.lentreprise.ai/",
+        "description": "Planificateur alimentaire gratuit qui optimise automatiquement les quantités de tes repas pour atteindre tes cibles caloriques et macros. Base de 3 010 aliments français (CIQUAL), scan code-barres, sans inscription obligatoire.",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web, iOS, Android",
+        "inLanguage": "fr-FR",
+        "browserRequirements": "Requires modern browser with JavaScript enabled.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "featureList": [
+          "Calcul du métabolisme de base (Harris-Benedict)",
+          "Optimisation automatique des quantités",
+          "Scan code-barres avec Open Food Facts",
+          "3 010 aliments de la base CIQUAL (ANSES)",
+          "Recettes composées avec étapes",
+          "Suivi de poids avec graphique",
+          "Vue semaine et liste de courses",
+          "Synchronisation multi-appareil optionnelle",
+          "Export PDF et CSV",
+          "Hors-ligne et installable sur écran d'accueil"
+        ],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Ma Diét",
+          "url": "https://madiet.lentreprise.ai/"
+        }
+      }
+    </script>
+
+    <!-- FAQPage Schema pour enrichir la page /aide -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Qu'est-ce que Ma Diét ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ma Diét est un planificateur alimentaire gratuit qui calcule ton besoin calorique et ajuste automatiquement les quantités de tes repas pour atteindre tes cibles en protéines, glucides et lipides. Fonctionne sans compte, tes données restent sur ton appareil."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment est calculé mon besoin calorique ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ma Diét utilise la formule de Harris-Benedict (métabolisme de base) multipliée par un coefficient d'activité (sédentaire à extrêmement actif), puis ajuste avec ton objectif (perte, maintien, prise de masse). Tu obtiens ta cible calorique journalière et la répartition recommandée des macros."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Est-ce que Ma Diét coûte quelque chose ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non, Ma Diét est gratuit. Pas d'inscription obligatoire, pas de publicité, pas de tracking. Un abonnement premium sera proposé plus tard pour des fonctionnalités avancées, mais l'app restera fonctionnelle en gratuit."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Ma Diét est-il un conseil médical ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Ma Diét fournit des calculs indicatifs basés sur des formules standards. Pour un suivi personnalisé ou en cas de pathologie, consultez un diététicien ou un médecin."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

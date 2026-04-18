@@ -1,5 +1,6 @@
 import { supabase, isCloudEnabled } from './supabase';
 import { storage } from './storage';
+import localforage from 'localforage';
 
 /**
  * Sync bidirectionnel entre IndexedDB (local, rapide, offline) et Supabase
@@ -27,6 +28,7 @@ export interface CloudSnapshot {
   customFoods: unknown;
   customTemplates: unknown;
   reminders: unknown;
+  water: { counts: Record<string, number>; goal: number };
   settings: unknown;
 }
 
@@ -52,6 +54,17 @@ async function buildLocalSnapshot(): Promise<CloudSnapshot> {
   const customTemplates = await storage.getCustomTemplates();
   const reminders = await storage.getReminders();
   const settings = await storage.getSettings();
+  // Récupère l'hydratation directement depuis localforage (pas d'API
+  // dédiée dans storage, on itère sur les clés water:*).
+  const waterCounts: Record<string, number> = {};
+  let waterGoal = 8;
+  await localforage.iterate<unknown, void>((value, key) => {
+    if (key === 'water:goal' && typeof value === 'number') {
+      waterGoal = value;
+    } else if (key.startsWith('water:') && typeof value === 'number') {
+      waterCounts[key] = value;
+    }
+  });
   return {
     profiles,
     activeProfileId,
@@ -62,6 +75,7 @@ async function buildLocalSnapshot(): Promise<CloudSnapshot> {
     customFoods,
     customTemplates,
     reminders,
+    water: { counts: waterCounts, goal: waterGoal },
     settings: settings ?? {},
   };
 }
@@ -94,6 +108,20 @@ async function applySnapshotToLocal(snap: CloudSnapshot): Promise<void> {
   if (snap.settings && typeof snap.settings === 'object' && Object.keys(snap.settings).length > 0) {
     await storage.saveSettings(snap.settings as Parameters<typeof storage.saveSettings>[0]);
   }
+  // Hydratation : efface les anciennes entrées water:* et applique celles du cloud.
+  if (snap.water) {
+    const oldKeys: string[] = [];
+    await localforage.iterate<unknown, void>((_v, key) => {
+      if (key.startsWith('water:')) oldKeys.push(key);
+    });
+    for (const k of oldKeys) await localforage.removeItem(k);
+    for (const [key, val] of Object.entries(snap.water.counts ?? {})) {
+      if (typeof val === 'number' && val > 0) await localforage.setItem(key, val);
+    }
+    if (typeof snap.water.goal === 'number') {
+      await localforage.setItem('water:goal', snap.water.goal);
+    }
+  }
 }
 
 /** Push complet de l'état local vers le cloud (débounced par l'appelant si besoin). */
@@ -114,6 +142,7 @@ export async function pushAll(userId: string): Promise<void> {
         custom_foods: snap.customFoods,
         custom_templates: snap.customTemplates,
         reminders: snap.reminders,
+        water: snap.water,
         settings: snap.settings,
       },
       { onConflict: 'user_id' }
@@ -145,6 +174,7 @@ export async function pullAll(userId: string): Promise<boolean> {
     customFoods: data.custom_foods ?? [],
     customTemplates: data.custom_templates ?? [],
     reminders: data.reminders ?? [],
+    water: (data.water as { counts: Record<string, number>; goal: number }) ?? { counts: {}, goal: 8 },
     settings: data.settings ?? {},
   };
   // Snapshot "vide" = 0 profils côté cloud : on considère que c'est un

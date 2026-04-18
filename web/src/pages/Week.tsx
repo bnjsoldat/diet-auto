@@ -208,7 +208,11 @@ export function Week() {
                   }}
                 >
                   {shortWeekday(date)}
-                  {isToday && <span className="ml-1 text-emerald-600">•</span>}
+                  {isToday && (
+                    <span className="ml-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-600 text-white align-middle">
+                      Aujourd'hui
+                    </span>
+                  )}
                 </button>
                 {hasPlan && (
                   <div className="relative">

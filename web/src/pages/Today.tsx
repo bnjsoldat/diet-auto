@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   BookmarkPlus,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Eraser,
   FileDown,
   LayoutTemplate,
@@ -30,6 +32,13 @@ import { buildMealsFromTemplate, type PlanTemplate } from '@/lib/templates';
 import { useCustomTemplates } from '@/store/useCustomTemplates';
 import type { MealFoodItem, OptimizeResult } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
+
+/** Ajoute un nombre de jours à une date ISO 'YYYY-MM-DD'. */
+function shiftDate(isoDate: string, days: number): string {
+  const d = new Date(isoDate + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 /**
  * Choisit l'id du repas le plus pertinent pour y insérer un aliment
@@ -84,6 +93,7 @@ export function Today() {
   const plans = useDayPlan((s) => s.plans);
   const addMeal = useDayPlan((s) => s.addMeal);
   const replacePlan = useDayPlan((s) => s.replaceCurrentPlan);
+  const switchDate = useDayPlan((s) => s.switchDate);
   const duplicateFromDate = useDayPlan((s) => s.duplicateFromDate);
 
   const optimizerMode = useSettings((s) => s.optimizerMode);
@@ -260,12 +270,42 @@ export function Today() {
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider muted">
-            {isToday ? 'Aujourd\u2019hui' : 'Plan du jour'}
+          <div className="text-xs font-semibold uppercase tracking-wider muted flex items-center gap-2">
+            <span>{isToday ? 'Aujourd\u2019hui' : 'Plan du jour'}</span>
+            {!isToday && (
+              <button
+                type="button"
+                onClick={() => switchDate(todayKey())}
+                className="inline-flex items-center gap-1 px-1.5 h-5 text-[10px] font-medium rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-colors"
+                title="Revenir au plan d'aujourd'hui"
+              >
+                <CalendarDays size={10} /> Revenir à aujourd'hui
+              </button>
+            )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold mt-1 capitalize">
-            {friendlyDate(current.date)}
-          </h1>
+          <div className="flex items-center gap-1 mt-1">
+            <button
+              type="button"
+              onClick={() => switchDate(shiftDate(current.date, -1))}
+              className="h-8 w-8 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)] transition-colors"
+              title="Jour précédent"
+              aria-label="Jour précédent"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <h1 className="text-2xl sm:text-3xl font-bold capitalize px-1 tabular-nums">
+              {friendlyDate(current.date)}
+            </h1>
+            <button
+              type="button"
+              onClick={() => switchDate(shiftDate(current.date, 1))}
+              className="h-8 w-8 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)] transition-colors"
+              title="Jour suivant"
+              aria-label="Jour suivant"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button

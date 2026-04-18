@@ -1,5 +1,6 @@
 import localforage from 'localforage';
 import type { DayPlan, Food, Profile, Reminder, Settings, WeightEntry } from '@/types';
+import type { PlanTemplate } from './templates';
 
 localforage.config({
   name: 'diet-auto',
@@ -17,6 +18,7 @@ const K = {
   recipes: (profileId: string) => `recipes:${profileId}`,
   customFoods: 'customFoods',
   reminders: 'reminders',
+  customTemplates: 'customTemplates',
 };
 
 export const storage = {
@@ -81,5 +83,12 @@ export const storage = {
   },
   async saveReminders(list: Reminder[]) {
     await localforage.setItem(K.reminders, list);
+  },
+
+  async getCustomTemplates(): Promise<PlanTemplate[]> {
+    return (await localforage.getItem<PlanTemplate[]>(K.customTemplates)) ?? [];
+  },
+  async saveCustomTemplates(list: PlanTemplate[]) {
+    await localforage.setItem(K.customTemplates, list);
   },
 };

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
+  BookmarkPlus,
   CalendarDays,
   Eraser,
   FileDown,
@@ -25,8 +26,9 @@ import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
 import { TemplatePicker } from '@/components/TemplatePicker';
-import { buildMealsFromTemplate } from '@/lib/templates';
-import type { MealFoodItem, OptimizeResult, OptimizerMode } from '@/types';
+import { buildMealsFromTemplate, type PlanTemplate } from '@/lib/templates';
+import { useCustomTemplates } from '@/store/useCustomTemplates';
+import type { MealFoodItem, OptimizeResult } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
 
 /**
@@ -86,6 +88,7 @@ export function Today() {
 
   const optimizerMode = useSettings((s) => s.optimizerMode);
   const updateSettings = useSettings((s) => s.update);
+  const addCustomTemplate = useCustomTemplates((s) => s.add);
 
   const [result, setResult] = useState<OptimizeResult | null>(null);
   const [open, setOpen] = useState(false);
@@ -268,10 +271,39 @@ export function Today() {
           <button
             className="btn-outline"
             onClick={() => setTplOpen(true)}
-            title="Charger un plan pré-fait (petit-déj / déjeuner / dîner prêts à optimiser)"
+            title="Charger un plan pré-fait ou un de tes modèles sauvegardés"
           >
             <LayoutTemplate size={14} /> Modèle
           </button>
+          {current.meals.some((m) => m.items.length > 0) && (
+            <button
+              className="btn-outline"
+              onClick={() => {
+                const label = window.prompt(
+                  'Nom du modèle :',
+                  `Mon plan du ${new Date().toLocaleDateString('fr-FR')}`
+                );
+                if (!label?.trim()) return;
+                const tpl: PlanTemplate = {
+                  id: 'custom_' + Date.now().toString(36),
+                  label: label.trim(),
+                  emoji: '👤',
+                  description: 'Mon modèle personnel.',
+                  mode: optimizerMode,
+                  meals: current.meals.map((m) => ({
+                    nom: m.nom,
+                    items: m.items
+                      .filter((it) => it.quantite > 0)
+                      .map((it) => [it.nom, it.quantite] as [string, number]),
+                  })),
+                };
+                void addCustomTemplate(tpl);
+              }}
+              title="Enregistrer le plan du jour comme modèle réutilisable"
+            >
+              <BookmarkPlus size={14} /> Enregistrer
+            </button>
+          )}
           {current.meals.some((m) => m.items.length > 0) && (
             <button
               className="btn-outline"
@@ -306,27 +338,6 @@ export function Today() {
           <button className="btn-outline" onClick={handleExportPDF}>
             <FileDown size={14} /> PDF
           </button>
-          <div className="inline-flex items-center rounded-md border overflow-hidden h-10">
-            <span className="px-2 text-xs muted border-r h-full grid place-items-center">
-              Mode
-            </span>
-            {(['strict', 'normal', 'souple'] as OptimizerMode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => updateSettings({ optimizerMode: m })}
-                className={
-                  'px-2.5 text-xs h-full border-r last:border-r-0 transition-colors ' +
-                  (optimizerMode === m
-                    ? 'bg-emerald-600 text-white'
-                    : 'hover:bg-[var(--bg-subtle)]')
-                }
-                title={OPTIMIZER_MODES[m].description}
-              >
-                {OPTIMIZER_MODES[m].label}
-              </button>
-            ))}
-          </div>
           <button
             className="btn-primary"
             onClick={handleOptimize}

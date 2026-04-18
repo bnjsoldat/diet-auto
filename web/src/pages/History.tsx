@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Download, History as HistoryIcon, Target, TrendingUp } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Download, History as HistoryIcon, Pencil, Target, Trash2, TrendingUp } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -75,8 +75,11 @@ function rollingMean(values: number[], window: number): (number | null)[] {
 }
 
 export function History() {
+  const navigate = useNavigate();
   const profile = useProfile((s) => s.getActive());
   const plans = useDayPlan((s) => s.plans);
+  const switchDate = useDayPlan((s) => s.switchDate);
+  const removePlanForDate = useDayPlan((s) => s.removePlanForDate);
   const [range, setRange] = useState<7 | 30 | 90>(30);
 
   const targets = useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
@@ -151,7 +154,7 @@ export function History() {
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-8">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Historique</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Mon suivi</h1>
           <p className="muted mt-1">
             {entries.length === 0
               ? 'Aucun plan enregistré pour l\u2019instant.'
@@ -424,29 +427,58 @@ export function History() {
             </div>
           )}
 
-          {/* Tableau : chaque journée détaillée (comme avant) */}
+          {/* Tableau : chaque journée détaillée, avec actions rapides */}
           <div className="grid gap-2">
             {entries.map((e) => (
               <div key={e.date} className="card p-4 flex flex-wrap items-center justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-medium capitalize">{friendlyDate(e.date)}</div>
                   <div className="text-xs muted">
                     {e.meals} repas · {e.items} aliments
                   </div>
                 </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="font-mono tabular-nums">
-                    <span className="muted">kcal</span> {e.kcal}
-                  </span>
-                  <span className="font-mono tabular-nums">
-                    <span className="muted">P</span> {e.prot}
-                  </span>
-                  <span className="font-mono tabular-nums">
-                    <span className="muted">G</span> {e.gluc}
-                  </span>
-                  <span className="font-mono tabular-nums">
-                    <span className="muted">L</span> {e.lip}
-                  </span>
+                <div className="flex items-center gap-4 text-sm flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono tabular-nums">
+                      <span className="muted">kcal</span> {e.kcal}
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      <span className="muted">P</span> {e.prot}
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      <span className="muted">G</span> {e.gluc}
+                    </span>
+                    <span className="font-mono tabular-nums">
+                      <span className="muted">L</span> {e.lip}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        switchDate(e.date);
+                        navigate('/today');
+                      }}
+                      className="h-7 w-7 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+                      title="Modifier ce jour"
+                      aria-label={`Modifier le plan du ${friendlyDate(e.date)}`}
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Supprimer définitivement le plan du ${friendlyDate(e.date)} ?`)) {
+                          removePlanForDate(e.date);
+                        }
+                      }}
+                      className="h-7 w-7 grid place-items-center rounded muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      title="Supprimer ce jour"
+                      aria-label={`Supprimer le plan du ${friendlyDate(e.date)}`}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

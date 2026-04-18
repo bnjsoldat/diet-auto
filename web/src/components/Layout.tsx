@@ -20,8 +20,8 @@ const nav = [
   { to: '/today', label: 'Aujourd\u2019hui', icon: CalendarDays },
   { to: '/week', label: 'Semaine', icon: CalendarRange },
   { to: '/shopping', label: 'Courses', icon: ShoppingCart },
-  { to: '/recipes', label: 'Recettes', icon: ChefHat },
-  { to: '/history', label: 'Historique', icon: HistoryIcon },
+  { to: '/recipes', label: 'Mes recettes', icon: ChefHat },
+  { to: '/history', label: 'Mon suivi', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
   { to: '/profiles', label: 'Profils', icon: User },
 ];

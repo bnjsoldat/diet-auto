@@ -13,6 +13,7 @@ import { useWeight } from './store/useWeight';
 import { useRecipes } from './store/useRecipes';
 import { useCustomFoods } from './store/useCustomFoods';
 import { useReminders } from './store/useReminders';
+import { useCustomTemplates } from './store/useCustomTemplates';
 import { useReminderScheduler } from './hooks/useReminderScheduler';
 
 // Pages chargées à la demande : réduit le bundle initial de ~60 %.
@@ -61,6 +62,7 @@ export default function App() {
   const loadRecipes = useRecipes((s) => s.load);
   const loadCustomFoods = useCustomFoods((s) => s.load);
   const loadReminders = useReminders((s) => s.load);
+  const loadCustomTemplates = useCustomTemplates((s) => s.load);
 
   useReminderScheduler();
 
@@ -99,7 +101,8 @@ export default function App() {
     loadSettings();
     loadCustomFoods();
     loadReminders();
-  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders]);
+    loadCustomTemplates();
+  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates]);
 
   useEffect(() => {
     if (activeId) {

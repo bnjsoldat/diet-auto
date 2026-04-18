@@ -32,6 +32,10 @@ interface DayPlanState {
   duplicateFromDate: (sourceDate: string) => void;
   /** Réordonne les repas du plan courant. */
   reorderMeals: (orderedIds: string[]) => void;
+  /** Supprime complètement le plan d'une date donnée (action destructive). */
+  removePlanForDate: (date: string) => void;
+  /** Duplique le plan courant sur plusieurs dates en même temps (ex : toute la semaine). */
+  duplicateToDates: (targetDates: string[]) => void;
 }
 
 function makeEmptyPlan(date: string, profileId: string): DayPlan {
@@ -207,6 +211,38 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       for (const m of map.values()) next.push(m);
       const updated: DayPlan = { ...plan, meals: next, updatedAt: Date.now() };
       set({ plans: { ...get().plans, [plan.date]: updated } });
+      _persist?.();
+    },
+
+    removePlanForDate(date) {
+      const { plans } = get();
+      if (!plans[date]) return;
+      const next = { ...plans };
+      delete next[date];
+      set({ plans: next });
+      _persist?.();
+    },
+
+    duplicateToDates(targetDates) {
+      const { date: currentDate, plans, profileId } = get();
+      if (!profileId) return;
+      const src = plans[currentDate];
+      if (!src) return;
+      const next = { ...plans };
+      for (const d of targetDates) {
+        if (d === currentDate) continue;
+        next[d] = {
+          date: d,
+          profileId,
+          meals: src.meals.map((m) => ({
+            id: uid('meal'),
+            nom: m.nom,
+            items: m.items.map((it) => ({ ...it, id: uid('itm') })),
+          })),
+          updatedAt: Date.now(),
+        };
+      }
+      set({ plans: next });
       _persist?.();
     },
 

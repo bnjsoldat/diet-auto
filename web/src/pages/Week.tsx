@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, Copy, Plus, ShoppingCart } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Copy, CopyCheck, Plus, ShoppingCart } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
@@ -31,6 +31,7 @@ export function Week() {
   const plans = useDayPlan((s) => s.plans);
   const switchDate = useDayPlan((s) => s.switchDate);
   const duplicateFromDate = useDayPlan((s) => s.duplicateFromDate);
+  const duplicateToDates = useDayPlan((s) => s.duplicateToDates);
   const optimizerMode = useSettings((s) => s.optimizerMode);
 
   // Ancre = dimanche le plus proche ≥ aujourd'hui (on montre la semaine en cours)
@@ -138,24 +139,52 @@ export function Week() {
                   {isToday && <span className="ml-1 text-emerald-600">•</span>}
                 </button>
                 {hasPlan && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (
-                        plans[todayKey()] &&
-                        plans[todayKey()].meals.some((m) => m.items.length > 0) &&
-                        !confirm('Remplacer le plan d\u2019aujourd\u2019hui par la copie de ce jour ?')
-                      )
-                        return;
-                      switchDate(todayKey());
-                      duplicateFromDate(date);
-                      navigate('/today');
-                    }}
-                    className="h-6 w-6 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
-                    title="Copier vers aujourd'hui"
-                  >
-                    <Copy size={11} />
-                  </button>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          plans[todayKey()] &&
+                          plans[todayKey()].meals.some((m) => m.items.length > 0) &&
+                          !confirm('Remplacer le plan d\u2019aujourd\u2019hui par la copie de ce jour ?')
+                        )
+                          return;
+                        switchDate(todayKey());
+                        duplicateFromDate(date);
+                        navigate('/today');
+                      }}
+                      className="h-6 w-6 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+                      title="Copier vers aujourd'hui"
+                      aria-label={`Copier vers aujourd'hui le plan du ${shortWeekday(date)}`}
+                    >
+                      <Copy size={11} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Applique ce plan aux 6 autres jours de la semaine affichée
+                        // (conserve le jour source tel quel ; écrase les autres).
+                        const othersWithPlan = weekDates.filter(
+                          (d) => d !== date && plans[d] && plans[d].meals.some((m) => m.items.length > 0)
+                        );
+                        const msg =
+                          othersWithPlan.length > 0
+                            ? `Ce plan va remplacer ${othersWithPlan.length} journée${othersWithPlan.length > 1 ? 's' : ''} déjà existante${othersWithPlan.length > 1 ? 's' : ''} cette semaine. Continuer ?`
+                            : `Appliquer ce plan aux 6 autres jours de la semaine ?`;
+                        if (!confirm(msg)) return;
+                        // On passe la date source en "date courante" pour que
+                        // duplicateToDates l'utilise comme source.
+                        switchDate(date);
+                        const targets = weekDates.filter((d) => d !== date);
+                        duplicateToDates(targets);
+                      }}
+                      className="h-6 w-6 grid place-items-center rounded muted hover:bg-[var(--bg-subtle)]"
+                      title="Appliquer à toute la semaine"
+                      aria-label={`Appliquer à toute la semaine le plan du ${shortWeekday(date)}`}
+                    >
+                      <CopyCheck size={11} />
+                    </button>
+                  </div>
                 )}
               </div>
 

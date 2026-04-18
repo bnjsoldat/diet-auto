@@ -84,7 +84,7 @@ export function Recipes() {
           <div className="flex items-center gap-2 muted text-xs font-semibold uppercase tracking-wider">
             <ChefHat size={12} /> Mes recettes
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold mt-1">Recettes composées</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mt-1">Mes recettes</h1>
           <p className="muted text-sm mt-1">
             Sauvegarde tes plats habituels (ex : Bolognaise, smoothie matin…) pour les ajouter en 1
             clic dans un repas.

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, Trash2, User, X } from 'lucide-react';
 import { PLAN_TEMPLATES, type PlanTemplate } from '@/lib/templates';
+import { useCustomTemplates } from '@/store/useCustomTemplates';
 
 interface Props {
   open: boolean;
@@ -11,6 +12,9 @@ interface Props {
 }
 
 export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
+  const customs = useCustomTemplates((s) => s.templates);
+  const removeCustom = useCustomTemplates((s) => s.remove);
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -29,7 +33,7 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
       aria-modal="true"
       onClick={onClose}
     >
-      <div className="w-full max-w-2xl card p-5 my-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-2xl card p-5 my-6 animate-slide-down" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-2">
           <div>
             <h2 className="text-lg font-semibold">Charger un plan pré-fait</h2>
@@ -52,30 +56,82 @@ export function TemplatePicker({ open, onClose, onPick, willReplace }: Props) {
           </div>
         )}
 
-        <div className="mt-4 grid sm:grid-cols-2 gap-3">
-          {PLAN_TEMPLATES.map((tpl) => (
-            <button
-              key={tpl.id}
-              type="button"
-              className="text-left p-4 rounded-md border hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-colors"
-              onClick={() => {
-                onPick(tpl);
-                onClose();
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-2xl" aria-hidden>
-                  {tpl.emoji}
-                </span>
-                <h3 className="font-semibold">{tpl.label}</h3>
-              </div>
-              <p className="text-xs muted mt-1.5">{tpl.description}</p>
-              <div className="mt-2 text-[11px] muted">
-                {tpl.meals.length} repas ·{' '}
-                {tpl.meals.reduce((acc, m) => acc + m.items.length, 0)} aliments
-              </div>
-            </button>
-          ))}
+        {/* Modèles perso d'abord (plus pertinents pour l'utilisateur) */}
+        {customs.length > 0 && (
+          <div className="mt-4">
+            <div className="text-xs font-semibold uppercase tracking-wider muted mb-2 flex items-center gap-1">
+              <User size={11} /> Mes modèles
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {customs.map((tpl) => (
+                <div key={tpl.id} className="relative group">
+                  <button
+                    type="button"
+                    className="w-full text-left p-4 rounded-md border hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-colors"
+                    onClick={() => {
+                      onPick(tpl);
+                      onClose();
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl" aria-hidden>
+                        {tpl.emoji}
+                      </span>
+                      <h3 className="font-semibold truncate">{tpl.label}</h3>
+                    </div>
+                    <p className="text-xs muted mt-1.5 line-clamp-2">{tpl.description}</p>
+                    <div className="mt-2 text-[11px] muted">
+                      {tpl.meals.length} repas ·{' '}
+                      {tpl.meals.reduce((acc, m) => acc + m.items.length, 0)} aliments
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Supprimer le modèle « ${tpl.label} » ?`)) removeCustom(tpl.id);
+                    }}
+                    className="absolute top-2 right-2 h-6 w-6 grid place-items-center rounded opacity-0 group-hover:opacity-100 muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-opacity"
+                    title="Supprimer ce modèle"
+                    aria-label={`Supprimer le modèle ${tpl.label}`}
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Modèles par défaut */}
+        <div className="mt-4">
+          {customs.length > 0 && (
+            <div className="text-xs font-semibold uppercase tracking-wider muted mb-2">Modèles par défaut</div>
+          )}
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PLAN_TEMPLATES.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                className="text-left p-4 rounded-md border hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-colors"
+                onClick={() => {
+                  onPick(tpl);
+                  onClose();
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl" aria-hidden>
+                    {tpl.emoji}
+                  </span>
+                  <h3 className="font-semibold">{tpl.label}</h3>
+                </div>
+                <p className="text-xs muted mt-1.5">{tpl.description}</p>
+                <div className="mt-2 text-[11px] muted">
+                  {tpl.meals.length} repas · {tpl.meals.reduce((acc, m) => acc + m.items.length, 0)} aliments
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

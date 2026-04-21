@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Star, TrendingUp } from 'lucide-react';
+import { ChevronDown, Filter as FilterIcon, Search, Star, TrendingUp } from 'lucide-react';
 import { foods, foodsByName, searchFoods } from '@/lib/foods';
 import { useFavorites } from '@/store/useFavorites';
 import { useCustomFoods } from '@/store/useCustomFoods';
@@ -24,6 +24,10 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
   const [open, setOpen] = useState(false);
   const [idx, setIdx] = useState(0);
   const [filter, setFilter] = useState<Filter>('favoris');
+  /** Mobile : affiche/cache les chips de catégorie pour libérer de la
+   *  place à la liste d'aliments. Par défaut collapsed sur mobile
+   *  (mieux pour voir les résultats), toujours ouvert sur desktop. */
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -172,31 +176,79 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
           role="listbox"
           onMouseDown={(e) => e.preventDefault()}
         >
-          {/* Filtres par catégorie */}
-          <div className="sticky top-0 bg-[var(--card)] border-b px-2 py-2 flex flex-wrap gap-1 z-10">
-            {favs.length > 0 && (
+          {/* Filtres par catégorie.
+              - Mobile (sm-) : bouton "Filtrer" + flèche qui déplie / replie
+                (par défaut replié pour libérer de la place à la liste).
+              - Desktop (sm+) : toujours affiché, wrap classique. */}
+          {/* Bouton toggle visible UNIQUEMENT sur mobile */}
+          <div className="sticky top-0 bg-[var(--card)] border-b z-10">
+            <button
+              type="button"
+              className="sm:hidden w-full flex items-center justify-between px-3 py-2 text-xs font-medium"
+              onClick={() => setFiltersOpen((v) => !v)}
+              aria-expanded={filtersOpen}
+            >
+              <span className="inline-flex items-center gap-1.5 muted">
+                <FilterIcon size={12} />
+                {filter === 'favoris'
+                  ? 'Favoris'
+                  : filter === 'all'
+                  ? 'Toutes catégories'
+                  : (availableCategories.find((c) => c.id === filter)?.label ?? 'Filtrer')}
+              </span>
+              <ChevronDown
+                size={14}
+                className={cn(
+                  'muted transition-transform',
+                  filtersOpen && 'rotate-180'
+                )}
+              />
+            </button>
+
+            {/* Liste des chips — toujours affichée sur sm+, conditionnelle sur mobile */}
+            <div
+              className={cn(
+                'px-2 py-2 flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible sm:flex',
+                filtersOpen ? 'flex' : 'hidden sm:flex'
+              )}
+              style={{ scrollbarWidth: 'thin' }}
+            >
+              {favs.length > 0 && (
+                <CategoryPill
+                  active={filter === 'favoris'}
+                  onClick={() => {
+                    setFilter('favoris');
+                    setFiltersOpen(false);
+                  }}
+                >
+                  <Star size={11} className="text-amber-500" fill="currentColor" /> Favoris
+                </CategoryPill>
+              )}
               <CategoryPill
-                active={filter === 'favoris'}
-                onClick={() => setFilter('favoris')}
+                active={filter === 'all'}
+                onClick={() => {
+                  setFilter('all');
+                  setFiltersOpen(false);
+                }}
               >
-                <Star size={11} className="text-amber-500" fill="currentColor" /> Favoris
+                Tous
               </CategoryPill>
-            )}
-            <CategoryPill active={filter === 'all'} onClick={() => setFilter('all')}>
-              Tous
-            </CategoryPill>
-            {availableCategories.map((c) => (
-              <CategoryPill
-                key={c.id}
-                active={filter === c.id}
-                onClick={() => setFilter(c.id)}
-              >
-                <span aria-hidden className="leading-none">
-                  {c.emoji}
-                </span>{' '}
-                {c.label}
-              </CategoryPill>
-            ))}
+              {availableCategories.map((c) => (
+                <CategoryPill
+                  key={c.id}
+                  active={filter === c.id}
+                  onClick={() => {
+                    setFilter(c.id);
+                    setFiltersOpen(false);
+                  }}
+                >
+                  <span aria-hidden className="leading-none">
+                    {c.emoji}
+                  </span>{' '}
+                  {c.label}
+                </CategoryPill>
+              ))}
+            </div>
           </div>
 
           {/* Bandeau "en manque de X" quand la vue Tous est active */}
@@ -278,7 +330,7 @@ function CategoryPill({
       type="button"
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1 text-xs px-2 h-7 rounded-full border transition-colors whitespace-nowrap',
+        'inline-flex items-center gap-1 text-xs px-2 h-7 rounded-full border transition-colors whitespace-nowrap shrink-0',
         active
           ? 'bg-emerald-600 text-white border-emerald-600'
           : 'muted hover:bg-[var(--bg-subtle)]'

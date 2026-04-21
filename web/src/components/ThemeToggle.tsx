@@ -1,8 +1,17 @@
-import { Coffee, Moon, Sun, Monitor } from 'lucide-react';
+import { Coffee, Moon, Sun } from 'lucide-react';
 import { useSettings } from '@/store/useSettings';
 import type { Theme } from '@/types';
 import { cn } from '@/lib/utils';
 
+/**
+ * Sélecteur de thème à 3 options : Clair / Pastel / Sombre.
+ * Le thème "system" (suivi auto de l'OS) a été retiré — les utilisateurs
+ * préfèrent en général un choix explicite, et ça réduit la largeur du
+ * toggle dans le header (précieux sur mobile).
+ *
+ * Si un user avait "system" stocké en settings, useSettings applique
+ * silencieusement un fallback en "light" (voir store/useSettings.ts).
+ */
 export function ThemeToggle() {
   const theme = useSettings((s) => s.theme);
   const setTheme = useSettings((s) => s.setTheme);
@@ -11,7 +20,6 @@ export function ThemeToggle() {
     { value: 'light', icon: Sun, label: 'Clair' },
     { value: 'pastel', icon: Coffee, label: 'Pastel' },
     { value: 'dark', icon: Moon, label: 'Sombre' },
-    { value: 'system', icon: Monitor, label: 'Système' },
   ];
 
   return (

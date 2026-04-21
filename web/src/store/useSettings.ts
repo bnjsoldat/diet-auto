@@ -4,7 +4,9 @@ import { applyTheme, getSavedTheme } from '@/lib/theme';
 import type { Settings, Theme } from '@/types';
 
 const DEFAULT: Settings = {
-  theme: 'system',
+  // Par défaut clair (le thème 'system' existe toujours en type pour les
+  // anciens utilisateurs mais n'est plus proposé dans le ThemeToggle).
+  theme: 'light',
   weightKcal: 2.0,
   weightMacro: 1.0,
   optimizerMode: 'normal',

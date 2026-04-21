@@ -43,26 +43,32 @@ export function Layout() {
   return (
     <div className="min-h-full flex flex-col">
       <header className="sticky top-0 z-20 border-b bg-[var(--bg)]/80 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link to={isLanding ? '/' : '/today'} className="flex items-center gap-2">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
+          <Link
+            to={isLanding ? '/' : '/today'}
+            className="flex items-center gap-2 shrink-0 min-w-0"
+          >
             <img
               src="/favicon.svg?v=2"
               alt=""
-              className="h-8 w-8 rounded-md"
+              className="h-8 w-8 rounded-md shrink-0"
               aria-hidden
             />
-            <span className="font-semibold">Ma Diét</span>
+            <span className="font-semibold whitespace-nowrap">Ma Diét</span>
           </Link>
 
+          {/* Desktop nav — hidden jusqu'à lg (1024px+) car 8 onglets +
+              logo + boutons droite = trop cramé en-dessous. Sur tablette
+              on tombe sur le mobile nav (barre horizontale). */}
           {!isLanding && (
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center overflow-x-auto">
               {nav.map((n) => (
                 <NavLink
                   key={n.to}
                   to={n.to}
                   className={({ isActive }) =>
                     cn(
-                      'inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                      'inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap',
                       isActive
                         ? 'bg-[var(--bg-subtle)] text-[var(--text)]'
                         : 'muted hover:bg-[var(--bg-subtle)] hover:text-[var(--text)]'
@@ -76,7 +82,7 @@ export function Layout() {
             </nav>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <AuthButton />
             {!isLanding && <ProfileSwitcher />}
             <InstallButton />
@@ -84,10 +90,10 @@ export function Layout() {
           </div>
         </div>
 
-        {/* En mobile, on affiche une barre de raccourcis horizontaux pour les
+        {/* En <lg, on affiche une barre de raccourcis horizontaux pour les
             pages secondaires (les 4 principales sont en bottom bar).  */}
         {!isLanding && (
-          <nav className="md:hidden border-t overflow-x-auto">
+          <nav className="lg:hidden border-t overflow-x-auto">
             <div className="flex min-w-max">
               {nav
                 .filter((n) => !mobileBottom.some((b) => b.to === n.to))
@@ -111,7 +117,7 @@ export function Layout() {
         )}
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 pb-20 lg:pb-0">
         {/* AnimatePresence + PageTransition : anime l'entrée/sortie
             de chaque route (fade + slide 8 px). La key pathname force
             l'animation à chaque changement. */}
@@ -124,7 +130,7 @@ export function Layout() {
 
       {/* Bottom tab bar iOS-style, mobile uniquement */}
       {!isLanding && (
-        <nav className="fixed bottom-0 inset-x-0 z-30 md:hidden border-t bg-[var(--bg)]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
+        <nav className="fixed bottom-0 inset-x-0 z-30 lg:hidden border-t bg-[var(--bg)]/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]">
           <div className="grid grid-cols-4">
             {mobileBottom.map((n) => (
               <NavLink

@@ -6,11 +6,13 @@
 
 **Éditeur légal** : Benjy GRONDIN, 26 ans, micro-entreprise à Saint-Paul (La Réunion), SIRET 933 093 882 00019, prépare le concours pompier. Pratique muscu / course / volley / boxe. Auto-entrepreneur : cours de maths, rédaction mémoires techniques, création sites + SaaS B2B.
 
-**Phase** : prêt au lancement public. Date J = **mardi 21 avril 2026, 10h heure La Réunion**. Plateforme 1 = r/fitness_France (Reddit), puis Twitter thread le soir, LinkedIn jeudi. Product Hunt = dans ~2 semaines selon feedback.
+**Phase** : prêt au lancement public. Date J = **vendredi 1er mai 2026, 10h heure La Réunion**. Plateforme 1 = r/fitness_France (Reddit), puis Twitter thread le soir, LinkedIn lundi. Product Hunt = dans ~2 semaines selon feedback.
 
 **Ton** pour les posts sociaux : *"dev sportif qui a galéré avec MFP/Yazio, a codé son outil pour préparer le concours pompier, cherche du feedback honnête"*. Jamais "founder qui lance", jamais mention du Pro payant (prévu plus tard à 4,99 €/mois, tabou dans les threads).
 
 **⚠️ Positionnement auth (changé le 21/04)** : la création de compte est maintenant **OBLIGATOIRE** pour accéder à /today, /week, /shopping, etc. (capture email pour marketing + sync cross-device). Landing + /blog + /aide + /legal restent publics. Méthodes de connexion : Google OAuth (1 clic), lien magique par email (10 s), ou email + mot de passe (caché dans « autres options »). Le RequireAuth guard redirect vers /login si non connecté. Les anciennes mentions « sans compte / 100 % local » ont été retirées partout (landing, blog, help, legal, onboarding, Reddit/Twitter/LinkedIn templates).
+
+**🏃 Intégration Strava (ajoutée le 21/04)** : OAuth complet pour récupérer les kcal brûlées des activités sportives et ajuster automatiquement la cible journalière. Table Supabase `user_integrations` (RLS strict) + Edge Function `strava-oauth` qui garde le Client Secret côté serveur. Flux : /integrations → bouton « Connecter Strava » → redirect Strava → callback /integrations/strava/callback → tokens stockés + sync auto. Widget sur /today affiche les kcal brûlées + liste des activités. La cible = maintenance + objectif + kcal_sport. Strava couvre ~95 % des sportifs équipés (Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit y syncent tous). Client ID : 228387. Client Secret : dans secrets Supabase. `VITE_STRAVA_CLIENT_ID` dans env Vercel.
 
 **Fichiers de lancement prêts à copier-coller** :
 - `LAUNCH_DAY_READY.md` (racine) — post Reddit + 7 tweets + LinkedIn + email beta + checklist jour J

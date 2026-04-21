@@ -8,18 +8,19 @@ muscu + course + volley + boxe.
 
 ---
 
-## 📅 Timing recommandé
+## 📅 Timing recommandé — LANCEMENT 1er MAI 2026
 
 | Jour | Heure La Réunion | Action | Plateforme |
 |---|---|---|---|
-| **Lundi 20 avril** | soir | Warmer le compte Reddit (commenter 2-3 posts sympas du sub) | r/fitness_France |
-| **Mardi 21 avril** | **10h** | 🚀 **Post Reddit** | r/fitness_France |
-| Mardi 21 avril | 10h-14h | Répondre à TOUS les commentaires (objectif : < 30 min de délai) | Reddit |
-| Mardi 21 avril | 20h | Thread Twitter (7 tweets) | X / Twitter |
-| Mercredi 22 avril | journée | Fixer les bugs remontés, derniers coms Reddit | GitHub + Reddit |
-| Jeudi 23 avril | matin | Post LinkedIn | LinkedIn |
-| Jeudi 23 avril | soir | Bilan chiffré (visites, profils, feedback) | Vercel Analytics |
-| Lundi 28 avril | - | Go/no-go Product Hunt selon feedback | — |
+| **Mer 22 avril → Mer 29 avril** | Progressif | Warming compte Reddit (5-10 coms utiles sur r/fitness_France et autres subs) | r/fitness_France |
+| **Jeu 30 avril** | soir | Test iPhone bout en bout + test Strava + hard refresh tous les appareils | Tes devices |
+| **Ven 1er mai** | **10h** | 🚀 **Post Reddit** | r/fitness_France |
+| Ven 1er mai | 10h-14h | Répondre à TOUS les commentaires (objectif : < 30 min de délai) | Reddit |
+| Ven 1er mai | 20h | Thread Twitter (7 tweets) | X / Twitter |
+| Sam 2 mai | journée | Fixer les bugs remontés, derniers coms Reddit | GitHub + Reddit |
+| Lun 4 mai | matin | Post LinkedIn | LinkedIn |
+| Lun 4 mai | soir | Bilan chiffré (visites, profils, feedback) | Vercel Analytics |
+| **Lun 11 mai** | - | Go/no-go Product Hunt selon feedback | — |
 
 ---
 
@@ -40,12 +41,15 @@ Je prépare le concours pompier et je track mes macros depuis un peu plus d'un a
 
 Du coup, comme je suis aussi dev à côté (auto-entrepreneur, je fais de la rédaction technique et du code pour des boîtes), j'ai codé mon propre truc le weekend : tu mets les aliments que tu veux manger, tu cliques "Optimiser", l'algo ajuste automatiquement les grammages pour matcher tes cibles kcal + macros (P/G/L). Tu peux verrouiller un aliment ("je veux exactement 150g de riz point"), l'algo ajuste le reste.
 
+**Bonus** : l'app se connecte à Strava (donc Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit via leur sync auto), récupère tes kcal brûlées du jour et ajuste la cible journalière en conséquence. Plus de "j'ai couru 10 km ce matin j'ai le droit de manger plus mais combien en plus ?" — c'est calculé.
+
 Base CIQUAL/ANSES (3010 aliments français) + scan code-barres Open Food Facts pour les produits industriels. C'est gratuit, la création de compte prend 10 s (lien magique par email ou Google) et te permet de retrouver ton plan sur ton tel et ton PC.
 
 👉 https://madiet.lentreprise.ai
 
 Je cherche surtout à savoir :
 - Est-ce que les calculs (Harris-Benedict + coef activité) vous paraissent cohérents avec vos chiffres habituels ?
+- Ceux qui ont un Garmin/Apple Watch, est-ce que la sync Strava vous donne bien les kcal réels ?
 - Quels aliments manquent ou ont des macros pétées dans la base ?
 - L'UX mobile, ça passe ? (je suis à La Réunion, mon panel de testeurs IRL est limité 😅)
 
@@ -68,6 +72,8 @@ Bon entraînement 💪
 - "Pourquoi gratuit ?" → *"Pour l'instant j'ai pas 100 users, je me focus sur rendre le truc bien. Un Pro arrivera dans quelques mois pour des features avancées mais l'essentiel restera gratuit."*
 - "C'est sécurisé ?" → *"L'auth passe par Supabase (RLS PostgreSQL, row-level sur l'user_id). Tes données ne sortent jamais du compte, pas de tracking tiers, pas de revente. Le code est fermé pour l'instant mais l'audit RGPD est dispo."*
 - "Pourquoi forcer un compte ?" → *"Pour que tes plans suivent sur tous tes appareils (tel/PC). C'est 10 s avec un lien magique email ou Google, pas de mot de passe à retenir."*
+- "Pourquoi Strava et pas Garmin direct ?" → *"Partenariat Garmin Health API = 4-8 semaines d'attente et potentiellement payant. Strava est gratuit, agrège déjà Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit — je couvre 95% des sportifs en connectant un seul service. Garmin direct viendra peut-être plus tard pour les données sommeil/HRV."*
+- "Le scope Strava demande quoi ?" → *"Juste `activity:read` — lecture seule. L'app ne peut rien publier sur ton compte Strava, juste lire les activités déjà enregistrées. Tu peux révoquer à tout moment depuis tes paramètres Strava."*
 - "Le CIQUAL c'est 2020, c'est pas trop vieux ?" → *"C'est la dernière version officielle publiée par l'ANSES. Pour les produits industriels, j'utilise Open Food Facts qui est à jour."*
 - "Vous êtes diététicien ?" → *"Non, je suis dev et sportif. L'outil calcule mécaniquement selon Harris-Benedict — c'est une aide pour calibrer, pas un conseil médical. Pour un vrai plan, faut voir un diét."*
 
@@ -122,7 +128,17 @@ Stack :
 Bundle : 393 kB gzip pour la landing. Installable en PWA.
 ```
 
-### Tweet 5 — le pourquoi perso
+### Tweet 5 — Strava (le hook du lancement)
+
+```
+Bonus sport : l'app se connecte à Strava via OAuth.
+
+Tu cours 10 km le matin ? Strava envoie les 600 kcal brûlées → la cible du jour passe de 2 700 à 3 300 kcal, les macros sont recalculées automatiquement.
+
+Garmin, Apple Watch, Polar, Coros syncent déjà avec Strava → tout couvert.
+```
+
+### Tweet 5bis — le pourquoi perso
 
 ```
 Pourquoi j'ai codé ça :

@@ -126,14 +126,38 @@ function Privacy() {
         (Irlande, Union Européenne).
       </p>
 
-      <h2 className="font-semibold mt-6 mb-2">4. Durée de conservation</h2>
+      <h2 className="font-semibold mt-6 mb-2">4. Intégrations tiers (optionnelles)</h2>
+      <p className="text-sm muted leading-relaxed">
+        Si tu choisis de connecter un service tiers, Ma Diét récupère des données de ce service
+        via OAuth :
+      </p>
+      <ul className="text-sm muted leading-relaxed list-disc ml-5 space-y-1 mt-1">
+        <li>
+          <strong>Strava</strong> (optionnel) : si tu actives l'intégration depuis la page{' '}
+          <Link to="/integrations" className="underline">Intégrations</Link>, nous récupérons
+          tes <em>activités sportives du jour</em> (type, durée, calories brûlées) pour ajuster
+          automatiquement ta cible calorique journalière. Scope OAuth minimal :{' '}
+          <code>activity:read</code> (lecture seule). Aucune publication n'est faite sur ton
+          profil Strava. Les tokens OAuth sont stockés chiffrés dans Supabase avec RLS stricte.
+          Tu peux te déconnecter à tout moment depuis la même page (cela supprime les tokens de
+          notre base).
+        </li>
+        <li>
+          <strong>Open Food Facts</strong> : lorsque tu scannes un code-barres, nous faisons une
+          requête anonyme à l'API Open Food Facts pour récupérer les valeurs nutritionnelles
+          publiques du produit. Aucune donnée personnelle n'est envoyée.
+        </li>
+      </ul>
+
+      <h2 className="font-semibold mt-6 mb-2">5. Durée de conservation</h2>
       <p className="text-sm muted leading-relaxed">
         Tes données sont conservées tant que ton compte existe. Tu peux supprimer ton compte à
         tout moment depuis la page <Link to="/compte" className="underline">Mon compte</Link> —
-        cela efface définitivement toutes tes données de notre serveur.
+        cela efface définitivement toutes tes données de notre serveur (y compris les tokens
+        Strava si tu avais connecté l'intégration).
       </p>
 
-      <h2 className="font-semibold mt-6 mb-2">5. Tes droits (RGPD)</h2>
+      <h2 className="font-semibold mt-6 mb-2">6. Tes droits (RGPD)</h2>
       <p className="text-sm muted leading-relaxed">
         Conformément au RGPD, tu peux :
       </p>
@@ -145,7 +169,7 @@ function Privacy() {
         <li>Adresser toute demande au contact ci-dessous</li>
       </ul>
 
-      <h2 className="font-semibold mt-6 mb-2">6. Contact</h2>
+      <h2 className="font-semibold mt-6 mb-2">7. Contact</h2>
       <p className="text-sm muted leading-relaxed">
         Pour toute question sur tes données : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>.
         Tu peux aussi déposer une réclamation auprès de la CNIL (cnil.fr).

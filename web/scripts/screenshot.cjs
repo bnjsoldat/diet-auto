@@ -165,6 +165,7 @@ async function run() {
     { name: '08-week-light', url: '/week', dark: false },
     { name: '09-shopping-light', url: '/shopping', dark: false },
     { name: '10-recipes-light', url: '/recipes', dark: false },
+    { name: '11-integrations-light', url: '/integrations', dark: false },
   ];
   for (const shot of filled) {
     console.log(`📸 ${shot.name} — ${shot.url} (${shot.dark ? 'dark' : 'light'})`);

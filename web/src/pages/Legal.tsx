@@ -160,13 +160,16 @@ function Mentions() {
 
       <h2 className="font-semibold mt-6 mb-2">Éditeur</h2>
       <p className="text-sm muted leading-relaxed">
-        Ma Diét est édité par <strong>[Nom de ton auto-entreprise]</strong>, auto-entrepreneur
-        immatriculé en France.
+        Ma Diét est édité par <strong>Benjy GRONDIN</strong>, auto-entrepreneur immatriculé
+        en France (micro-entreprise).
       </p>
       <p className="text-sm muted leading-relaxed mt-2">
         SIRET : 933 093 882 00019<br />
-        Adresse : <em>[à compléter]</em><br />
+        Adresse : 56 chemin Champs de Merle, 97435 Saint-Paul (La Réunion)<br />
         Email : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>
+      </p>
+      <p className="text-sm muted leading-relaxed mt-2">
+        Directeur de la publication : Benjy GRONDIN.
       </p>
 
       <h2 className="font-semibold mt-6 mb-2">Hébergement</h2>

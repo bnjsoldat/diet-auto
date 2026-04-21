@@ -6,12 +6,18 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="108" fill="url(#bg512)"/>
-  <g fill="none" stroke="white" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M256 416 V288"/>
-    <path d="M184 288 H328"/>
-    <path d="M184 288 V192"/>
-    <path d="M328 288 V192"/>
+  <g transform="rotate(-90 256 256)" fill="none" stroke-linecap="round">
+    <!-- r=176, circ=1105.8, 75% -->
+    <circle cx="256" cy="256" r="176" stroke="#ffffff" stroke-width="32" stroke-opacity="0.22"/>
+    <circle cx="256" cy="256" r="176" stroke="#ffffff" stroke-width="32"
+            stroke-dasharray="829 277"/>
+    <!-- r=112, circ=703.7, 72% -->
+    <circle cx="256" cy="256" r="112" stroke="#ffffff" stroke-width="28" stroke-opacity="0.22"/>
+    <circle cx="256" cy="256" r="112" stroke="#ffffff" stroke-width="28"
+            stroke-dasharray="507 197"/>
+    <!-- r=52, circ=326.7, 62% -->
+    <circle cx="256" cy="256" r="52" stroke="#ffffff" stroke-width="22" stroke-opacity="0.22"/>
+    <circle cx="256" cy="256" r="52" stroke="#ffffff" stroke-width="22"
+            stroke-dasharray="203 124"/>
   </g>
-  <path d="M256 288 C200 240 200 160 256 104 C312 160 312 240 256 288 Z" fill="white"/>
-  <path d="M256 104 V288" stroke="#10b981" stroke-width="14" stroke-linecap="round"/>
 </svg>

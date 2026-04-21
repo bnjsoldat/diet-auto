@@ -259,14 +259,19 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
             </div>
           )}
 
-          {/* Manual entry toggle when camera is running */}
+          {/* Saisie manuelle toujours visible (plus gros sur iOS qui a un
+              scanner plus lent). Pas caché dans un <details>. */}
           {!foundFood && status !== 'error' && (
-            <details className="text-xs muted">
-              <summary className="cursor-pointer">Saisir le code à la main</summary>
-              <div className="flex gap-2 mt-2">
+            <div className="space-y-1.5">
+              <label className="text-xs muted block">
+                {isIOS
+                  ? 'Tu peux aussi saisir le code à la main (plus rapide que le scan sur iPhone) :'
+                  : 'Ou saisis le code à la main :'}
+              </label>
+              <div className="flex gap-2">
                 <input
                   className="input flex-1"
-                  placeholder="13 chiffres"
+                  placeholder="13 chiffres (ex : 3017620422003)"
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value.replace(/\D/g, ''))}
                   inputMode="numeric"
@@ -280,7 +285,7 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
                   OK
                 </button>
               </div>
-            </details>
+            </div>
           )}
 
           {/* Not found */}

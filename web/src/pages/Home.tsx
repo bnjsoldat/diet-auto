@@ -53,18 +53,19 @@ export function Home() {
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium mb-6 animate-fade-in-up">
             <Sparkles size={12} className="text-emerald-600" />
-            <span>Gratuit · sync multi-appareil · base CIQUAL 2020</span>
+            <span>Base officielle française · 3 010 aliments CIQUAL · Gratuit</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-fade-in-up">
-            Ton plan alimentaire,{' '}
+            Tes macros, calculées{' '}
             <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
-              optimisé automatiquement
+              au gramme près
             </span>
             .
           </h1>
           <p className="mt-5 text-lg muted max-w-xl lg:max-w-none mx-auto lg:mx-0 animate-fade-in-up">
-            Choisis tes aliments, scanne les produits emballés. L'optimiseur ajuste les quantités
-            pour atteindre tes cibles caloriques et macros, en un clic.
+            Dis ta cible calorique. Choisis tes aliments. L'algo ajuste automatiquement les
+            grammages pour taper pile sur tes protéines, glucides et lipides. Plus jamais
+            20 minutes à bidouiller les quantités avant chaque repas.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3 animate-fade-in-up">
@@ -147,53 +148,53 @@ export function Home() {
       <section className="mt-24 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Feature
           icon={Wand2}
-          title="Optimiseur intelligent"
-          desc="Ajuste les quantités et complète automatiquement ton plan en un clic pour atteindre ta cible."
+          title="Calculé, pas bricolé"
+          desc="Tu cliques « Optimiser » — l'algo fait les maths pour taper ta cible kcal + macros au pourcent près, en moins d'une seconde."
         />
         <Feature
           icon={ScanBarcode}
-          title="Scanner code-barres"
-          desc="Scanne un produit emballé, les valeurs nutritionnelles sont récupérées automatiquement via Open Food Facts."
+          title="Scan = aliment ajouté"
+          desc="Code-barres scanné en 2 s, valeurs nutritionnelles récupérées direct depuis Open Food Facts. Même les produits bio de La Réunion."
         />
         <Feature
           icon={TrendingUp}
-          title="3 modes d'optimisation"
-          desc="Strict (±3 %), Normal (±5 %) ou Souple (±10 %) — choisis la précision qui colle à ton objectif."
+          title="3 précisions, 1 clic"
+          desc="Strict (±3 %), Normal (±5 %) ou Souple (±10 %). Adapte la rigueur à ton objectif : sèche, maintien, prise."
         />
         <Feature
           icon={Lock}
-          title="Portions verrouillables"
-          desc="Tu manges 2 œufs fixes ? Verrouille-les, l'algo ajuste le reste autour."
+          title="Verrouille ce qui compte"
+          desc="Tu veux exactement 2 œufs et 150 g de riz ? Verrouille-les, l'algo ajuste les autres aliments autour. Fin du bras de fer."
         />
         <Feature
           icon={Star}
-          title="Favoris & historique"
-          desc="Retrouve tes aliments préférés en un clic, visualise ta courbe de calories sur 30 jours."
+          title="Historique sans effort"
+          desc="Chaque journée est snapshotée. Courbes calories/macros sur 7, 30 ou 90 jours. Tu vois ce qui marche pour toi."
         />
         <Feature
           icon={CalendarRange}
-          title="Vue semaine"
-          desc="7 jours d'un coup d'œil, duplication de journées, liste de courses agrégée automatiquement."
+          title="Vue semaine complète"
+          desc="7 jours d'un coup d'œil, duplication de journées, liste de courses agrégée automatiquement par rayon."
         />
         <Feature
           icon={BookOpen}
-          title="Recettes composées"
-          desc="Groupe plusieurs aliments en une recette, ajoute-la en un clic à un repas à la portion voulue."
+          title="Tes recettes, pesées"
+          desc="Combine plusieurs aliments en une recette, ajoute-la à un repas à la portion voulue. Les macros suivent."
         />
         <Feature
           icon={Share2}
-          title="Partage & PDF"
-          desc="Envoie un plan par lien ou exporte un PDF A4 mise en page pour l'imprimer."
+          title="Partage ou imprime"
+          desc="Envoie ton plan par lien (WhatsApp, sms) ou exporte un PDF A4 propre à coller sur le frigo."
         />
         <Feature
           icon={Moon}
-          title="Mobile & hors-ligne"
-          desc="Installable sur ton écran d'accueil comme une vraie app, utilisable sans connexion, avec un mode nuit soigné."
+          title="Mobile d'abord"
+          desc="Installable sur ton écran d'accueil comme une vraie app, fonctionne hors-ligne, mode nuit impeccable."
         />
         <Feature
           icon={Lock}
-          title="Privé par défaut"
-          desc="Ton compte sert uniquement à retrouver tes plans sur tous tes appareils. Tes données ne sont jamais revendues. Jamais de pub, jamais de tracking tiers."
+          title="Tes données, tes règles"
+          desc="Ton compte sert à la sync multi-appareil, point. Zéro pub, zéro tracking tiers, zéro revente. Serveurs UE."
         />
       </section>
 
@@ -201,23 +202,23 @@ export function Home() {
       <section className="mt-24 card p-6 sm:p-10 max-w-3xl mx-auto">
         <h2 className="text-xl font-semibold mb-5">Comment ça marche</h2>
         <ol className="grid gap-4 sm:gap-3">
-          <Step n={1} title="Renseigne ton profil">
-            Poids, taille, âge, activité, objectif. Métabolisme de base (Harris-Benedict), besoin
-            de maintenance et macros calculés instantanément.
+          <Step n={1} title="Ton profil, ta cible">
+            Taille, poids, âge, activité, objectif. Ton besoin calorique et tes macros sont
+            calculés instantanément (formule Harris-Benedict reconnue médicalement).
           </Step>
-          <Step n={2} title="Construis ou charge un modèle">
-            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments issus de la base
-            officielle française de composition nutritionnelle (ANSES/CIQUAL 2020), scanne un
-            produit emballé, ou charge un modèle : équilibré, sportif, perte, végétarien.
+          <Step n={2} title="Tes aliments, en vrai">
+            Cherche parmi {nbAliments.toLocaleString('fr-FR')} aliments de la base officielle
+            française <strong>CIQUAL 2020</strong> (ANSES), scanne un produit emballé, ou charge
+            un des modèles pré-faits (équilibré, sportif, perte, prise de masse, végé).
           </Step>
-          <Step n={3} title="Optimise en un clic">
-            <strong>Optimiser</strong> : ajuste les quantités, ajoute les aliments manquants et
-            repasse jusqu'à atteindre ta cible. Verrouille 🔒 les aliments que tu ne veux pas
-            voir bouger.
+          <Step n={3} title="1 clic, 0 calcul">
+            <strong>Optimiser</strong> : les grammages s'ajustent automatiquement, les aliments
+            manquants sont proposés, tu tombes pile sur ta cible kcal + macros. Verrouille 🔒
+            ce qui ne doit pas bouger.
           </Step>
-          <Step n={4} title="Suis tes progrès">
-            Historique avec courbe des calories, suivi pondéral, vue hebdomadaire, liste de
-            courses agrégée, export CSV.
+          <Step n={4} title="Ton suivi, ta progression">
+            Historique complet, courbes kcal/macros 7-30-90 jours, suivi pondéral, liste de
+            courses auto par rayon. Tu vois ce qui fonctionne pour toi sur la durée.
           </Step>
         </ol>
       </section>
@@ -226,7 +227,7 @@ export function Home() {
       <section className="mt-16 text-center max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-2 text-xs muted">
           <Lock size={12} />
-          Tes données restent sur ton appareil — aucune inscription, aucun serveur, aucune analyse.
+          Compte gratuit (lien magique email ou Google). Zéro pub. Zéro tracking tiers. Serveurs UE.
         </div>
       </section>
     </div>

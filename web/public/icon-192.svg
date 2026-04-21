@@ -6,12 +6,18 @@
     </linearGradient>
   </defs>
   <rect width="192" height="192" rx="40" fill="url(#bg192)"/>
-  <g fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M96 156 V108"/>
-    <path d="M69 108 H123"/>
-    <path d="M69 108 V72"/>
-    <path d="M123 108 V72"/>
+  <g transform="rotate(-90 96 96)" fill="none" stroke-linecap="round">
+    <!-- r=66, circ=414.7, 75% -->
+    <circle cx="96" cy="96" r="66" stroke="#ffffff" stroke-width="12" stroke-opacity="0.22"/>
+    <circle cx="96" cy="96" r="66" stroke="#ffffff" stroke-width="12"
+            stroke-dasharray="311 104"/>
+    <!-- r=42, circ=263.9, 72% -->
+    <circle cx="96" cy="96" r="42" stroke="#ffffff" stroke-width="10.5" stroke-opacity="0.22"/>
+    <circle cx="96" cy="96" r="42" stroke="#ffffff" stroke-width="10.5"
+            stroke-dasharray="190 74"/>
+    <!-- r=19.5, circ=122.5, 62% -->
+    <circle cx="96" cy="96" r="19.5" stroke="#ffffff" stroke-width="8" stroke-opacity="0.22"/>
+    <circle cx="96" cy="96" r="19.5" stroke="#ffffff" stroke-width="8"
+            stroke-dasharray="76 47"/>
   </g>
-  <path d="M96 108 C75 90 75 60 96 39 C117 60 117 90 96 108 Z" fill="white"/>
-  <path d="M96 39 V108" stroke="#10b981" stroke-width="5" stroke-linecap="round"/>
 </svg>

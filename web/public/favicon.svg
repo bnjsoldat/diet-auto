@@ -6,18 +6,20 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <!-- Fourchette végétale : 3 dents dont la centrale est une feuille -->
-  <g fill="none" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Manche vertical -->
-    <path d="M32 52 V36"/>
-    <!-- Barre reliant les dents -->
-    <path d="M23 36 H41"/>
-    <!-- Dent gauche -->
-    <path d="M23 36 V24"/>
-    <!-- Dent droite -->
-    <path d="M41 36 V24"/>
+  <!-- 3 anneaux concentriques. Dasharray en unités pixels directes
+       (évite le fallback buggué de pathLength sur certains renderers PNG). -->
+  <g transform="rotate(-90 32 32)" fill="none" stroke-linecap="round">
+    <!-- Externe r=22, circ=138.2, 75% plein -->
+    <circle cx="32" cy="32" r="22" stroke="#ffffff" stroke-width="4" stroke-opacity="0.22"/>
+    <circle cx="32" cy="32" r="22" stroke="#ffffff" stroke-width="4"
+            stroke-dasharray="104 35"/>
+    <!-- Milieu r=14, circ=87.9, 72% plein -->
+    <circle cx="32" cy="32" r="14" stroke="#ffffff" stroke-width="3.5" stroke-opacity="0.22"/>
+    <circle cx="32" cy="32" r="14" stroke="#ffffff" stroke-width="3.5"
+            stroke-dasharray="63 25"/>
+    <!-- Interne r=6.5, circ=40.8, 62% plein -->
+    <circle cx="32" cy="32" r="6.5" stroke="#ffffff" stroke-width="2.6" stroke-opacity="0.22"/>
+    <circle cx="32" cy="32" r="6.5" stroke="#ffffff" stroke-width="2.6"
+            stroke-dasharray="25 16"/>
   </g>
-  <!-- Feuille centrale (remplace la dent du milieu pour évoquer le végétal) -->
-  <path d="M32 36 C25 30 25 20 32 13 C39 20 39 30 32 36 Z" fill="white"/>
-  <path d="M32 13 V36" stroke="#10b981" stroke-width="1.6" stroke-linecap="round"/>
 </svg>

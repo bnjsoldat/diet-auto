@@ -44,7 +44,7 @@ export function Layout() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link to={isLanding ? '/' : '/today'} className="flex items-center gap-2">
             <img
-              src="/favicon.svg"
+              src="/favicon.svg?v=2"
               alt=""
               className="h-8 w-8 rounded-md"
               aria-hidden

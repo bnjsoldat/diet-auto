@@ -176,15 +176,15 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
           role="listbox"
           onMouseDown={(e) => e.preventDefault()}
         >
-          {/* Filtres par catégorie.
-              - Mobile (sm-) : bouton "Filtrer" + flèche qui déplie / replie
-                (par défaut replié pour libérer de la place à la liste).
-              - Desktop (sm+) : toujours affiché, wrap classique. */}
-          {/* Bouton toggle visible UNIQUEMENT sur mobile */}
+          {/* Filtres par catégorie — bouton toggle TOUJOURS visible (flèche
+              qui déplie/replie), quelle que soit la taille d'écran.
+              - Par défaut replié : on voit tout de suite la liste d'aliments.
+              - Clic sur la flèche → affiche les chips.
+              - Clic sur un chip → se replie auto pour libérer l'espace. */}
           <div className="sticky top-0 bg-[var(--card)] border-b z-10">
             <button
               type="button"
-              className="sm:hidden w-full flex items-center justify-between px-3 py-2 text-xs font-medium"
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium hover:bg-[var(--bg-subtle)] transition-colors"
               onClick={() => setFiltersOpen((v) => !v)}
               aria-expanded={filtersOpen}
             >
@@ -194,61 +194,57 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
                   ? 'Favoris'
                   : filter === 'all'
                   ? 'Toutes catégories'
-                  : (availableCategories.find((c) => c.id === filter)?.label ?? 'Filtrer')}
+                  : (availableCategories.find((c) => c.id === filter)?.label ?? 'Filtrer par catégorie')}
               </span>
               <ChevronDown
                 size={14}
-                className={cn(
-                  'muted transition-transform',
-                  filtersOpen && 'rotate-180'
-                )}
+                className={cn('muted transition-transform', filtersOpen && 'rotate-180')}
               />
             </button>
 
-            {/* Liste des chips — toujours affichée sur sm+, conditionnelle sur mobile */}
-            <div
-              className={cn(
-                'px-2 py-2 flex gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible sm:flex',
-                filtersOpen ? 'flex' : 'hidden sm:flex'
-              )}
-              style={{ scrollbarWidth: 'thin' }}
-            >
-              {favs.length > 0 && (
-                <CategoryPill
-                  active={filter === 'favoris'}
-                  onClick={() => {
-                    setFilter('favoris');
-                    setFiltersOpen(false);
-                  }}
-                >
-                  <Star size={11} className="text-amber-500" fill="currentColor" /> Favoris
-                </CategoryPill>
-              )}
-              <CategoryPill
-                active={filter === 'all'}
-                onClick={() => {
-                  setFilter('all');
-                  setFiltersOpen(false);
-                }}
+            {/* Liste des chips — affichée uniquement quand filtersOpen */}
+            {filtersOpen && (
+              <div
+                className="px-2 pb-2 flex flex-wrap gap-1 animate-fade-in-up"
+                style={{ scrollbarWidth: 'thin' }}
               >
-                Tous
-              </CategoryPill>
-              {availableCategories.map((c) => (
+                {favs.length > 0 && (
+                  <CategoryPill
+                    active={filter === 'favoris'}
+                    onClick={() => {
+                      setFilter('favoris');
+                      setFiltersOpen(false);
+                    }}
+                  >
+                    <Star size={11} className="text-amber-500" fill="currentColor" /> Favoris
+                  </CategoryPill>
+                )}
                 <CategoryPill
-                  key={c.id}
-                  active={filter === c.id}
+                  active={filter === 'all'}
                   onClick={() => {
-                    setFilter(c.id);
+                    setFilter('all');
                     setFiltersOpen(false);
                   }}
                 >
-                  <span aria-hidden className="leading-none">
-                    {c.emoji}
-                  </span>{' '}
-                  {c.label}
+                  Tous
                 </CategoryPill>
-              ))}
-            </div>
+                {availableCategories.map((c) => (
+                  <CategoryPill
+                    key={c.id}
+                    active={filter === c.id}
+                    onClick={() => {
+                      setFilter(c.id);
+                      setFiltersOpen(false);
+                    }}
+                  >
+                    <span aria-hidden className="leading-none">
+                      {c.emoji}
+                    </span>{' '}
+                    {c.label}
+                  </CategoryPill>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Bandeau "en manque de X" quand la vue Tous est active */}

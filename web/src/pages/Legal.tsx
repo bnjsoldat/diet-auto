@@ -97,13 +97,15 @@ function Privacy() {
 
       <h2 className="font-semibold mt-6 mb-2">1. Données collectées</h2>
       <p className="text-sm muted leading-relaxed">
-        En mode <strong>sans compte</strong> (par défaut) : aucune donnée ne sort de ton appareil.
-        Tout est stocké localement dans ton navigateur (IndexedDB).
+        La création de compte est obligatoire pour utiliser Ma Diét. Nous collectons uniquement
+        ton <strong>email</strong> (identification) et éventuellement ton <strong>nom/avatar Google</strong> (si tu
+        te connectes via OAuth Google).
       </p>
       <p className="text-sm muted leading-relaxed mt-2">
-        En mode <strong>avec compte</strong> : email (identification) et données utilisateur
-        synchronisées avec notre base Supabase (plans alimentaires, recettes, profils, suivi
-        pondéral, rappels, paramètres).
+        Tes <strong>données d'usage</strong> (plans alimentaires, recettes, profils nutritionnels,
+        suivi pondéral, rappels, paramètres) sont stockées dans notre base Supabase (serveurs UE)
+        et isolées par Row Level Security — un utilisateur ne peut jamais accéder aux données d'un
+        autre. Un cache local dans ton navigateur (IndexedDB) permet un usage hors-ligne.
       </p>
 
       <h2 className="font-semibold mt-6 mb-2">2. Finalités</h2>

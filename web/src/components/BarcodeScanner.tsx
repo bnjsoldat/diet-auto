@@ -35,6 +35,12 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
   // On tente toujours la caméra : si BarcodeDetector natif est absent,
   // @zxing/browser prend le relais via lib/barcode.ts.
   const native = isBarcodeDetectorSupported();
+  // Détection iOS : Safari iOS n'a pas BarcodeDetector, tombe sur @zxing
+  // qui est plus lent. On montre un message adapté.
+  const isIOS =
+    typeof navigator !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as any).MSStream;
 
   useEffect(() => {
     if (!open) return;
@@ -46,10 +52,21 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
 
     (async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false,
-        });
+        // facingMode: string simple plus robuste que { ideal: ... } sur
+        // certains iPad/iPhone anciens. Fallback sans facingMode si échec.
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false,
+          });
+        } catch {
+          // Plan B : sans contrainte de caméra (prend la 1re dispo)
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop());
           return;
@@ -57,7 +74,14 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          await videoRef.current.play().catch(() => {});
+          // iOS exige playsinline + muted + autoplay ; on s'assure que play()
+          // est explicitement déclenché et que son échec est loggué (certaines
+          // versions d'iOS refusent si le site n'a pas été en "touched" mode).
+          try {
+            await videoRef.current.play();
+          } catch (playErr) {
+            console.warn('video.play() failed on iOS, user may need to tap', playErr);
+          }
 
           const stop = await startScanner(videoRef.current, (barcode) => {
             vibrate('medium');
@@ -190,8 +214,15 @@ export function BarcodeScanner({ open, onClose, onConfirm }: Props) {
                 <div className="border-2 border-emerald-400/80 rounded-md w-3/4 h-1/3" />
               </div>
               {status === 'scanning' && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white bg-black/50 px-2 py-1 rounded flex items-center gap-1">
-                  <Camera size={12} /> {native ? 'En attente d’un code-barres…' : 'Scan iOS/Firefox — tiens stable…'}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white bg-black/70 px-3 py-1.5 rounded-md flex items-center gap-1.5 max-w-[90%] text-center">
+                  <Camera size={12} className="shrink-0" />
+                  <span>
+                    {native
+                      ? 'Vise le code-barres…'
+                      : isIOS
+                      ? 'Scan iOS : vise bien centré, lumière correcte, 3–5 s…'
+                      : 'Scan en cours — tiens stable…'}
+                  </span>
                 </div>
               )}
               {status === 'searching' && (

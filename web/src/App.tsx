@@ -5,6 +5,8 @@ import { ImportPlanPrompt } from './components/ImportPlanPrompt';
 import { CommandPalette } from './components/CommandPalette';
 import { ToastContainer } from './components/ToastContainer';
 import { Onboarding } from './components/Onboarding';
+import { RequireAuth } from './components/RequireAuth';
+import { FeedbackButton } from './components/FeedbackButton';
 import { Analytics } from '@vercel/analytics/react';
 import { emit } from './lib/eventBus';
 import { useAuth } from './store/useAuth';
@@ -221,6 +223,9 @@ export default function App() {
       />
       <ToastContainer />
       <Onboarding />
+      {/* Bouton flottant "Feedback" en bas à droite (affiché partout
+          sauf sur /login pour ne pas gêner). */}
+      <FeedbackButton />
       {/* Analytics Vercel : 100 % cookie-free, conforme RGPD, pas de PII.
           Active automatiquement en production quand Vercel Analytics est
           activé dans le dashboard Vercel. (Speed Insights retiré pour
@@ -240,14 +245,17 @@ export default function App() {
             <Route path="/integrations" element={<Integrations />} />
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
-            <Route path="/setup" element={<Setup />} />
-            <Route path="/today" element={<Today />} />
-            <Route path="/week" element={<Week />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/profiles" element={<Profiles />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/shopping" element={<Shopping />} />
-            <Route path="/recipes" element={<Recipes />} />
+            {/* Routes "app" — auth obligatoire via RequireAuth.
+                Seuls /, /login, /blog, /aide, /integrations et les pages
+                légales sont publiques. */}
+            <Route path="/setup" element={<RequireAuth><Setup /></RequireAuth>} />
+            <Route path="/today" element={<RequireAuth><Today /></RequireAuth>} />
+            <Route path="/week" element={<RequireAuth><Week /></RequireAuth>} />
+            <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
+            <Route path="/profiles" element={<RequireAuth><Profiles /></RequireAuth>} />
+            <Route path="/favorites" element={<RequireAuth><Favorites /></RequireAuth>} />
+            <Route path="/shopping" element={<RequireAuth><Shopping /></RequireAuth>} />
+            <Route path="/recipes" element={<RequireAuth><Recipes /></RequireAuth>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

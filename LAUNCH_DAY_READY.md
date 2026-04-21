@@ -40,7 +40,7 @@ Je prépare le concours pompier et je track mes macros depuis un peu plus d'un a
 
 Du coup, comme je suis aussi dev à côté (auto-entrepreneur, je fais de la rédaction technique et du code pour des boîtes), j'ai codé mon propre truc le weekend : tu mets les aliments que tu veux manger, tu cliques "Optimiser", l'algo ajuste automatiquement les grammages pour matcher tes cibles kcal + macros (P/G/L). Tu peux verrouiller un aliment ("je veux exactement 150g de riz point"), l'algo ajuste le reste.
 
-Base CIQUAL/ANSES (3010 aliments français) + scan code-barres Open Food Facts pour les produits industriels. C'est gratuit, pas besoin de compte pour tester, tout reste en local dans ton navigateur.
+Base CIQUAL/ANSES (3010 aliments français) + scan code-barres Open Food Facts pour les produits industriels. C'est gratuit, la création de compte prend 10 s (lien magique par email ou Google) et te permet de retrouver ton plan sur ton tel et ton PC.
 
 👉 https://madiet.lentreprise.ai
 
@@ -66,7 +66,8 @@ Bon entraînement 💪
 
 ### ✅ Si quelqu'un pose une question critique
 - "Pourquoi gratuit ?" → *"Pour l'instant j'ai pas 100 users, je me focus sur rendre le truc bien. Un Pro arrivera dans quelques mois pour des features avancées mais l'essentiel restera gratuit."*
-- "C'est sécurisé ?" → *"Tout est en local dans ton navigateur par défaut (IndexedDB). La sync cloud est optionnelle via Supabase (OAuth Google). Je ne collecte aucune donnée perso, pas de tracking tiers."*
+- "C'est sécurisé ?" → *"L'auth passe par Supabase (RLS PostgreSQL, row-level sur l'user_id). Tes données ne sortent jamais du compte, pas de tracking tiers, pas de revente. Le code est fermé pour l'instant mais l'audit RGPD est dispo."*
+- "Pourquoi forcer un compte ?" → *"Pour que tes plans suivent sur tous tes appareils (tel/PC). C'est 10 s avec un lien magique email ou Google, pas de mot de passe à retenir."*
 - "Le CIQUAL c'est 2020, c'est pas trop vieux ?" → *"C'est la dernière version officielle publiée par l'ANSES. Pour les produits industriels, j'utilise Open Food Facts qui est à jour."*
 - "Vous êtes diététicien ?" → *"Non, je suis dev et sportif. L'outil calcule mécaniquement selon Harris-Benedict — c'est une aide pour calibrer, pas un conseil médical. Pour un vrai plan, faut voir un diét."*
 
@@ -83,7 +84,7 @@ J'ai passé mon weekend à coder un optimiseur de plan alimentaire en React.
 
 Tu dis "je veux 2700 kcal et 150g de protéines", tu choisis tes aliments, l'algo ajuste automatiquement les grammages.
 
-Gratuit, sans compte : madiet.lentreprise.ai
+Gratuit, connexion en 10 s (lien magique ou Google) : madiet.lentreprise.ai
 
 🧵 comment ça marche 👇
 ```
@@ -105,7 +106,7 @@ Base de données : CIQUAL 2020 (ANSES, 3010 aliments français officiels).
 
 Pour les produits industriels emballés, scan du code-barres → appel à Open Food Facts, l'aliment est ajouté à ta base perso.
 
-Tout est en local (IndexedDB), zéro backend, 100% privé.
+Compte requis (lien magique ou Google, 10 s) pour sync cross-device. Auth Supabase, tes données sont isolées par RLS PostgreSQL. Pas de tracking tiers.
 ```
 
 ### Tweet 4 — la stack
@@ -172,7 +173,7 @@ Ma Diét → https://madiet.lentreprise.ai
 
 Tu renseignes ton profil, tu choisis tes aliments, et un optimiseur numérique (descente de gradient projetée, pour les curieux) ajuste automatiquement les grammages pour tomber pile sur tes cibles.
 
-Base CIQUAL 2020 (ANSES, 3 010 aliments français), scan code-barres Open Food Facts, mode sombre, PWA installable, offline-first. Pas de compte requis, tout reste local par défaut. Gratuit.
+Base CIQUAL 2020 (ANSES, 3 010 aliments français), scan code-barres Open Food Facts, mode sombre, PWA installable, sync cross-device. Connexion en 10 s (lien magique email ou Google). Gratuit.
 
 Ce post n'est pas un launch — c'est un appel à feedback. Si ça t'intéresse, teste et dis-moi :
 
@@ -198,7 +199,7 @@ Tu connais Ma Diét, le petit planificateur alimentaire sur lequel je
 bosse. J'ai bien avancé et je voudrais ton avis avant de lancer publiquement
 la semaine prochaine.
 
-Le lien : https://madiet.lentreprise.ai (gratuit, sans compte)
+Le lien : https://madiet.lentreprise.ai (gratuit, connexion 10 s lien magique ou Google)
 
 Ce que j'aimerais que tu testes (5 min max) :
 1. Crée ton profil

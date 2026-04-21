@@ -10,6 +10,8 @@
 
 **Ton** pour les posts sociaux : *"dev sportif qui a galéré avec MFP/Yazio, a codé son outil pour préparer le concours pompier, cherche du feedback honnête"*. Jamais "founder qui lance", jamais mention du Pro payant (prévu plus tard à 4,99 €/mois, tabou dans les threads).
 
+**⚠️ Positionnement auth (changé le 21/04)** : la création de compte est maintenant **OBLIGATOIRE** pour accéder à /today, /week, /shopping, etc. (capture email pour marketing + sync cross-device). Landing + /blog + /aide + /legal restent publics. Méthodes de connexion : Google OAuth (1 clic), lien magique par email (10 s), ou email + mot de passe (caché dans « autres options »). Le RequireAuth guard redirect vers /login si non connecté. Les anciennes mentions « sans compte / 100 % local » ont été retirées partout (landing, blog, help, legal, onboarding, Reddit/Twitter/LinkedIn templates).
+
 **Fichiers de lancement prêts à copier-coller** :
 - `LAUNCH_DAY_READY.md` (racine) — post Reddit + 7 tweets + LinkedIn + email beta + checklist jour J
 - `LAUNCH_KIT.md` (racine) — version longue (PH template, autres subs, métriques)

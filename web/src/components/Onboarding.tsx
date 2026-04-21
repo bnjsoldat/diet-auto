@@ -26,7 +26,7 @@ const STEPS: Step[] = [
     icon: Sparkles,
     title: 'Bienvenue sur Ma Diét',
     description:
-      'Choisis tes aliments, l\u2019optimiseur ajuste les quantités pour atteindre ta cible calorique. Gratuit, sans inscription obligatoire, 100 % privé.',
+      'Choisis tes aliments, l\u2019optimiseur ajuste les quantités pour atteindre ta cible calorique. Gratuit, sync multi-appareil, 100 % privé.',
     accent: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600',
   },
   {

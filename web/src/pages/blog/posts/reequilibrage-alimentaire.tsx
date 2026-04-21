@@ -267,7 +267,7 @@ export default function Post() {
         <em>équilibré</em> et <em>perte douce</em>), et ajuste les quantités automatiquement
         pour que tu vises juste. Tu peux tracker pendant un mois pour te calibrer, puis
         arrêter et continuer au feeling.{' '}
-        <Link to="/today">Commence ton plan</Link> — gratuit, sans inscription.
+        <Link to="/today">Commence ton plan</Link> — gratuit, connexion en 10 s.
       </p>
       <p>
         Si tu veux approfondir :{' '}

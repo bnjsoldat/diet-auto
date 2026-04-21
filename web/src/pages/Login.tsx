@@ -1,145 +1,210 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AtSign, KeyRound, Loader2, LogIn, Mail, Sparkles, UserPlus } from 'lucide-react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
+import { AtSign, CheckCircle2, KeyRound, Loader2, LogIn, Mail, Sparkles, UserPlus } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { isCloudEnabled } from '@/lib/supabase';
 
 /**
- * Page unifiée Login / Signup / Magic link.
- * Comportement : si Supabase n'est pas configuré, redirige vers / avec
- * un message d'info (l'app continue en mode 100 % local).
+ * Page de connexion — auth OBLIGATOIRE pour accéder à l'app.
+ *
+ * Parcours principaux (mis en avant) :
+ *  1. Google OAuth (1 clic)
+ *  2. Lien magique par email (zéro mot de passe)
+ *
+ * Parcours secondaire (caché dans « Autres options ») :
+ *  3. Mot de passe (signup + signin classiques)
+ *
+ * Si Supabase n'est pas configuré (mode dev local) → affiche un message
+ * et laisse passer sur /today.
  */
-type Mode = 'login' | 'signup' | 'magic';
+type Mode = 'magic' | 'signin-password' | 'signup-password';
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation() as Location & { state?: { from?: string } };
+  const from = location.state?.from ?? '/today';
+
   const signIn = useAuth((s) => s.signIn);
   const signUp = useAuth((s) => s.signUp);
   const magicLink = useAuth((s) => s.signInMagicLink);
   const signInGoogle = useAuth((s) => s.signInGoogle);
   const loading = useAuth((s) => s.loading);
+  const user = useAuth((s) => s.user);
 
-  const [mode, setMode] = useState<Mode>('login');
+  const [mode, setMode] = useState<Mode>('magic');
+  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  // Déjà connecté ? <Navigate> gère ça proprement pendant le render
+  // (pas de warning React).
+  if (user) return <Navigate to={from} replace />;
 
   if (!isCloudEnabled()) {
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <Sparkles size={32} className="text-emerald-600 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Mode 100 % local</h1>
+        <h1 className="text-2xl font-bold mb-2">Mode dev local</h1>
         <p className="muted mb-6">
-          Ma Diét fonctionne actuellement sans compte — tes données sont stockées uniquement sur
-          cet appareil. La synchronisation multi-appareil arrive bientôt.
+          Supabase n'est pas configuré sur cette instance. En prod, la connexion est obligatoire.
         </p>
-        <Link className="btn-primary" to="/today">Aller au plan du jour</Link>
+        <Link className="btn-primary" to="/today">Aller au plan (mode dev)</Link>
       </div>
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
-    if (mode === 'magic') {
-      const { error } = await magicLink(email);
-      if (error) setMsg({ type: 'error', text: error });
-      else setMsg({ type: 'success', text: 'Email envoyé ! Clique sur le lien pour te connecter.' });
-      return;
+    const { error } = await magicLink(email);
+    if (error) {
+      setMsg({ type: 'error', text: error });
+    } else {
+      setMsg({
+        type: 'success',
+        text: `Email envoyé à ${email}. Vérifie aussi les spams. Ouvre le lien depuis le MÊME navigateur que cette page (pas dans l'app Gmail).`,
+      });
     }
-    if (mode === 'signup') {
+  }
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    if (mode === 'signup-password') {
       const { error } = await signUp(email, password);
       if (error) {
         setMsg({ type: 'error', text: error });
       } else {
         setMsg({
           type: 'success',
-          text: 'Compte créé ! Vérifie ta boîte mail pour confirmer.',
+          text: `Compte créé ! Email de confirmation envoyé à ${email}. Ouvre-le depuis le MÊME navigateur que cette page (pas dans l'app Gmail/Mail, sinon la session ne suit pas). Pense à vérifier les spams.`,
         });
       }
       return;
     }
     const { error } = await signIn(email, password);
-    if (error) setMsg({ type: 'error', text: error });
-    else navigate('/today');
+    if (error) {
+      // Messages plus clairs pour les erreurs fréquentes
+      let clearText = error;
+      if (error.toLowerCase().includes('invalid')) {
+        clearText = 'Email ou mot de passe incorrect. Si tu viens de créer ton compte, clique d\'abord sur le lien de confirmation reçu par email.';
+      } else if (error.toLowerCase().includes('confirm')) {
+        clearText = 'Ton email n\'est pas encore confirmé. Clique sur le lien dans l\'email de confirmation (pense à vérifier les spams).';
+      }
+      setMsg({ type: 'error', text: clearText });
+    } else {
+      navigate(from, { replace: true });
+    }
   }
 
   async function handleGoogle() {
     setMsg(null);
     const { error } = await signInGoogle();
     if (error) setMsg({ type: 'error', text: error });
+    // Si OK : Supabase redirige vers Google puis revient sur /today
   }
-
-  const title =
-    mode === 'login' ? 'Se connecter' : mode === 'signup' ? 'Créer un compte' : 'Lien magique';
 
   return (
     <div className="mx-auto max-w-md px-4 py-12 sm:py-16">
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <Sparkles size={28} className="text-emerald-600 mx-auto mb-3" />
-        <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
-        <p className="muted text-sm mt-1">
-          {mode === 'signup'
-            ? 'Crée ton compte pour synchroniser tes plans sur tous tes appareils.'
-            : mode === 'magic'
-            ? 'Reçois un lien par email, aucun mot de passe à retenir.'
-            : 'Retrouve ton plan, tes recettes et ton suivi sur tous tes appareils.'}
+        <h1 className="text-2xl sm:text-3xl font-bold">Connecte-toi à Ma Diét</h1>
+        <p className="muted text-sm mt-2">
+          Tes plans, ton suivi et tes recettes sont sauvegardés et synchronisés sur tous tes
+          appareils.
         </p>
       </div>
 
       <div className="card p-5 space-y-4">
-        {/* Google OAuth */}
+        {/* ---- 1. Google (mis en avant) ---- */}
         <button
           type="button"
           onClick={handleGoogle}
           disabled={loading}
-          className="btn-outline w-full"
+          className="btn-outline w-full h-11 font-medium"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.33-2.1V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.83z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.2 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"
-            />
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.26 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.33-2.1V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.83z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.2 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z" />
           </svg>
           Continuer avec Google
         </button>
 
         <div className="flex items-center gap-3 text-xs muted">
           <div className="flex-1 border-t" />
-          <span>ou</span>
+          <span>ou par email</span>
           <div className="flex-1 border-t" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="block">
-            <span className="text-sm font-medium mb-1 block">Email</span>
-            <div className="relative">
-              <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input pl-9"
-                placeholder="toi@exemple.fr"
-                autoComplete="email"
-              />
-            </div>
-          </label>
+        {/* ---- 2. Magic link (défaut) ---- */}
+        {mode === 'magic' && (
+          <form onSubmit={handleMagicLink} className="space-y-3">
+            <label className="block">
+              <span className="text-sm font-medium mb-1 block">Email</span>
+              <div className="relative">
+                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input pl-9 h-11"
+                  placeholder="toi@exemple.fr"
+                  autoComplete="email"
+                />
+              </div>
+            </label>
+            {msg && (
+              <div
+                className={
+                  'flex items-start gap-2 text-sm rounded-md p-2.5 ' +
+                  (msg.type === 'error'
+                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900')
+                }
+              >
+                {msg.type === 'success' && <CheckCircle2 size={14} className="shrink-0 mt-0.5" />}
+                <span>{msg.text}</span>
+              </div>
+            )}
+            <button type="submit" className="btn-primary w-full h-11 font-medium" disabled={loading}>
+              {loading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <>
+                  <Mail size={14} /> Recevoir un lien magique
+                </>
+              )}
+            </button>
+            <p className="text-[11px] muted text-center">
+              Tu reçois un email avec un lien. Clique dessus, tu es connecté. Pas de mot de passe à
+              retenir.
+            </p>
+          </form>
+        )}
 
-          {mode !== 'magic' && (
+        {/* ---- 3. Mot de passe (caché) ---- */}
+        {(mode === 'signin-password' || mode === 'signup-password') && (
+          <form onSubmit={handlePasswordSubmit} className="space-y-3">
+            <label className="block">
+              <span className="text-sm font-medium mb-1 block">Email</span>
+              <div className="relative">
+                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input pl-9 h-11"
+                  placeholder="toi@exemple.fr"
+                  autoComplete="email"
+                />
+              </div>
+            </label>
             <label className="block">
               <span className="text-sm font-medium mb-1 block">Mot de passe</span>
               <div className="relative">
@@ -150,97 +215,95 @@ export function Login() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-9"
+                  className="input pl-9 h-11"
                   placeholder="Au moins 6 caractères"
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  autoComplete={mode === 'signup-password' ? 'new-password' : 'current-password'}
                 />
               </div>
             </label>
-          )}
-
-          {msg && (
-            <div
-              className={
-                'text-sm rounded-md p-2.5 ' +
-                (msg.type === 'error'
-                  ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
-                  : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900')
-              }
-            >
-              {msg.text}
-            </div>
-          )}
-
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : mode === 'signup' ? (
-              <>
-                <UserPlus size={14} /> Créer mon compte
-              </>
-            ) : mode === 'magic' ? (
-              <>
-                <Mail size={14} /> Recevoir un lien magique
-              </>
-            ) : (
-              <>
-                <LogIn size={14} /> Me connecter
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="text-xs muted text-center space-y-1">
-          {mode === 'login' && (
-            <>
-              <button
-                type="button"
-                className="underline hover:text-[var(--text)]"
-                onClick={() => setMode('magic')}
+            {msg && (
+              <div
+                className={
+                  'text-sm rounded-md p-2.5 ' +
+                  (msg.type === 'error'
+                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900')
+                }
               >
-                Se connecter par lien magique
-              </button>
-              <div>
-                Pas encore de compte ?{' '}
-                <button
-                  type="button"
-                  className="underline text-emerald-600 hover:text-emerald-700"
-                  onClick={() => setMode('signup')}
-                >
-                  Crée-en un
-                </button>
+                {msg.text}
               </div>
-            </>
-          )}
-          {mode === 'signup' && (
-            <div>
-              Déjà un compte ?{' '}
+            )}
+            <button type="submit" className="btn-primary w-full h-11" disabled={loading}>
+              {loading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : mode === 'signup-password' ? (
+                <>
+                  <UserPlus size={14} /> Créer mon compte
+                </>
+              ) : (
+                <>
+                  <LogIn size={14} /> Me connecter
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Bascule "autres options" */}
+        <details
+          open={showPassword}
+          onToggle={(e) => setShowPassword((e.target as HTMLDetailsElement).open)}
+          className="text-xs muted"
+        >
+          <summary className="cursor-pointer select-none hover:text-[var(--text)]">
+            Autres options
+          </summary>
+          <div className="pt-3 flex flex-col gap-1.5">
+            {mode !== 'magic' && (
               <button
                 type="button"
-                className="underline text-emerald-600 hover:text-emerald-700"
-                onClick={() => setMode('login')}
+                className="underline text-left hover:text-[var(--text)]"
+                onClick={() => {
+                  setMode('magic');
+                  setMsg(null);
+                }}
               >
-                Se connecter
+                ← Revenir au lien magique (recommandé)
               </button>
-            </div>
-          )}
-          {mode === 'magic' && (
-            <button
-              type="button"
-              className="underline hover:text-[var(--text)]"
-              onClick={() => setMode('login')}
-            >
-              Revenir au mot de passe
-            </button>
-          )}
-        </div>
+            )}
+            {mode !== 'signin-password' && (
+              <button
+                type="button"
+                className="underline text-left hover:text-[var(--text)]"
+                onClick={() => {
+                  setMode('signin-password');
+                  setMsg(null);
+                }}
+              >
+                Se connecter avec mot de passe
+              </button>
+            )}
+            {mode !== 'signup-password' && (
+              <button
+                type="button"
+                className="underline text-left hover:text-[var(--text)]"
+                onClick={() => {
+                  setMode('signup-password');
+                  setMsg(null);
+                }}
+              >
+                Créer un compte avec mot de passe
+              </button>
+            )}
+          </div>
+        </details>
       </div>
 
       <p className="text-[11px] muted text-center mt-6 max-w-sm mx-auto">
-        En continuant, tu acceptes nos{' '}
-        <Link to="/cgu" className="underline">conditions d'utilisation</Link> et notre{' '}
+        En continuant, tu acceptes les{' '}
+        <Link to="/cgu" className="underline">conditions d'utilisation</Link> et la{' '}
         <Link to="/confidentialite" className="underline">politique de confidentialité</Link>. Tes
-        données restent privées et ne sont jamais partagées.
+        données sont privées et ne sont jamais revendues.
       </p>
     </div>
   );

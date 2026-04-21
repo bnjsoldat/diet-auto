@@ -16,6 +16,7 @@ import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
 import { calcTargets } from '@/lib/calculations';
 import { foods, foodsByName } from '@/lib/foods';
+import { track } from '@vercel/analytics';
 import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { suggestComplements } from '@/lib/suggestions';
@@ -198,6 +199,11 @@ export function Today() {
       alert('Ajoute au moins un aliment avant d\u2019optimiser.');
       return;
     }
+    // Event custom pour mesurer l'activation de la feature-phare
+    track('plan_optimized', {
+      mode: optimizerMode,
+      nb_items: clone.meals.flatMap((m) => m.items).length,
+    });
     setAutoBusy(true);
     const mode = OPTIMIZER_MODES[optimizerMode];
     const cibles = {

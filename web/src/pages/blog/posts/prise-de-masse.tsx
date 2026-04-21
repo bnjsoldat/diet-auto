@@ -314,7 +314,7 @@ export default function Post() {
       </ul>
       <p>
         Plus besoin de passer 20 min à ajuster les portions au gramme près.{' '}
-        <Link to="/today">Commence ton plan</Link> — gratuit, sans inscription.
+        <Link to="/today">Commence ton plan</Link> — gratuit, connexion en 10 s.
       </p>
     </BlogLayout>
   );

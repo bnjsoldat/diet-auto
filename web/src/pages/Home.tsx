@@ -14,6 +14,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
+import { useAuth } from '@/store/useAuth';
 
 /**
  * Nombre d'aliments dans la base (CIQUAL 2020 + extras curated). Inlined en
@@ -25,11 +26,22 @@ const NB_ALIMENTS = 3010;
 
 export function Home() {
   const profiles = useProfile((s) => s.profiles);
+  const user = useAuth((s) => s.user);
   const navigate = useNavigate();
 
   const nbAliments = NB_ALIMENTS;
 
+  /**
+   * Parcours d'entrée :
+   *  - Non connecté → /login (auth obligatoire en prod)
+   *  - Connecté, pas de profil → /setup
+   *  - Connecté avec profil → /today
+   */
   function handleStart() {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     if (profiles.length > 0) navigate('/today');
     else navigate('/setup');
   }
@@ -41,7 +53,7 @@ export function Home() {
         <div className="text-center lg:text-left">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium mb-6 animate-fade-in-up">
             <Sparkles size={12} className="text-emerald-600" />
-            <span>Sans compte ou avec sync multi-appareil — c'est toi qui choisis.</span>
+            <span>Gratuit · sync multi-appareil · base CIQUAL 2020</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight animate-fade-in-up">
             Ton plan alimentaire,{' '}
@@ -57,20 +69,22 @@ export function Home() {
 
           <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3 animate-fade-in-up">
             <button className="btn-primary text-base h-12 px-6" onClick={handleStart}>
-              {profiles.length > 0 ? 'Ouvrir mon plan' : 'Commencer gratuitement'}
+              {user ? (profiles.length > 0 ? 'Ouvrir mon plan' : 'Créer mon profil') : 'Commencer gratuitement'}
               <ArrowRight size={16} />
             </button>
-            <Link to="/setup" className="btn-outline h-12 px-6">
-              Créer un nouveau profil
-            </Link>
+            {!user && (
+              <Link to="/login" className="btn-outline h-12 px-6">
+                Me connecter
+              </Link>
+            )}
           </div>
 
           <div className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-xs muted">
             <span className="flex items-center gap-1">
-              <Check size={12} className="text-emerald-600" /> Zéro compte
+              <Check size={12} className="text-emerald-600" /> Gratuit
             </span>
             <span className="flex items-center gap-1">
-              <Check size={12} className="text-emerald-600" /> Hors-ligne
+              <Check size={12} className="text-emerald-600" /> Sync multi-appareil
             </span>
             <span className="flex items-center gap-1">
               <Check size={12} className="text-emerald-600" /> {nbAliments.toLocaleString('fr-FR')} aliments référencés
@@ -172,7 +186,7 @@ export function Home() {
         <Feature
           icon={Lock}
           title="Privé par défaut"
-          desc="Utilise-le sans compte (données 100 % locales) ou crée un compte pour synchroniser tes plans sur tous tes appareils. Jamais de pub, jamais de tracking."
+          desc="Ton compte sert uniquement à retrouver tes plans sur tous tes appareils. Tes données ne sont jamais revendues. Jamais de pub, jamais de tracking tiers."
         />
       </section>
 

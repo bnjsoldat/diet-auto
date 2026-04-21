@@ -20,8 +20,8 @@ export function Account() {
       <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
           icon={CloudOff}
-          title="Mode 100 % local"
-          description="Ma Diét fonctionne sans compte. Tes données sont stockées uniquement sur cet appareil. La synchronisation multi-appareil arrivera bientôt."
+          title="Mode dev local"
+          description="Supabase n'est pas configuré sur cette instance. En prod, la connexion est obligatoire pour sync multi-appareil."
           tone="slate"
           cta={
             <Link className="btn-primary" to="/today">

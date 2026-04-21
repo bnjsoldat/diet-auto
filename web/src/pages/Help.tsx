@@ -148,10 +148,10 @@ const SECTIONS: { title: string; items: QA[] }[] = [
         q: 'Dois-je créer un compte ?',
         a: (
           <>
-            Non — Ma Diét fonctionne à 100 % sans compte, tes données sont stockées
-            uniquement dans ton navigateur. Tu crées un compte <strong>seulement</strong> si
-            tu veux retrouver tes plans sur plusieurs appareils (mobile + ordinateur par
-            exemple).
+            Oui. La création de compte est <strong>gratuite et rapide</strong> (10 s par lien
+            magique email ou Google, pas de mot de passe à retenir). Elle permet de retrouver
+            tes plans sur tous tes appareils (mobile + ordinateur) et de ne jamais perdre ton
+            historique si tu changes de navigateur.
           </>
         ),
       },
@@ -159,9 +159,10 @@ const SECTIONS: { title: string; items: QA[] }[] = [
         q: 'Où sont stockées mes données ?',
         a: (
           <>
-            Sans compte : uniquement dans IndexedDB de ton navigateur (local). Avec compte :
-            synchronisées avec un serveur Supabase basé en Europe (Allemagne/Irlande). Nous
-            n'utilisons aucun cookie de tracking, aucune pub, aucun outil d'analyse tiers.
+            Tes données sont synchronisées avec Supabase (serveurs UE, Allemagne/Irlande) et
+            isolées par Row Level Security (un utilisateur ne peut jamais voir les données
+            d'un autre). Un cache local dans ton navigateur (IndexedDB) permet un usage
+            hors-ligne. Aucun cookie de tracking, aucune pub, aucun outil d'analyse tiers.
             Voir notre{' '}
             <Link to="/confidentialite" className="underline">politique de confidentialité</Link>.
           </>

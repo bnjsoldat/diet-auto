@@ -66,7 +66,7 @@ export function BlogLayout({
           <h2 className="font-semibold text-lg">Envie d'appliquer ça concrètement ?</h2>
           <p className="text-sm muted mt-1">
             Ma Diét calcule ton besoin calorique et optimise tes quantités automatiquement.
-            Gratuit, sans inscription obligatoire.
+            Gratuit, création de compte en 10 s avec un lien email ou Google.
           </p>
           <Link to="/today" className="btn-primary mt-4 inline-flex">
             Commencer mon plan →

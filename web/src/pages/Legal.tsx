@@ -164,7 +164,7 @@ function Mentions() {
         immatriculé en France.
       </p>
       <p className="text-sm muted leading-relaxed mt-2">
-        SIRET : <em>[à compléter]</em><br />
+        SIRET : 933 093 882 00019<br />
         Adresse : <em>[à compléter]</em><br />
         Email : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>
       </p>

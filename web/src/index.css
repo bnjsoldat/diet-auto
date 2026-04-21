@@ -113,6 +113,54 @@
   }
 }
 
+@layer components {
+  /* Typographie riche pour les articles de blog — pas de dépendance
+     @tailwindcss/typography pour garder le bundle léger. */
+  .prose-article {
+    @apply text-[var(--text)] leading-relaxed;
+  }
+  .prose-article h2 {
+    @apply text-xl sm:text-2xl font-bold mt-10 mb-3 tracking-tight;
+  }
+  .prose-article h3 {
+    @apply text-lg font-semibold mt-7 mb-2;
+  }
+  .prose-article p {
+    @apply my-4 text-[15px];
+  }
+  .prose-article a {
+    @apply text-emerald-600 dark:text-emerald-400 underline underline-offset-2 hover:no-underline;
+  }
+  .prose-article ul {
+    @apply my-4 pl-5 list-disc space-y-1.5 text-[15px];
+  }
+  .prose-article ol {
+    @apply my-4 pl-5 list-decimal space-y-1.5 text-[15px];
+  }
+  .prose-article li {
+    @apply pl-1;
+  }
+  .prose-article strong {
+    @apply font-semibold text-[var(--text)];
+  }
+  .prose-article blockquote {
+    @apply my-5 pl-4 border-l-2 border-emerald-500 italic muted;
+  }
+  .prose-article table {
+    @apply w-full my-5 text-sm border-collapse;
+  }
+  .prose-article th,
+  .prose-article td {
+    @apply border border-[var(--border)] px-3 py-2 text-left;
+  }
+  .prose-article th {
+    @apply font-semibold bg-[var(--bg-subtle)];
+  }
+  .prose-article .callout {
+    @apply my-5 p-4 rounded-md border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 text-[14px];
+  }
+}
+
 @layer utilities {
   /* Entrée subtile pour les lignes d'aliment, cartes et suggestions.
      Durée courte (180 ms) pour que l'interface reste vive. */

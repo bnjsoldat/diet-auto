@@ -155,6 +155,8 @@ export function Layout() {
       <footer className="border-t py-6 text-center text-xs muted">
         <p>Ma Diét · calcule ton besoin, optimise tes quantités.</p>
         <div className="mt-2 flex justify-center gap-3 flex-wrap">
+          <Link to="/blog" className="hover:text-[var(--text)]">Blog</Link>
+          <span>·</span>
           <Link to="/aide" className="hover:text-[var(--text)]">Aide</Link>
           <span>·</span>
           <Link to="/integrations" className="hover:text-[var(--text)]">Intégrations</Link>

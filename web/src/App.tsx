@@ -32,6 +32,10 @@ const Account = lazy(() => import('./pages/Account').then((m) => ({ default: m.A
 const Legal = lazy(() => import('./pages/Legal').then((m) => ({ default: m.Legal })));
 const Help = lazy(() => import('./pages/Help').then((m) => ({ default: m.Help })));
 const Integrations = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.Integrations })));
+const BlogIndex = lazy(() => import('./pages/blog/BlogIndex').then((m) => ({ default: m.BlogIndex })));
+const BlogPostPage = lazy(() =>
+  import('./pages/blog/BlogPostPage').then((m) => ({ default: m.BlogPostPage }))
+);
 const Today = lazy(() => import('./pages/Today').then((m) => ({ default: m.Today })));
 const Week = lazy(() => import('./pages/Week').then((m) => ({ default: m.Week })));
 const History = lazy(() => import('./pages/History').then((m) => ({ default: m.History })));
@@ -234,6 +238,8 @@ export default function App() {
             <Route path="/mentions-legales" element={<Legal section="mentions" />} />
             <Route path="/aide" element={<Help />} />
             <Route path="/integrations" element={<Integrations />} />
+            <Route path="/blog" element={<BlogIndex />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/today" element={<Today />} />
             <Route path="/week" element={<Week />} />

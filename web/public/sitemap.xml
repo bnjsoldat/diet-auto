@@ -11,6 +11,23 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://madiet.lentreprise.ai/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://madiet.lentreprise.ai/blog/besoin-calorique-journalier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2026-04-21</lastmod>
+  </url>
+  <url>
+    <loc>https://madiet.lentreprise.ai/blog/perdre-5-kg-en-2-mois</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2026-04-21</lastmod>
+  </url>
+  <url>
     <loc>https://madiet.lentreprise.ai/aide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="system-ui, -apple-system, Inter, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0f2f25"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <!-- Pastille anneau façon Apple Watch pour l'illustration -->
+    <radialGradient id="ring" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="#10b981" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.15"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fond -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Pastille illustration à droite -->
+  <g transform="translate(860 315)">
+    <circle r="220" fill="url(#ring)"/>
+    <!-- 4 anneaux concentriques (kcal, P, G, L) -->
+    <circle r="180" fill="none" stroke="#10b981" stroke-width="18" stroke-opacity="0.15"/>
+    <circle r="180" fill="none" stroke="#10b981" stroke-width="18" stroke-linecap="round"
+      stroke-dasharray="1131 1131" stroke-dashoffset="113" transform="rotate(-90)"/>
+    <circle r="150" fill="none" stroke="#f97316" stroke-width="14" stroke-opacity="0.15"/>
+    <circle r="150" fill="none" stroke="#f97316" stroke-width="14" stroke-linecap="round"
+      stroke-dasharray="942 942" stroke-dashoffset="188" transform="rotate(-90)"/>
+    <circle r="122" fill="none" stroke="#3b82f6" stroke-width="12" stroke-opacity="0.15"/>
+    <circle r="122" fill="none" stroke="#3b82f6" stroke-width="12" stroke-linecap="round"
+      stroke-dasharray="767 767" stroke-dashoffset="100" transform="rotate(-90)"/>
+    <circle r="95" fill="none" stroke="#a855f7" stroke-width="10" stroke-opacity="0.15"/>
+    <circle r="95" fill="none" stroke="#a855f7" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="597 597" stroke-dashoffset="150" transform="rotate(-90)"/>
+    <!-- Texte central : cible kcal -->
+    <text x="0" y="-10" text-anchor="middle" fill="#ffffff" font-size="64" font-weight="700">2 450</text>
+    <text x="0" y="30" text-anchor="middle" fill="#a3a3a3" font-size="22" font-weight="500">/ 2 745 kcal</text>
+  </g>
+
+  <!-- Logo + nom en haut à gauche -->
+  <g transform="translate(80 80)">
+    <rect width="72" height="72" rx="18" fill="url(#accent)"/>
+    <!-- Fourchette + feuille blanche stylisée -->
+    <g fill="none" stroke="white" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(36 36)">
+      <path d="M0 24 V8"/>
+      <path d="M-12 8 H12"/>
+      <path d="M-12 8 V-6"/>
+      <path d="M12 8 V-6"/>
+    </g>
+    <path d="M36 44 C28 38 28 22 36 10 C44 22 44 38 36 44 Z" fill="white" transform="translate(0 0)"/>
+    <text x="96" y="48" fill="white" font-size="40" font-weight="700">Ma Diét</text>
+  </g>
+
+  <!-- Titre principal + sous-titre en bas à gauche -->
+  <g transform="translate(80 280)">
+    <text x="0" y="0" fill="white" font-size="72" font-weight="800" letter-spacing="-2">Ton plan</text>
+    <text x="0" y="90" fill="white" font-size="72" font-weight="800" letter-spacing="-2">alimentaire,</text>
+    <text x="0" y="180" font-size="72" font-weight="800" letter-spacing="-2">
+      <tspan fill="#10b981">optimisé.</tspan>
+    </text>
+  </g>
+
+  <!-- Mini tags en bas -->
+  <g transform="translate(80 530)" font-size="22" font-weight="500" fill="#a3a3a3">
+    <g transform="translate(0 0)">
+      <rect x="0" y="-22" width="260" height="38" rx="19" fill="#171717" stroke="#262626"/>
+      <text x="20" y="5">3 010 aliments</text>
+    </g>
+    <g transform="translate(280 0)">
+      <rect x="0" y="-22" width="280" height="38" rx="19" fill="#171717" stroke="#262626"/>
+      <text x="20" y="5">Scan code-barres</text>
+    </g>
+    <g transform="translate(580 0)">
+      <rect x="0" y="-22" width="200" height="38" rx="19" fill="#171717" stroke="#262626"/>
+      <text x="20" y="5">Sans compte</text>
+    </g>
+  </g>
+
+  <!-- URL en bas à droite -->
+  <text x="1120" y="590" text-anchor="end" fill="#6b7280" font-size="20" font-weight="500">madiet.lentreprise.ai</text>
+</svg>

@@ -384,14 +384,32 @@ export function Today() {
           <button className="btn-outline" onClick={handleExportPDF}>
             <FileDown size={14} /> PDF
           </button>
-          <button
-            className="btn-primary"
-            onClick={handleOptimize}
-            disabled={autoBusy}
-            title="Ajuste les quantités et complète ton plan pour atteindre ta cible. Les aliments verrouillés 🔒 restent figés."
-          >
-            <Wand2 size={14} /> {autoBusy ? 'En cours…' : 'Optimiser'}
-          </button>
+          {/* Le bouton Optimiser gagne un petit point pulsant émeraude
+              quand le plan contient assez d'aliments mais est hors
+              tolérance : guide l'utilisateur sans être intrusif. */}
+          {(() => {
+            const tol = OPTIMIZER_MODES[optimizerMode].tolKcal;
+            const offTarget = targets
+              ? Math.abs(totals.kcal - targets.kcalCible) / targets.kcalCible > tol
+              : false;
+            const shouldHint = allItems.length >= 3 && offTarget && !autoBusy;
+            return (
+              <button
+                className="btn-primary relative"
+                onClick={handleOptimize}
+                disabled={autoBusy}
+                title="Ajuste les quantités et complète ton plan pour atteindre ta cible. Les aliments verrouillés 🔒 restent figés."
+              >
+                <Wand2 size={14} /> {autoBusy ? 'En cours…' : 'Optimiser'}
+                {shouldHint && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+                  </span>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 

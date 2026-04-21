@@ -14,13 +14,20 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
-import { foods } from '@/lib/foods';
+
+/**
+ * Nombre d'aliments dans la base (CIQUAL 2020 + extras curated). Inlined en
+ * constante pour que la landing (chunk principal) n'ait pas à importer
+ * `@/lib/foods` et ses 479 KB de JSON — ceux-ci restent dans les chunks
+ * lazy des pages Today/Week/etc.
+ */
+const NB_ALIMENTS = 3010;
 
 export function Home() {
   const profiles = useProfile((s) => s.profiles);
   const navigate = useNavigate();
 
-  const nbAliments = foods.length;
+  const nbAliments = NB_ALIMENTS;
 
   function handleStart() {
     if (profiles.length > 0) navigate('/today');

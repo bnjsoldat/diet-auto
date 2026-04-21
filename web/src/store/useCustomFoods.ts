@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/storage';
-import { registerCustomFoods } from '@/lib/foods';
 import type { Food } from '@/types';
 
 interface CustomFoodsState {
@@ -11,6 +10,17 @@ interface CustomFoodsState {
   addOrUpdate: (food: Food) => void;
   remove: (nom: string) => void;
   clear: () => void;
+}
+
+/**
+ * Import dynamique de `@/lib/foods` — évite de tirer les 479 KB de JSON
+ * CIQUAL dans le chunk principal. Appelé à la 1re mutation (load /
+ * addOrUpdate / remove / clear) ; une fois résolue, la Map et l'index
+ * Fuse sont en mémoire et partagés avec le reste de l'app.
+ */
+async function lazyRegister(customs: Food[]) {
+  const { registerCustomFoods } = await import('@/lib/foods');
+  registerCustomFoods(customs);
 }
 
 /**
@@ -26,7 +36,7 @@ export const useCustomFoods = create<CustomFoodsState>((set, get) => ({
 
   async load() {
     const customs = await storage.getCustomFoods();
-    registerCustomFoods(customs);
+    await lazyRegister(customs);
     set({ customs, loaded: true });
   },
 
@@ -37,7 +47,7 @@ export const useCustomFoods = create<CustomFoodsState>((set, get) => ({
     const next = [...filtered, { ...food, groupe: 'perso' }];
     next.sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
     set({ customs: next });
-    registerCustomFoods(next);
+    lazyRegister(next);
     storage.saveCustomFoods(next);
   },
 
@@ -45,13 +55,13 @@ export const useCustomFoods = create<CustomFoodsState>((set, get) => ({
     const { customs } = get();
     const next = customs.filter((f) => f.nom.toLowerCase() !== nom.toLowerCase());
     set({ customs: next });
-    registerCustomFoods(next);
+    lazyRegister(next);
     storage.saveCustomFoods(next);
   },
 
   clear() {
     set({ customs: [] });
-    registerCustomFoods([]);
+    lazyRegister([]);
     storage.saveCustomFoods([]);
   },
 }));

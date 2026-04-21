@@ -1,9 +1,20 @@
 import { create } from 'zustand';
 import { storage } from '@/lib/storage';
-import type { DayPlan, Meal, MealFoodItem, Recipe } from '@/types';
+import type { DayPlan, Food, Meal, MealFoodItem, Recipe } from '@/types';
 import { DEFAULT_MEALS } from '@/lib/constants';
 import { debounce, todayKey, uid } from '@/lib/utils';
-import { foodsByName } from '@/lib/foods';
+
+/**
+ * Map d'aliments chargée dynamiquement — évite de tirer les 479 KB de JSON
+ * CIQUAL dans le chunk principal. Au 1er appel d'`addFood`, si la Map n'est
+ * pas encore prête, on défaut silencieusement à 100 g (comportement correct
+ * pour les aliments sans `unites`). En pratique Today/MealSection ont déjà
+ * résolu l'import statique avant que l'utilisateur clique sur "Ajouter".
+ */
+let _foodsByName: Map<string, Food> = new Map();
+import('@/lib/foods').then((mod) => {
+  _foodsByName = mod.foodsByName;
+});
 
 interface DayPlanState {
   profileId: string | null;
@@ -96,7 +107,7 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
       // Quantité par défaut : 1 unité si l'aliment en a une, sinon 100 g
       let qDefault = quantite;
       if (qDefault == null) {
-        const food = foodsByName.get(nomFood.toLowerCase());
+        const food = _foodsByName.get(nomFood.toLowerCase());
         qDefault = food?.unites?.[0] ? food.unites[0].g : 100;
       }
       const item: MealFoodItem = {

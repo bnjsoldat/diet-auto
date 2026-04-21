@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import { useDayPlan } from '@/store/useDayPlan';
-import { foodsByName } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
 import { clearPlanFromLocation, decodePlanFromUrl, readPlanFromLocation } from '@/lib/share';
 import { formatNumber } from '@/lib/utils';
-import type { DayPlan } from '@/types';
+import type { DayPlan, Food } from '@/types';
 
 /**
  * À l'ouverture de l'app, si l'URL contient `#plan=...`, on décode le plan et
  * on propose à l'utilisateur de l'importer dans sa journée courante (écrase
  * le plan actuel) ou de l'ignorer.
+ *
+ * `foodsByName` est chargé dynamiquement pour éviter de bundler les 479 KB
+ * de JSON CIQUAL dans le chunk principal. La modal ne s'ouvre qu'après
+ * résolution de cet import (quasi-immédiate puisque la détection d'URL
+ * `#plan=` est rarissime).
  */
 export function ImportPlanPrompt() {
   const [plan, setPlan] = useState<DayPlan | null>(null);
+  const [foodsByName, setFoodsByName] = useState<Map<string, Food> | null>(null);
   const replacePlan = useDayPlan((s) => s.replaceCurrentPlan);
   const current = useDayPlan((s) => s.current());
 
@@ -21,23 +26,32 @@ export function ImportPlanPrompt() {
     const encoded = readPlanFromLocation();
     if (!encoded) return;
     const decoded = decodePlanFromUrl(encoded);
-    if (decoded) setPlan(decoded);
+    if (!decoded) return;
+    // Plan détecté : charger la base d'aliments pour résoudre les macros,
+    // puis afficher la modal.
+    import('@/lib/foods').then((mod) => {
+      setFoodsByName(mod.foodsByName);
+      setPlan(decoded);
+    });
     // On garde l'URL en place pour que l'utilisateur puisse copier/re-partager
     // mais on la nettoie après import ou fermeture explicite.
   }, []);
 
   const totals = useMemo(
-    () => (plan ? totalsForItems(plan.meals.flatMap((m) => m.items), foodsByName) : null),
-    [plan]
+    () =>
+      plan && foodsByName
+        ? totalsForItems(plan.meals.flatMap((m) => m.items), foodsByName)
+        : null,
+    [plan, foodsByName]
   );
   const itemsCount = plan
     ? plan.meals.reduce((sum, m) => sum + m.items.length, 0)
     : 0;
   const unknownItems = useMemo(() => {
-    if (!plan) return [];
+    if (!plan || !foodsByName) return [];
     const all = plan.meals.flatMap((m) => m.items);
     return all.filter((i) => !foodsByName.has(i.nom.toLowerCase()));
-  }, [plan]);
+  }, [plan, foodsByName]);
 
   function handleImport() {
     if (!plan || !current) return;

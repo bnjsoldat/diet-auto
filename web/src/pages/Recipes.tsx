@@ -41,6 +41,14 @@ export function Recipes() {
   const [draftSteps, setDraftSteps] = useState<string[]>([]);
   const [shareModal, setShareModal] = useState<Recipe | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  /** Recette décodée depuis l'URL #recipe=… en attente d'import — affichée
+   *  dans une modale (pas `window.confirm` qui sort de la charte visuelle
+   *  et peut être bloqué sur mobile). */
+  const [pendingImport, setPendingImport] = useState<{
+    nom: string;
+    ingredients: RecipeIngredient[];
+    etapes?: string[];
+  } | null>(null);
 
   /**
    * Écoute les URL #recipe=… pour importer une recette partagée. On
@@ -50,13 +58,20 @@ export function Recipes() {
   useEffect(() => {
     const shared = readRecipeFromLocation();
     if (!shared || !profile) return;
-    const ok = window.confirm(
-      `Importer la recette partagée « ${shared.nom} » (${shared.ingredients.length} ingrédients${shared.etapes ? `, ${shared.etapes.length} étapes` : ''}) dans tes recettes ?`
-    );
+    setPendingImport(shared);
+  }, [profile]);
+
+  function handleImportAccept() {
+    if (!pendingImport) return;
+    create(pendingImport.nom, pendingImport.ingredients, pendingImport.etapes);
     clearRecipeFromLocation();
-    if (!ok) return;
-    create(shared.nom, shared.ingredients, shared.etapes);
-  }, [profile, create]);
+    setPendingImport(null);
+  }
+
+  function handleImportCancel() {
+    clearRecipeFromLocation();
+    setPendingImport(null);
+  }
 
   if (profilesLoaded && !profile) {
     navigate('/setup');
@@ -502,6 +517,50 @@ export function Recipes() {
               >
                 {shareCopied ? 'Copié ✓' : 'Copier'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale d'import de recette partagée (remplace window.confirm qui
+          est bloqué sur certains navigateurs mobiles). */}
+      {pendingImport && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
+          onClick={handleImportCancel}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-[var(--card)] border shadow-xl overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b">
+              <h3 className="font-semibold">Recette partagée reçue</h3>
+            </div>
+            <div className="p-4 space-y-3 text-sm">
+              <p>
+                Importer <strong>« {pendingImport.nom} »</strong> dans tes recettes&nbsp;?
+              </p>
+              <div className="rounded-md border bg-[var(--bg-subtle)] p-3 text-xs">
+                <div>
+                  <strong>{pendingImport.ingredients.length}</strong> ingrédient
+                  {pendingImport.ingredients.length > 1 ? 's' : ''}
+                  {pendingImport.etapes && pendingImport.etapes.length > 0 && (
+                    <>
+                      {' '}·{' '}
+                      <strong>{pendingImport.etapes.length}</strong> étape
+                      {pendingImport.etapes.length > 1 ? 's' : ''}
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" className="btn-outline" onClick={handleImportCancel}>
+                  Ignorer
+                </button>
+                <button type="button" className="btn-primary" onClick={handleImportAccept}>
+                  Importer
+                </button>
+              </div>
             </div>
           </div>
         </div>

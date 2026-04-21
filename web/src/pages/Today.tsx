@@ -111,6 +111,9 @@ export function Today() {
   const [dragOverMealId, setDragOverMealId] = useState<string | null>(null);
   /** Input inline "Ajouter un repas" : null quand fermé, valeur saisie sinon. */
   const [newMealName, setNewMealName] = useState<string | null>(null);
+  /** Modale inline "Enregistrer comme plan" : null quand fermée. Remplace
+   *  `window.prompt()` que Chrome Android bloque silencieusement. */
+  const [saveTplName, setSaveTplName] = useState<string | null>(null);
   const reorderMeals = useDayPlan((s) => s.reorderMeals);
 
   /**
@@ -325,27 +328,9 @@ export function Today() {
           {current.meals.some((m) => m.items.length > 0) && (
             <button
               className="btn-outline"
-              onClick={() => {
-                const label = window.prompt(
-                  'Nom du modèle :',
-                  `Mon plan du ${new Date().toLocaleDateString('fr-FR')}`
-                );
-                if (!label?.trim()) return;
-                const tpl: PlanTemplate = {
-                  id: 'custom_' + Date.now().toString(36),
-                  label: label.trim(),
-                  emoji: '👤',
-                  description: 'Mon modèle personnel.',
-                  mode: optimizerMode,
-                  meals: current.meals.map((m) => ({
-                    nom: m.nom,
-                    items: m.items
-                      .filter((it) => it.quantite > 0)
-                      .map((it) => [it.nom, it.quantite] as [string, number]),
-                  })),
-                };
-                void addCustomTemplate(tpl);
-              }}
+              onClick={() =>
+                setSaveTplName(`Mon plan du ${new Date().toLocaleDateString('fr-FR')}`)
+              }
               title="Enregistrer le plan du jour comme modèle réutilisable"
             >
               <BookmarkPlus size={14} /> Enregistrer
@@ -575,6 +560,94 @@ export function Today() {
           if (tpl.mode) updateSettings({ optimizerMode: tpl.mode });
         }}
       />
+
+      {/* Modale inline "Enregistrer comme plan" : remplace window.prompt()
+          qui ne s'ouvre pas sur Chrome Android dans certaines conditions. */}
+      {saveTplName !== null && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
+          onClick={() => setSaveTplName(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-lg bg-[var(--card)] border shadow-xl overflow-hidden animate-fade-in-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b">
+              <h3 className="font-semibold">Enregistrer comme plan</h3>
+              <p className="text-xs muted mt-0.5">
+                Ce plan sera réutilisable depuis « Mes plans » pour n'importe quelle journée.
+              </p>
+            </div>
+            <div className="p-4 space-y-3">
+              <input
+                autoFocus
+                className="input w-full"
+                placeholder="Nom du plan"
+                value={saveTplName}
+                onChange={(e) => setSaveTplName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const v = saveTplName.trim();
+                    if (!v || !current) return;
+                    const tpl: PlanTemplate = {
+                      id: 'custom_' + Date.now().toString(36),
+                      label: v,
+                      emoji: '👤',
+                      description: 'Mon modèle personnel.',
+                      mode: optimizerMode,
+                      meals: current.meals.map((m) => ({
+                        nom: m.nom,
+                        items: m.items
+                          .filter((it) => it.quantite > 0)
+                          .map((it) => [it.nom, it.quantite] as [string, number]),
+                      })),
+                    };
+                    void addCustomTemplate(tpl);
+                    setSaveTplName(null);
+                  } else if (e.key === 'Escape') {
+                    setSaveTplName(null);
+                  }
+                }}
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => setSaveTplName(null)}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={!saveTplName.trim()}
+                  onClick={() => {
+                    const v = saveTplName.trim();
+                    if (!v || !current) return;
+                    const tpl: PlanTemplate = {
+                      id: 'custom_' + Date.now().toString(36),
+                      label: v,
+                      emoji: '👤',
+                      description: 'Mon modèle personnel.',
+                      mode: optimizerMode,
+                      meals: current.meals.map((m) => ({
+                        nom: m.nom,
+                        items: m.items
+                          .filter((it) => it.quantite > 0)
+                          .map((it) => [it.nom, it.quantite] as [string, number]),
+                      })),
+                    };
+                    void addCustomTemplate(tpl);
+                    setSaveTplName(null);
+                  }}
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

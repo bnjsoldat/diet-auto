@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Cloud, CloudOff, LogOut, Mail, Trash2, User } from 'lucide-react';
+import { AlertTriangle, Cloud, CloudOff, Flame, LogOut, Mail, Trash2, User, Watch } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { pushAll, pullAll } from '@/lib/cloudSync';
 import { isCloudEnabled } from '@/lib/supabase';
@@ -169,6 +169,31 @@ export function Account() {
         {msg && (
           <div className="mt-3 text-xs text-emerald-600 dark:text-emerald-400">{msg}</div>
         )}
+      </div>
+
+      {/* Raccourci vers la page Intégrations (Strava, plus tard Apple/Fit/Garmin) */}
+      <div className="card p-5 mb-4">
+        <div className="flex items-start gap-3">
+          <div className="h-10 w-10 rounded-md bg-orange-50 dark:bg-orange-950/40 text-orange-600 grid place-items-center shrink-0">
+            <Flame size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold flex items-center gap-2">
+              Intégrations sportives
+              <Watch size={13} className="muted" />
+            </h2>
+            <p className="text-sm muted mt-1 leading-relaxed">
+              Connecte Strava (ou plus tard Garmin / Apple Santé / Google Fit) pour que tes
+              kcal brûlées ajustent automatiquement ta cible journalière. Strava reçoit déjà
+              les données de la plupart des montres (Garmin, Apple Watch, Polar, Coros…).
+            </p>
+            <div className="mt-3">
+              <Link to="/integrations" className="btn-primary">
+                <Watch size={14} /> Gérer mes intégrations
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="card p-5 border-red-200 dark:border-red-900">

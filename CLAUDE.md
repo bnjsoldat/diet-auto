@@ -1,11 +1,36 @@
 # Diét Automatique — contexte projet
 
+## 🚀 État actuel (2026-04-21)
+
+**App déployée en prod** : https://madiet.lentreprise.ai (branche `main`, déploiement auto Vercel).
+
+**Éditeur légal** : Benjy GRONDIN, 26 ans, micro-entreprise à Saint-Paul (La Réunion), SIRET 933 093 882 00019, prépare le concours pompier. Pratique muscu / course / volley / boxe. Auto-entrepreneur : cours de maths, rédaction mémoires techniques, création sites + SaaS B2B.
+
+**Phase** : prêt au lancement public. Date J = **mardi 21 avril 2026, 10h heure La Réunion**. Plateforme 1 = r/fitness_France (Reddit), puis Twitter thread le soir, LinkedIn jeudi. Product Hunt = dans ~2 semaines selon feedback.
+
+**Ton** pour les posts sociaux : *"dev sportif qui a galéré avec MFP/Yazio, a codé son outil pour préparer le concours pompier, cherche du feedback honnête"*. Jamais "founder qui lance", jamais mention du Pro payant (prévu plus tard à 4,99 €/mois, tabou dans les threads).
+
+**Fichiers de lancement prêts à copier-coller** :
+- `LAUNCH_DAY_READY.md` (racine) — post Reddit + 7 tweets + LinkedIn + email beta + checklist jour J
+- `LAUNCH_KIT.md` (racine) — version longue (PH template, autres subs, métriques)
+- `REDDIT_POST_DRAFT.md` (racine) — 3 versions explorées du post Reddit
+- `CLAUDE_PROJECT_SETUP.md` (racine) — guide pour créer le Projet sur claude.ai mobile
+
+**10 captures d'écran 1440×900** dans `screenshots/` (générées via `web/scripts/screenshot.cjs` avec Puppeteer + Chrome local). Relançables via `node web/scripts/screenshot.cjs` après changement UI majeur.
+
+**Ce que le user doit encore faire manuellement (hors Claude Code)** :
+- Poster sur Reddit mardi matin (copier depuis `LAUNCH_DAY_READY.md`)
+- Poster le thread Twitter le soir
+- Répondre aux commentaires Reddit dans les 2-4 h
+- Uploader les screenshots sur Product Hunt le jour J
+- Vercel Speed Insights NON activé (payant après essai, décision assumée)
+
 ## Vue d'ensemble
 
 Dossier contenant **deux implémentations** du même système de planification alimentaire :
 
 1. **Google Sheet + Apps Script** (original, opérationnel) — dans ce dossier, menu « Diét Auto » installé sur le Sheet distant.
-2. **Site web React** (`web/` sous-dossier) — version moderne publique, même logique, UI épurée, offline-friendly, déployable sur Vercel.
+2. **Site web React** (`web/` sous-dossier) — version moderne publique, même logique, UI épurée, offline-friendly, déployable sur Vercel. **C'est le focus actuel.**
 
 Le but commun : à partir d'un profil (poids, taille, âge, activité, genre, objectif), calculer le besoin calorique + quotas macros via Harris-Benedict, puis **ajuster automatiquement les quantités des aliments choisis** pour atteindre ces cibles (descente de gradient projetée).
 

@@ -95,9 +95,13 @@ export function Home() {
           </div>
         </div>
 
-        {/* Mockup cartes flottantes — donne une idée de l'UI réelle */}
-        <div className="relative hidden lg:block animate-fade-in-up">
-          <div className="absolute -top-4 -left-4 card p-4 w-56 shadow-xl bg-[var(--card)]">
+        {/* Mockup cartes flottantes — donne une idée de l'UI réelle.
+            Positionnement absolu avec hauteur explicite : évite l'overlap
+            des cartes à certaines tailles d'écran (le problème qu'on avait
+            avec mt-20 + absolute top-40 qui se chevauchaient). */}
+        <div className="relative hidden lg:block h-[440px] animate-fade-in-up">
+          {/* Carte 1 — Cibles du jour (top-left) */}
+          <div className="absolute top-0 left-0 card p-4 w-60 shadow-xl bg-[var(--card)] z-10">
             <div className="text-xs muted font-semibold uppercase tracking-wider mb-1">
               Cible du jour
             </div>
@@ -112,26 +116,28 @@ export function Home() {
             </div>
           </div>
 
-          <div className="mt-20 ml-auto card p-4 w-64 shadow-xl">
+          {/* Carte 2 — Optimiseur (milieu-droit, value prop principale) */}
+          <div className="absolute top-24 right-0 card p-4 w-64 shadow-xl z-20 bg-[var(--card)]">
             <div className="flex items-center gap-2 mb-2">
               <span className="h-6 w-6 rounded bg-emerald-600 text-white grid place-items-center">
                 <Wand2 size={12} />
               </span>
               <div className="text-sm font-semibold">Optimiseur</div>
             </div>
-            <p className="text-xs muted">
+            <p className="text-xs muted leading-relaxed">
               Ajuste toutes les quantités et complète ton plan pour atteindre ta cible au
               pourcent près.
             </p>
           </div>
 
-          <div className="absolute top-40 -right-4 card p-3 w-52 shadow-xl">
+          {/* Carte 3 — Scan d'un produit healthy (bas-gauche) */}
+          <div className="absolute bottom-0 left-8 card p-3 w-56 shadow-xl z-30 bg-[var(--card)]">
             <div className="flex items-center gap-2 text-xs muted">
               <ScanBarcode size={14} className="text-emerald-600" />
               Scan d'un produit
             </div>
-            <div className="mt-1 text-sm font-medium">Tuiles apéro paprika</div>
-            <div className="text-xs muted">535 kcal · P 6 · G 55 · L 32</div>
+            <div className="mt-1 text-sm font-medium">Skyr nature</div>
+            <div className="text-xs muted">60 kcal · P 11 · G 4 · L 0 (/100 g)</div>
           </div>
         </div>
       </section>

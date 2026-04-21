@@ -9,7 +9,6 @@ import {
   ShoppingCart,
   Star,
   User,
-  Watch,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
@@ -24,8 +23,9 @@ const nav = [
   { to: '/recipes', label: 'Mes recettes', icon: ChefHat },
   { to: '/history', label: 'Mon suivi', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
-  { to: '/integrations', label: 'Intégrations', icon: Watch },
   { to: '/profiles', label: 'Mon profil', icon: User },
+  // Intégrations retiré de la nav (accessible depuis /compte ou /integrations
+  // direct ou footer) — trop d'items rendait la barre illisible sur mobile.
 ];
 
 /** 4 onglets principaux pour la bottom bar mobile (les autres sont dans un menu "Plus"). */

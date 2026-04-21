@@ -70,7 +70,7 @@ export function FeedbackButton() {
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div className="flex items-center gap-2">
                 <MessageCircle size={16} className="text-emerald-600" />
-                <h3 className="font-semibold">Un retour, un bug ?</h3>
+                <h3 className="font-semibold">Donne-moi ton avis</h3>
               </div>
               <button
                 type="button"
@@ -83,15 +83,16 @@ export function FeedbackButton() {
             </div>
             <div className="p-4 space-y-3 text-sm">
               <p className="muted text-xs">
-                Ton message ouvre ton client mail (à contact@lentreprise.ai). Je lis tout et je
-                réponds.
+                Écris ce que tu veux : un bug, une idée, un aliment manquant, un remerciement…
+                Ton message m'est envoyé directement par email à{' '}
+                <strong>contact@lentreprise.ai</strong>. Je lis tout et je te réponds.
               </p>
               <textarea
                 autoFocus
                 value={msg}
                 onChange={(e) => setMsg(e.target.value)}
                 rows={5}
-                placeholder="Ce qui marche, ce qui te manque, un bug, une idée…"
+                placeholder="Exemple : « Le scan ne marche pas sur mon iPhone », ou « L'aliment “pâtes fraîches” a des calories fausses », ou « J'adore l'app, merci ! »"
                 className="input w-full resize-none"
               />
               <div className="flex justify-end gap-2">

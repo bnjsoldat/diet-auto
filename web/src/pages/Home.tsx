@@ -96,10 +96,10 @@ export function Home() {
         </div>
 
         {/* Mockup cartes flottantes — donne une idée de l'UI réelle.
-            Positionnement absolu avec hauteur explicite : évite l'overlap
-            des cartes à certaines tailles d'écran (le problème qu'on avait
-            avec mt-20 + absolute top-40 qui se chevauchaient). */}
-        <div className="relative hidden lg:block h-[440px] animate-fade-in-up">
+            Positionnement absolu avec hauteur explicite + gaps verticaux
+            assez larges pour éviter tout chevauchement, même quand le
+            navigateur n'est pas en plein écran. */}
+        <div className="relative hidden lg:block h-[500px] animate-fade-in-up">
           {/* Carte 1 — Cibles du jour (top-left) */}
           <div className="absolute top-0 left-0 card p-4 w-60 shadow-xl bg-[var(--card)] z-10">
             <div className="text-xs muted font-semibold uppercase tracking-wider mb-1">
@@ -116,8 +116,9 @@ export function Home() {
             </div>
           </div>
 
-          {/* Carte 2 — Optimiseur (milieu-droit, value prop principale) */}
-          <div className="absolute top-24 right-0 card p-4 w-64 shadow-xl z-20 bg-[var(--card)]">
+          {/* Carte 2 — Optimiseur (positionnée BIEN plus bas pour ne jamais
+              chevaucher la carte Cible, même à largeur réduite) */}
+          <div className="absolute top-52 right-0 card p-4 w-64 shadow-xl z-20 bg-[var(--card)]">
             <div className="flex items-center gap-2 mb-2">
               <span className="h-6 w-6 rounded bg-emerald-600 text-white grid place-items-center">
                 <Wand2 size={12} />

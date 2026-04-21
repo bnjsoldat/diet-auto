@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Star,
   User,
+  Watch,
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
@@ -23,6 +24,7 @@ const nav = [
   { to: '/recipes', label: 'Mes recettes', icon: ChefHat },
   { to: '/history', label: 'Mon suivi', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
+  { to: '/integrations', label: 'Intégrations', icon: Watch },
   { to: '/profiles', label: 'Mon profil', icon: User },
 ];
 

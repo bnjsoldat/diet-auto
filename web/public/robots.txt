@@ -1,4 +1,33 @@
 User-agent: *
 Allow: /
 
+# Bots sociaux explicitement allowlistés (défensif — le * au-dessus suffit
+# mais certains services matchent par nom exact avant *).
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
 Sitemap: https://madiet.lentreprise.ai/sitemap.xml

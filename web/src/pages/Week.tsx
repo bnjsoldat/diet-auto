@@ -129,7 +129,10 @@ export function Week() {
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted">Ma semaine</div>
           <h1 className="text-2xl sm:text-3xl font-bold mt-1 capitalize">Du {friendlyDate(weekDates[0])}</h1>
-          <p className="muted text-sm mt-1 flex items-center gap-1.5">
+          {/* div au lieu de <p> : InfoTip contient un div interne (tooltip),
+              et div > p > div casse le HTML spec → warning React
+              validateDOMNesting. Visuellement identique via Tailwind. */}
+          <div className="muted text-sm mt-1 flex items-center gap-1.5">
             <span>{profile.nom} · cible {targets?.kcalCible} kcal/j</span>
             <InfoTip>
               <div className="font-semibold mb-1">Tolérance ±{Math.round(tolKcal * 100)}% (mode {optimizerMode})</div>
@@ -138,7 +141,7 @@ export function Week() {
               à ±2× (orange) ou au-delà (rouge). Tu peux changer le mode
               depuis <strong>Mon profil</strong>.
             </InfoTip>
-          </p>
+          </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Link

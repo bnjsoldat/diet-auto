@@ -6,7 +6,6 @@ import { CommandPalette } from './components/CommandPalette';
 import { ToastContainer } from './components/ToastContainer';
 import { Onboarding } from './components/Onboarding';
 import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { emit } from './lib/eventBus';
 import { useAuth } from './store/useAuth';
 import { syncOnLogin, schedulePush } from './lib/cloudSync';
@@ -224,9 +223,10 @@ export default function App() {
       <Onboarding />
       {/* Analytics Vercel : 100 % cookie-free, conforme RGPD, pas de PII.
           Active automatiquement en production quand Vercel Analytics est
-          activé dans le dashboard Vercel. */}
+          activé dans le dashboard Vercel. (Speed Insights retiré pour
+          éviter la facturation post-essai — on monitore via PageSpeed
+          Insights + Lighthouse DevTools si besoin.) */}
       <Analytics />
-      <SpeedInsights />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route element={<Layout />}>

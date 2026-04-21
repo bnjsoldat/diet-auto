@@ -42,7 +42,9 @@ export function initSentry(): Promise<void> {
 
   initPromise = (async () => {
     try {
+      console.log('[sentry] loading SDK…');
       const Sentry = await import('@sentry/react');
+      console.log('[sentry] SDK loaded, calling init…');
       Sentry.init({
         dsn: DSN,
         environment: import.meta.env.MODE,
@@ -52,17 +54,13 @@ export function initSentry(): Promise<void> {
         sendDefaultPii: false,
         // Filtre : on ignore les erreurs qu'on ne peut pas fixer
         ignoreErrors: [
-          // Erreurs browser classiques non-actionnables
           'ResizeObserver loop limit exceeded',
           'ResizeObserver loop completed with undelivered notifications',
-          // Extensions Chrome qui injectent des trucs
           /chrome-extension/i,
-          // NetworkError quand l'user perd la connexion offline (normal)
           /NetworkError/i,
           /Failed to fetch/i,
         ],
         beforeSend(event) {
-          // Strip email/IDs des URLs si présents (privacy)
           if (event.request?.url) {
             event.request.url = event.request.url.replace(/[?&]email=[^&]+/g, '');
           }
@@ -72,8 +70,11 @@ export function initSentry(): Promise<void> {
       captureException = (error, context) =>
         Sentry.captureException(error, context ? { extra: context } : undefined);
       captureMessage = (msg, level = 'info') => Sentry.captureMessage(msg, level);
+      console.log('[sentry] ✓ initialized — errors will be forwarded to Sentry.io');
+      // Envoie un petit event "app started" pour valider la connexion
+      // (visible dans Sentry sous forme de message info).
+      Sentry.captureMessage('Ma Diét app started', 'info');
     } catch (err) {
-      // Si Sentry n'est pas installable (package manquant), on log et on continue.
       console.warn('[sentry] init failed', err);
     }
   })();

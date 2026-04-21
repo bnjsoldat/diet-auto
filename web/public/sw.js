@@ -4,9 +4,22 @@
  *  - Assets (js/css/img/json/police) : cache-first + mise en cache au vol
  * La version du cache est bumpée à chaque build (injection via vite-plugin ou manuel).
  */
-const VERSION = 'v3';
+// v4 : bump pour forcer le refresh du cache après refonte du logo 3 anneaux.
+// À incrémenter (v5, v6…) à chaque changement d'asset statique majeur.
+const VERSION = 'v4';
 const CACHE = `diet-auto-${VERSION}`;
-const CORE = ['/', '/index.html', '/favicon.svg', '/manifest.webmanifest', '/icon-192.svg', '/icon-512.svg'];
+const CORE = [
+  '/',
+  '/index.html',
+  '/favicon.svg',
+  '/manifest.webmanifest',
+  '/icon-192.svg',
+  '/icon-512.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+  '/favicon-32.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

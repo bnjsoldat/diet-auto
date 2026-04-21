@@ -15,6 +15,16 @@
 
 const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
+// Log utile pour diagnostiquer si le DSN est bien présent après build.
+// Visible dans la console du navigateur au chargement de l'app.
+if (typeof window !== 'undefined') {
+  if (DSN) {
+    console.log('[sentry] DSN detected — error tracking enabled');
+  } else {
+    console.log('[sentry] VITE_SENTRY_DSN absent — error tracking disabled');
+  }
+}
+
 /** True si Sentry est configuré (DSN présent). */
 export const isSentryEnabled = (): boolean => !!DSN;
 

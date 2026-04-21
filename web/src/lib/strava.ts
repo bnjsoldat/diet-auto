@@ -48,26 +48,47 @@ export function getAuthorizeUrl(): string {
 
 /**
  * Appelle l'Edge Function avec l'access token du user courant.
- * Renvoie le JSON parsé ou throw une Error avec le message serveur.
+ * On utilise `fetch` directement plutôt que `supabase.functions.invoke()`
+ * pour garantir que l'Authorization header contient le JWT user (pas
+ * l'anon key qui est le comportement par défaut dans certains cas).
  */
 async function callEdge<T = unknown>(action: string, body: Record<string, unknown> = {}): Promise<T> {
   if (!supabase) throw new Error('Supabase non configuré');
   const { data: session } = await supabase.auth.getSession();
   const token = session.session?.access_token;
-  if (!token) throw new Error('Non connecté');
+  if (!token) throw new Error('Non connecté — reconnecte-toi');
 
-  // `supabase.functions.invoke` passe le JWT user auto.
-  const { data, error } = await supabase.functions.invoke(`strava-oauth/${action}`, {
-    body,
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+  const url = `${supabaseUrl}/functions/v1/strava-oauth/${action}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // IMPORTANT : c'est bien le JWT user qu'on envoie (pas la anon key),
+      // pour que l'Edge Function puisse extraire user_id du payload.
+      Authorization: `Bearer ${token}`,
+      apikey: anonKey,
+    },
+    body: JSON.stringify(body),
   });
-  if (error) {
-    const detail =
-      typeof data === 'object' && data && 'error' in data
-        ? (data as { error: string }).error
-        : error.message;
-    throw new Error(detail);
+
+  let parsed: unknown;
+  try {
+    parsed = await res.json();
+  } catch {
+    parsed = { error: `HTTP ${res.status} — réponse non-JSON` };
   }
-  return data as T;
+
+  if (!res.ok) {
+    const msg =
+      typeof parsed === 'object' && parsed && 'error' in parsed
+        ? String((parsed as { error: unknown }).error)
+        : `Edge error HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return parsed as T;
 }
 
 /**

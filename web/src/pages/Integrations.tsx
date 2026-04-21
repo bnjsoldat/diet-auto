@@ -152,6 +152,12 @@ export function Integrations() {
               déjà Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit, Nike Run Club,
               et plein d'autres.
             </p>
+            <p className="text-xs muted mt-2 leading-relaxed">
+              <strong>Comment ta cible s'ajuste :</strong> quand une activité Strava est détectée
+              pour la journée, Ma Diét bascule sur un calcul <em>métabolisme basal seul</em>
+              (corps au repos × 1.2) puis ajoute les kcal exactes brûlées via Strava.{' '}
+              <strong>Zéro double-comptage</strong> avec ton niveau d'activité du profil.
+            </p>
 
             {!isCloudEnabled() && (
               <p className="mt-3 text-xs text-amber-600">

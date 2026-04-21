@@ -41,7 +41,7 @@ Je prépare le concours pompier et je track mes macros depuis un peu plus d'un a
 
 Du coup, comme je suis aussi dev à côté (auto-entrepreneur, je fais de la rédaction technique et du code pour des boîtes), j'ai codé mon propre truc le weekend : tu mets les aliments que tu veux manger, tu cliques "Optimiser", l'algo ajuste automatiquement les grammages pour matcher tes cibles kcal + macros (P/G/L). Tu peux verrouiller un aliment ("je veux exactement 150g de riz point"), l'algo ajuste le reste.
 
-**Bonus** : l'app se connecte à Strava (donc Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit via leur sync auto), récupère tes kcal brûlées du jour et ajuste la cible journalière en conséquence. Plus de "j'ai couru 10 km ce matin j'ai le droit de manger plus mais combien en plus ?" — c'est calculé.
+**Bonus** : l'app se connecte à Strava (donc Garmin, Apple Watch, Polar, Coros, Suunto, Wahoo, Fitbit via leur sync auto). Quand une activité est détectée, la cible du jour bascule sur une base métabolisme basal × 1.2 (sédentaire pur) + les kcal **exactes** brûlées — zéro double-comptage avec le coef d'activité du profil. Plus de "j'ai couru 10 km ce matin j'ai le droit de manger plus mais combien en plus ?" — calculé au kcal près.
 
 Base CIQUAL/ANSES (3010 aliments français) + scan code-barres Open Food Facts pour les produits industriels. C'est gratuit, la création de compte prend 10 s (lien magique par email ou Google) et te permet de retrouver ton plan sur ton tel et ton PC.
 
@@ -133,7 +133,7 @@ Bundle : 393 kB gzip pour la landing. Installable en PWA.
 ```
 Bonus sport : l'app se connecte à Strava via OAuth.
 
-Tu cours 10 km le matin ? Strava envoie les 600 kcal brûlées → la cible du jour passe de 2 700 à 3 300 kcal, les macros sont recalculées automatiquement.
+Quand une activité est détectée, la cible du jour bascule sur MB×1.2 (sédentaire) + les kcal exactes de Strava. Pas de double-comptage avec le coef d'activité du profil.
 
 Garmin, Apple Watch, Polar, Coros syncent déjà avec Strava → tout couvert.
 ```

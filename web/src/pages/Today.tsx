@@ -148,13 +148,23 @@ export function Today() {
     if (profile) ensurePlan();
   }, [profile, ensurePlan, currentDate]);
 
-  // Activité du jour (Strava ou manuel) → ajoute les kcal à la cible
+  // Activité du jour (Strava ou manuel) → ajuste la cible journalière.
+  // Quand une activité est présente, on passe le flag `useStravaAsActivitySource`
+  // à calcTargets, qui remplace le coef d'activité par sédentaire (1.2) pour
+  // éviter le double-comptage (Strava = sport réel vs. coef = sport estimé).
   const todayActivity = useActivity((s) => (current ? s.byDate[current.date] : null));
   const extraBurnedKcal = todayActivity?.kcal ?? 0;
+  const hasActivityToday = !!todayActivity && extraBurnedKcal > 0;
 
   const targets = useMemo(
-    () => (profile ? calcTargets(profile, { extraBurnedKcal }) : null),
-    [profile, extraBurnedKcal]
+    () =>
+      profile
+        ? calcTargets(profile, {
+            extraBurnedKcal,
+            useStravaAsActivitySource: hasActivityToday,
+          })
+        : null,
+    [profile, extraBurnedKcal, hasActivityToday]
   );
 
   // État "Strava connecté" — check 1 fois au mount, pas critique

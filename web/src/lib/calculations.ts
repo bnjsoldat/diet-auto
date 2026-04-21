@@ -29,23 +29,42 @@ export function calcIMC(profile: Profile): number {
 
 /**
  * Options de calcul de cible :
- *  - `extraBurnedKcal` : kcal dépensées par le sport du jour (depuis
- *    Strava ou saisie manuelle). S'ajoute à la cible journalière.
- *    Les macros sont recalculées sur la cible ajustée.
+ *  - `extraBurnedKcal` : kcal brûlées par le sport du jour (Strava ou
+ *    saisie manuelle). S'ajoute à la cible.
+ *  - `useStravaAsActivitySource` : si `true`, on IGNORE le coef d'activité
+ *    du profil et on utilise « sédentaire » (1.2) comme base — le sport
+ *    réel vient uniquement d'`extraBurnedKcal`. C'est le comportement
+ *    correct quand l'utilisateur a connecté Strava (ou saisit manuellement
+ *    ses kcal) : sinon le coef d'activité + les kcal Strava compteraient
+ *    le sport deux fois.
  *
- * Logique : ton besoin de maintenance inclut déjà ton coef d'activité
- * (sédentaire/actif/très actif), mais ce coef est une moyenne. Si tu as
- * brûlé 500 kcal en plus aujourd'hui avec une séance, tu dois les
- * compenser pour rester à la cible nette voulue (maintien/sèche/masse).
+ * Exemple :
+ *  - Homme 75 kg, très actif (coef 1.725), Strava 800 kcal aujourd'hui
+ *  - Sans fix : maintenance = MB × 1.725 + 800 = double-comptage
+ *  - Avec fix : maintenance = MB × 1.2 + 800 (les 800 sont le VRAI sport)
  */
 export interface TargetsOptions {
   /** kcal brûlées en sport aujourd'hui (0 par défaut). */
   extraBurnedKcal?: number;
+  /**
+   * Si true, force le coef d'activité à 1.2 (sédentaire) pour ne pas
+   * double-compter le sport déjà capté par extraBurnedKcal. À utiliser
+   * quand Strava est connecté OU que l'utilisateur a saisi manuellement
+   * les kcal brûlées du jour.
+   */
+  useStravaAsActivitySource?: boolean;
 }
+
+// Coef sédentaire (métabolisme basal × 1.2 = MB + thermogénèse alimentaire
+// + activité ultra-légère = NEAT pur, sans sport). C'est la base correcte
+// quand on connaît le sport exact via tracker.
+const SEDENTARY_COEF = 1.2;
 
 export function calcTargets(profile: Profile, opts: TargetsOptions = {}): Targets {
   const mb = calcMetabolismeBasal(profile);
-  const kcalMaintenance = calcMaintenance(mb, profile);
+  const kcalMaintenance = opts.useStravaAsActivitySource
+    ? mb * SEDENTARY_COEF
+    : calcMaintenance(mb, profile);
   const deltaKcal = OBJECTIVE_DELTA_KCAL[profile.objectif];
   const extra = Math.max(0, opts.extraBurnedKcal ?? 0);
   const kcalCible = kcalMaintenance + deltaKcal + extra;

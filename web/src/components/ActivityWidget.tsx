@@ -128,6 +128,11 @@ export function ActivityWidget({ date, stravaConnected }: Props) {
               {activity.source === 'strava' ? 'Strava' : 'manuel'}
             </span>
           </div>
+          <div className="mt-2 text-[11px] muted leading-relaxed rounded bg-[var(--bg-subtle)] p-2">
+            ℹ️ Ta cible du jour utilise la base <strong>sédentaire</strong> (métabolisme basal
+            corps seul) + les <strong>{totalKcal} kcal sport exactes</strong>. Pas de
+            double-comptage avec ton niveau d'activité profil.
+          </div>
 
           {activity.items && activity.items.length > 0 && (
             <ul className="mt-3 space-y-1 text-xs">

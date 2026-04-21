@@ -139,6 +139,41 @@ const SECTIONS: { title: string; items: QA[] }[] = [
           </ul>
         ),
       },
+      {
+        q: 'Comment Strava ajuste-t-il ma cible calorique ?',
+        a: (
+          <>
+            Quand tu connectes Strava (ou saisis manuellement des kcal brûlées), Ma Diét
+            bascule le calcul de ta cible journalière sur une <strong>base « sédentaire »</strong>{' '}
+            (métabolisme basal × 1.2, qui correspond au corps au repos + activités
+            ultra-légères), puis ajoute les <strong>kcal exactes</strong> de ton activité
+            sportive du jour.
+            <br /><br />
+            <strong>Pourquoi ?</strong> Le coefficient d'activité que tu choisis dans ton
+            profil (Sédentaire, Actif, Très actif…) inclut déjà une <em>estimation moyenne</em>{' '}
+            de ton sport. Si on gardait ce coef tout en ajoutant les kcal Strava par-dessus,
+            on compterait le sport deux fois et ta cible serait sur-estimée de plusieurs
+            centaines de kcal/jour.
+            <br /><br />
+            <strong>Exemple concret :</strong> un homme de 75 kg très actif a une cible de
+            maintenance à ~3 000 kcal (coef 1.725). Avec Strava connecté et une sortie
+            running de 600 kcal, sa cible devient : 1 800 (MB) × 1.2 + 600 = <strong>2 760 kcal</strong>.
+            C'est plus précis car basé sur les vraies kcal brûlées.
+          </>
+        ),
+      },
+      {
+        q: 'Dois-je changer mon profil activité si j\'utilise Strava ?',
+        a: (
+          <>
+            <strong>Non, pas la peine.</strong> Ma Diét gère ça automatiquement. Le coef
+            d'activité de ton profil est utilisé uniquement les jours où tu n'as <em>aucune
+            activité</em> enregistrée (repos total, ou tracker déconnecté). Dès qu'une
+            activité est détectée, la base bascule sur sédentaire et les kcal réelles
+            s'ajoutent. Tu peux donc laisser ton profil sur « Très actif » sans souci.
+          </>
+        ),
+      },
     ],
   },
   {

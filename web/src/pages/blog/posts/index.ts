@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { BlogPostMeta } from '../BlogLayout';
 import Calorique, { meta as caloriqueMeta } from './besoin-calorique';
 import Perdre5kg, { meta as perdre5kgMeta } from './perdre-5-kg';
+import PriseDeMasse, { meta as priseDeMasseMeta } from './prise-de-masse';
 
 export interface BlogPost {
   meta: BlogPostMeta;
@@ -15,6 +16,7 @@ export interface BlogPost {
  * au plus ancien.
  */
 export const BLOG_POSTS: BlogPost[] = [
+  { meta: priseDeMasseMeta, Component: PriseDeMasse },
   { meta: perdre5kgMeta, Component: Perdre5kg },
   { meta: caloriqueMeta, Component: Calorique },
 ];

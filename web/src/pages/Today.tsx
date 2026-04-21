@@ -27,12 +27,16 @@ import { on as onEvent } from '@/lib/eventBus';
 import { TargetsCard } from '@/components/TargetsCard';
 import { WaterTracker } from '@/components/WaterTracker';
 import { MicroNutrientsCard } from '@/components/MicroNutrientsCard';
+import { ActivityWidget } from '@/components/ActivityWidget';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
 import { TemplatePicker } from '@/components/TemplatePicker';
 import { buildMealsFromTemplate, type PlanTemplate } from '@/lib/templates';
 import { useCustomTemplates } from '@/store/useCustomTemplates';
+import { useActivity } from '@/store/useActivity';
+import { useAuth } from '@/store/useAuth';
+import { supabase } from '@/lib/supabase';
 import type { MealFoodItem, OptimizeResult } from '@/types';
 import { friendlyDate, todayKey } from '@/lib/utils';
 
@@ -144,7 +148,30 @@ export function Today() {
     if (profile) ensurePlan();
   }, [profile, ensurePlan, currentDate]);
 
-  const targets = useMemo(() => (profile ? calcTargets(profile) : null), [profile]);
+  // Activité du jour (Strava ou manuel) → ajoute les kcal à la cible
+  const todayActivity = useActivity((s) => (current ? s.byDate[current.date] : null));
+  const extraBurnedKcal = todayActivity?.kcal ?? 0;
+
+  const targets = useMemo(
+    () => (profile ? calcTargets(profile, { extraBurnedKcal }) : null),
+    [profile, extraBurnedKcal]
+  );
+
+  // État "Strava connecté" — check 1 fois au mount, pas critique
+  const user = useAuth((s) => s.user);
+  const [stravaConnected, setStravaConnected] = useState(false);
+  useEffect(() => {
+    if (!user || !supabase) return;
+    (async () => {
+      const { data } = await supabase!
+        .from('user_integrations')
+        .select('provider')
+        .eq('user_id', user.id)
+        .eq('provider', 'strava')
+        .maybeSingle();
+      setStravaConnected(!!data);
+    })();
+  }, [user]);
 
   const allItems = useMemo(
     () => (current ? current.meals.flatMap((m) => m.items) : []),
@@ -524,6 +551,9 @@ export function Today() {
               currentLip={totals.lip}
               mode={optimizerMode}
             />
+            <div className="mt-3">
+              <ActivityWidget date={current.date} stravaConnected={stravaConnected} />
+            </div>
             <div className="mt-3">
               <WaterTracker profileId={profile.id} date={current.date} />
             </div>

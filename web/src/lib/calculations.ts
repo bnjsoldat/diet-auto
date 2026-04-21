@@ -27,11 +27,28 @@ export function calcIMC(profile: Profile): number {
   return profile.poids / (profile.taille * profile.taille);
 }
 
-export function calcTargets(profile: Profile): Targets {
+/**
+ * Options de calcul de cible :
+ *  - `extraBurnedKcal` : kcal dépensées par le sport du jour (depuis
+ *    Strava ou saisie manuelle). S'ajoute à la cible journalière.
+ *    Les macros sont recalculées sur la cible ajustée.
+ *
+ * Logique : ton besoin de maintenance inclut déjà ton coef d'activité
+ * (sédentaire/actif/très actif), mais ce coef est une moyenne. Si tu as
+ * brûlé 500 kcal en plus aujourd'hui avec une séance, tu dois les
+ * compenser pour rester à la cible nette voulue (maintien/sèche/masse).
+ */
+export interface TargetsOptions {
+  /** kcal brûlées en sport aujourd'hui (0 par défaut). */
+  extraBurnedKcal?: number;
+}
+
+export function calcTargets(profile: Profile, opts: TargetsOptions = {}): Targets {
   const mb = calcMetabolismeBasal(profile);
   const kcalMaintenance = calcMaintenance(mb, profile);
   const deltaKcal = OBJECTIVE_DELTA_KCAL[profile.objectif];
-  const kcalCible = kcalMaintenance + deltaKcal;
+  const extra = Math.max(0, opts.extraBurnedKcal ?? 0);
+  const kcalCible = kcalMaintenance + deltaKcal + extra;
   const imc = calcIMC(profile);
 
   // Répartition macros à partir de la cible finale (pas de la maintenance)

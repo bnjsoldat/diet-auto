@@ -30,6 +30,8 @@ export interface CloudSnapshot {
   reminders: unknown;
   water: { counts: Record<string, number>; goal: number };
   settings: unknown;
+  /** Activités sportives par jour (Strava + saisie manuelle). Keyed by YYYY-MM-DD. */
+  activities: Record<string, unknown>;
 }
 
 /**
@@ -65,6 +67,13 @@ async function buildLocalSnapshot(): Promise<CloudSnapshot> {
       waterCounts[key] = value;
     }
   });
+  // Activités sportives : keyed by date 'activities:YYYY-MM-DD'.
+  const activities: Record<string, unknown> = {};
+  await localforage.iterate<unknown, void>((value, key) => {
+    if (key.startsWith('activities:') && value && typeof value === 'object') {
+      activities[key.slice('activities:'.length)] = value;
+    }
+  });
   return {
     profiles,
     activeProfileId,
@@ -77,6 +86,7 @@ async function buildLocalSnapshot(): Promise<CloudSnapshot> {
     reminders,
     water: { counts: waterCounts, goal: waterGoal },
     settings: settings ?? {},
+    activities,
   };
 }
 
@@ -122,6 +132,19 @@ async function applySnapshotToLocal(snap: CloudSnapshot): Promise<void> {
       await localforage.setItem('water:goal', snap.water.goal);
     }
   }
+  // Activités sportives : efface les anciennes clés activities:* et applique le snapshot cloud.
+  if (snap.activities && typeof snap.activities === 'object') {
+    const oldActKeys: string[] = [];
+    await localforage.iterate<unknown, void>((_v, key) => {
+      if (key.startsWith('activities:')) oldActKeys.push(key);
+    });
+    for (const k of oldActKeys) await localforage.removeItem(k);
+    for (const [date, entry] of Object.entries(snap.activities)) {
+      if (entry && typeof entry === 'object') {
+        await localforage.setItem('activities:' + date, entry);
+      }
+    }
+  }
 }
 
 /** Push complet de l'état local vers le cloud (débounced par l'appelant si besoin). */
@@ -144,6 +167,7 @@ export async function pushAll(userId: string): Promise<void> {
         reminders: snap.reminders,
         water: snap.water,
         settings: snap.settings,
+        activities: snap.activities,
       },
       { onConflict: 'user_id' }
     );
@@ -176,6 +200,7 @@ export async function pullAll(userId: string): Promise<boolean> {
     reminders: data.reminders ?? [],
     water: (data.water as { counts: Record<string, number>; goal: number }) ?? { counts: {}, goal: 8 },
     settings: data.settings ?? {},
+    activities: (data.activities as Record<string, unknown>) ?? {},
   };
   // Snapshot "vide" = 0 profils côté cloud : on considère que c'est un
   // premier login, on ne touche pas au local (qui peut contenir les

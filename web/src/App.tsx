@@ -23,7 +23,9 @@ import { useCustomFoods } from './store/useCustomFoods';
 import { useReminders } from './store/useReminders';
 import { useCustomTemplates } from './store/useCustomTemplates';
 import { useWater } from './store/useWater';
+import { useActivity } from './store/useActivity';
 import { useReminderScheduler } from './hooks/useReminderScheduler';
+import { syncActivities } from './lib/strava';
 
 // Pages chargées à la demande : réduit le bundle initial de ~60 %.
 // Home reste en import statique (c'est la landing, donc toujours utile tôt).
@@ -44,6 +46,9 @@ const Profiles = lazy(() => import('./pages/Profiles').then((m) => ({ default: m
 const Favorites = lazy(() => import('./pages/Favorites').then((m) => ({ default: m.Favorites })));
 const Shopping = lazy(() => import('./pages/Shopping').then((m) => ({ default: m.Shopping })));
 const Recipes = lazy(() => import('./pages/Recipes').then((m) => ({ default: m.Recipes })));
+const StravaCallback = lazy(() =>
+  import('./pages/StravaCallback').then((m) => ({ default: m.StravaCallback }))
+);
 
 /**
  * Skeleton affiché pendant le chargement d'une route lazy. Utilise les
@@ -82,6 +87,8 @@ export default function App() {
   const loadReminders = useReminders((s) => s.load);
   const loadCustomTemplates = useCustomTemplates((s) => s.load);
   const loadWater = useWater((s) => s.load);
+  const loadActivity = useActivity((s) => s.load);
+  const mergeActivities = useActivity((s) => s.merge);
   const initAuth = useAuth((s) => s.init);
   const user = useAuth((s) => s.user);
   const setSyncing = useAuth((s) => s.setSyncing);
@@ -144,12 +151,42 @@ export default function App() {
           await loadReminders();
           await loadCustomTemplates();
           await loadWater();
+          await loadActivity();
         }
       } finally {
         setSyncing(false);
       }
     })();
-  }, [user, loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, setSyncing]);
+  }, [user, loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, loadActivity, setSyncing]);
+
+  /**
+   * Auto-sync Strava à l'ouverture de l'app (si connecté et dernière
+   * sync > 1 h). Silencieux côté UI : les activités sont fusionnées dans
+   * le store, le widget /today se met à jour tout seul.
+   */
+  useEffect(() => {
+    if (!user || !isCloudEnabled()) return;
+    (async () => {
+      try {
+        const { supabase } = await import('./lib/supabase');
+        if (!supabase) return;
+        const { data } = await supabase
+          .from('user_integrations')
+          .select('last_sync_at')
+          .eq('user_id', user.id)
+          .eq('provider', 'strava')
+          .maybeSingle();
+        if (!data) return; // pas connecté
+        const lastSync = data.last_sync_at ? new Date(data.last_sync_at).getTime() : 0;
+        const elapsed = Date.now() - lastSync;
+        if (elapsed < 60 * 60 * 1000) return; // < 1h : skip
+        const res = await syncActivities();
+        if (res.activities) await mergeActivities(res.activities);
+      } catch {
+        // Silencieux : un échec de sync ne doit pas bloquer l'app.
+      }
+    })();
+  }, [user, mergeActivities]);
 
   /**
    * Après chaque mutation importante dans un store, push léger vers le
@@ -172,6 +209,7 @@ export default function App() {
       useCustomTemplates.subscribe(() => schedulePush(uid)),
       useWater.subscribe(() => schedulePush(uid)),
       useSettings.subscribe(() => schedulePush(uid)),
+      useActivity.subscribe(() => schedulePush(uid)),
     ];
     return () => unsub.forEach((u) => u());
   }, [user]);
@@ -183,7 +221,8 @@ export default function App() {
     loadReminders();
     loadCustomTemplates();
     loadWater();
-  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, loadWater]);
+    loadActivity();
+  }, [loadProfiles, loadSettings, loadCustomFoods, loadReminders, loadCustomTemplates, loadWater, loadActivity]);
 
   useEffect(() => {
     if (activeId) {
@@ -243,6 +282,10 @@ export default function App() {
             <Route path="/mentions-legales" element={<Legal section="mentions" />} />
             <Route path="/aide" element={<Help />} />
             <Route path="/integrations" element={<Integrations />} />
+            <Route
+              path="/integrations/strava/callback"
+              element={<RequireAuth><StravaCallback /></RequireAuth>}
+            />
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPostPage />} />
             {/* Routes "app" — auth obligatoire via RequireAuth.

@@ -1,0 +1,96 @@
+/**
+ * Intégration Sentry optionnelle (active uniquement si VITE_SENTRY_DSN est
+ * défini dans les env vars Vercel).
+ *
+ * Import dynamique : on ne charge le SDK Sentry QUE s'il est nécessaire.
+ * Ça évite d'alourdir le bundle de 50 KB pour les users non-prod.
+ *
+ * Pour activer en prod :
+ *   1. Créer un compte gratuit sur https://sentry.io
+ *   2. Créer un projet « Ma Diét » (type React/JS)
+ *   3. Copier le DSN (format https://abc@o123.ingest.sentry.io/456)
+ *   4. Dans Vercel env vars : VITE_SENTRY_DSN = <le DSN>
+ *   5. Redéploiement auto, Sentry s'active sans intervention code
+ */
+
+const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+
+/** True si Sentry est configuré (DSN présent). */
+export const isSentryEnabled = (): boolean => !!DSN;
+
+let captureException: ((error: unknown, context?: Record<string, unknown>) => void) | null = null;
+let captureMessage: ((message: string, level?: 'info' | 'warning' | 'error') => void) | null = null;
+let initPromise: Promise<void> | null = null;
+
+/**
+ * Initialise Sentry en dynamic import. Appelé une fois au démarrage de l'app.
+ * No-op si DSN absent (mode dev local).
+ */
+export function initSentry(): Promise<void> {
+  if (!DSN) return Promise.resolve();
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    try {
+      const Sentry = await import('@sentry/react');
+      Sentry.init({
+        dsn: DSN,
+        environment: import.meta.env.MODE,
+        // Sampling : 100 % des erreurs, 10 % des traces de performance
+        tracesSampleRate: 0.1,
+        // PII : on ne capture PAS les IPs (RGPD-friendly)
+        sendDefaultPii: false,
+        // Filtre : on ignore les erreurs qu'on ne peut pas fixer
+        ignoreErrors: [
+          // Erreurs browser classiques non-actionnables
+          'ResizeObserver loop limit exceeded',
+          'ResizeObserver loop completed with undelivered notifications',
+          // Extensions Chrome qui injectent des trucs
+          /chrome-extension/i,
+          // NetworkError quand l'user perd la connexion offline (normal)
+          /NetworkError/i,
+          /Failed to fetch/i,
+        ],
+        beforeSend(event) {
+          // Strip email/IDs des URLs si présents (privacy)
+          if (event.request?.url) {
+            event.request.url = event.request.url.replace(/[?&]email=[^&]+/g, '');
+          }
+          return event;
+        },
+      });
+      captureException = (error, context) =>
+        Sentry.captureException(error, context ? { extra: context } : undefined);
+      captureMessage = (msg, level = 'info') => Sentry.captureMessage(msg, level);
+    } catch (err) {
+      // Si Sentry n'est pas installable (package manquant), on log et on continue.
+      console.warn('[sentry] init failed', err);
+    }
+  })();
+  return initPromise;
+}
+
+/**
+ * Capture une exception (via Sentry si dispo, sinon console.error).
+ * Utilisable en dehors de React (hors ErrorBoundary).
+ */
+export function logException(error: unknown, context?: Record<string, unknown>): void {
+  if (captureException) {
+    captureException(error, context);
+  } else {
+    console.error('[exception]', error, context);
+  }
+}
+
+/** Capture un événement / message (info, warning, error). */
+export function logMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): void {
+  if (captureMessage) {
+    captureMessage(message, level);
+  } else if (level === 'error') {
+    console.error('[message]', message);
+  } else if (level === 'warning') {
+    console.warn('[message]', message);
+  } else {
+    console.log('[message]', message);
+  }
+}

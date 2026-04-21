@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useAuth } from '@/store/useAuth';
+import { SocialProof } from '@/components/SocialProof';
 
 /**
  * Nombre d'aliments dans la base (CIQUAL 2020 + extras curated). Inlined en
@@ -78,6 +79,12 @@ export function Home() {
                 Me connecter
               </Link>
             )}
+          </div>
+
+          {/* Social proof : affiché discrètement UNIQUEMENT si > 50 users créés
+              (évite l'effet démotivant d'un "3 users" en phase early). */}
+          <div className="mt-5">
+            <SocialProof />
           </div>
 
           <div className="mt-5 flex flex-wrap justify-center lg:justify-start gap-x-5 gap-y-2 text-xs muted">

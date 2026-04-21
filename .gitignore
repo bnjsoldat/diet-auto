@@ -26,3 +26,4 @@ web/.claude/
 # Vercel deployment local cache
 .vercel
 screenshots/
+screenshots/ph/

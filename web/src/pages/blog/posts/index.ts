@@ -5,6 +5,7 @@ import Perdre5kg, { meta as perdre5kgMeta } from './perdre-5-kg';
 import PriseDeMasse, { meta as priseDeMasseMeta } from './prise-de-masse';
 import Reequilibrage, { meta as reequilibrageMeta } from './reequilibrage-alimentaire';
 import Macros, { meta as macrosMeta } from './macros-musculation';
+import Endurance, { meta as enduranceMeta } from './nutrition-endurance';
 
 export interface BlogPost {
   meta: BlogPostMeta;
@@ -18,6 +19,7 @@ export interface BlogPost {
  * au plus ancien.
  */
 export const BLOG_POSTS: BlogPost[] = [
+  { meta: enduranceMeta, Component: Endurance },
   { meta: macrosMeta, Component: Macros },
   { meta: reequilibrageMeta, Component: Reequilibrage },
   { meta: priseDeMasseMeta, Component: PriseDeMasse },

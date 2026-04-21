@@ -268,16 +268,37 @@ export function optimizeQuantities(
   };
 }
 
-/** Totaux (kcal + macros) pour une liste d'items. Utilisé par les vues. */
+/** Totaux (kcal + macros + micros) pour une liste d'items. */
 export function totalsForItems(items: MealFoodItem[], foodsByName: Map<string, Food>) {
   let kcal = 0, prot = 0, gluc = 0, lip = 0;
+  let fib = 0, suc = 0, sel = 0, ags = 0;
+  // Couverture : nombre d'items pour lesquels CIQUAL a le nutriment.
+  // Sert à afficher "≥ X" quand on n'a pas toute la donnée.
+  let covFib = 0, covSuc = 0, covSel = 0, covAgs = 0;
+  let totalItems = 0;
   for (const item of items) {
     const food = foodsByName.get(item.nom.toLowerCase());
     if (!food) continue;
-    kcal += (item.quantite * food.kcal) / 100;
-    prot += (item.quantite * food.prot) / 100;
-    gluc += (item.quantite * food.gluc) / 100;
-    lip += (item.quantite * food.lip) / 100;
+    totalItems++;
+    const q = item.quantite;
+    kcal += (q * food.kcal) / 100;
+    prot += (q * food.prot) / 100;
+    gluc += (q * food.gluc) / 100;
+    lip += (q * food.lip) / 100;
+    if (food.fib != null) { fib += (q * food.fib) / 100; covFib++; }
+    if (food.suc != null) { suc += (q * food.suc) / 100; covSuc++; }
+    if (food.sel != null) { sel += (q * food.sel) / 100; covSel++; }
+    if (food.ags != null) { ags += (q * food.ags) / 100; covAgs++; }
   }
-  return { kcal, prot, gluc, lip };
+  return {
+    kcal, prot, gluc, lip,
+    fib, suc, sel, ags,
+    // Ratios de couverture (0..1) pour afficher "≈" ou "≥" quand incomplet
+    cov: {
+      fib: totalItems > 0 ? covFib / totalItems : 1,
+      suc: totalItems > 0 ? covSuc / totalItems : 1,
+      sel: totalItems > 0 ? covSel / totalItems : 1,
+      ags: totalItems > 0 ? covAgs / totalItems : 1,
+    },
+  };
 }

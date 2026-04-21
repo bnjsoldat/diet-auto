@@ -25,6 +25,7 @@ import { celebrateTargetIfFirstTime } from '@/lib/celebrate';
 import { on as onEvent } from '@/lib/eventBus';
 import { TargetsCard } from '@/components/TargetsCard';
 import { WaterTracker } from '@/components/WaterTracker';
+import { MicroNutrientsCard } from '@/components/MicroNutrientsCard';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
@@ -534,6 +535,15 @@ export function Today() {
             />
             <div className="mt-3">
               <WaterTracker profileId={profile.id} date={current.date} />
+            </div>
+            <div className="mt-3">
+              <MicroNutrientsCard
+                fib={totals.fib}
+                suc={totals.suc}
+                sel={totals.sel}
+                ags={totals.ags}
+                cov={totals.cov}
+              />
             </div>
             <div className="mt-3 text-xs muted">
               Profil :{' '}

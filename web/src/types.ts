@@ -45,6 +45,14 @@ export interface Food {
   prot: number;
   gluc: number;
   lip: number;
+  /** Fibres alimentaires (g / 100 g). Absent si inconnu de CIQUAL. */
+  fib?: number;
+  /** Sucres totaux (g / 100 g). Inclus dans gluc, mais affiché séparément pour repérer les sucres rapides. */
+  suc?: number;
+  /** Sel chlorure de sodium (g / 100 g). Repère pour limiter à ~6 g/jour adulte. */
+  sel?: number;
+  /** Acides gras saturés (g / 100 g). Inclus dans lip, à limiter à ~22 g/jour adulte. */
+  ags?: number;
   /**
    * Unités pratiques en plus des grammes (œuf, cuillère, pomme, tranche…).
    * La première unité est l'unité par défaut à l'ajout.

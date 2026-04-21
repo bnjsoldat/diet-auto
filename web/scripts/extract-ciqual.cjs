@@ -3,12 +3,19 @@
  * Extrait la base CIQUAL 2020 complète depuis les XML décompressés dans
  * /tmp/ciqual, et génère `web/src/data/foods.json` prêt à l'emploi.
  *
- * Garde uniquement :
+ * Nutriments extraits :
  *   - kcal (const_code 328, EU Règlement 1169/2011)
  *   - Protéines (25000 ou fallback 25003)
  *   - Glucides (31000)
  *   - Lipides (40000)
- * Les aliments dont une de ces 4 valeurs est manquante sont ignorés.
+ *   - Fibres (34100)
+ *   - Sucres (32000)
+ *   - Sel (10004)
+ *   - AG saturés (40302)
+ *
+ * Les 4 nutriments "de base" (kcal/P/G/L) sont requis, les autres sont
+ * optionnels — s'ils sont absents on les omet pour éviter de stocker
+ * des valeurs parasites.
  *
  * Usage : node scripts/extract-ciqual.js <cheminZipExtrait> <sortie>
  *   ex : node scripts/extract-ciqual.js /tmp/ciqual web/src/data/foods.json
@@ -46,8 +53,18 @@ while ((m = alimRe.exec(alimXml)) !== null) {
 console.log('ALIM entries:', alims.size);
 
 // 2) COMPO : (alim_code, const_code) → teneur
-const NEEDED = new Set(['328', '25000', '25003', '31000', '40000']);
-const comp = new Map(); // alim_code → {kcal, prot, gluc, lip}
+const NEEDED = new Set([
+  '328',   // kcal
+  '25000', // prot
+  '25003', // prot fallback
+  '31000', // gluc
+  '40000', // lip
+  '34100', // fibres
+  '32000', // sucres
+  '10004', // sel chlorure de sodium (g/100g)
+  '40302', // AG saturés
+]);
+const comp = new Map(); // alim_code → {kcal, prot, gluc, lip, fib, suc, sel, ags}
 
 const compoXml = readXml('compo_2020_07_07.xml');
 const compoRe = /<COMPO>\s*<alim_code>\s*(\d+)\s*<\/alim_code>\s*<const_code>\s*(\d+)\s*<\/const_code>\s*<teneur>\s*([^<]*?)\s*<\/teneur>/g;
@@ -63,6 +80,10 @@ while ((cm = compoRe.exec(compoXml)) !== null) {
   else if (constCode === '25003' && cur.prot == null) cur.prot = n; // fallback
   else if (constCode === '31000') cur.gluc = n;
   else if (constCode === '40000') cur.lip = n;
+  else if (constCode === '34100') cur.fib = n;
+  else if (constCode === '32000') cur.suc = n;
+  else if (constCode === '10004') cur.sel = n;
+  else if (constCode === '40302') cur.ags = n;
   comp.set(alimCode, cur);
 }
 console.log('COMPO entries with at least one needed nutrient:', comp.size);
@@ -101,6 +122,10 @@ function groupeForAlim(grp, ssgrp) {
 // CIQUAL omet souvent certaines valeurs quand elles sont < seuil de détection
 // (ex : lipides sur un fruit). On les traite comme 0 pour ne pas jeter
 // l'aliment. kcal absente → fallback calculé (Atwater 4/4/9).
+// Les micronutriments (fib/suc/sel/ags) sont omis s'ils sont absents
+// (pas de valeur 0 forcée — on n'a pas le droit de mentir).
+const round = (v) => Math.round(v * 10) / 10;
+const roundSel = (v) => Math.round(v * 1000) / 1000; // sel souvent < 1 g, besoin de précision
 const out = [];
 for (const [code, a] of alims) {
   const c = comp.get(code);
@@ -115,14 +140,21 @@ for (const [code, a] of alims) {
   }
   const groupe = groupeForAlim(a.grp, a.ssgrp);
   if (!groupe) continue;
-  out.push({
+  const entry = {
     nom: a.nom,
     groupe,
-    kcal: Math.round(kcal * 10) / 10,
-    prot: Math.round(prot * 10) / 10,
-    gluc: Math.round(gluc * 10) / 10,
-    lip: Math.round(lip * 10) / 10,
-  });
+    kcal: round(kcal),
+    prot: round(prot),
+    gluc: round(gluc),
+    lip: round(lip),
+  };
+  // Micronutriments (optionnels — on les ajoute seulement si la valeur
+  // est connue CIQUAL pour ne pas inventer des zéros)
+  if (c.fib != null) entry.fib = round(c.fib);
+  if (c.suc != null) entry.suc = round(c.suc);
+  if (c.sel != null) entry.sel = roundSel(c.sel);
+  if (c.ags != null) entry.ags = round(c.ags);
+  out.push(entry);
 }
 
 // Trier et dédupliquer par nom (garder la 1ère occurrence)

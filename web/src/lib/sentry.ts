@@ -71,9 +71,9 @@ export function initSentry(): Promise<void> {
         Sentry.captureException(error, context ? { extra: context } : undefined);
       captureMessage = (msg, level = 'info') => Sentry.captureMessage(msg, level);
       console.log('[sentry] ✓ initialized — errors will be forwarded to Sentry.io');
-      // Envoie un petit event "app started" pour valider la connexion
-      // (visible dans Sentry sous forme de message info).
-      Sentry.captureMessage('Ma Diét app started', 'info');
+      // NB : le captureMessage('app started') initial a été retiré après
+      // validation — inutile de polluer Sentry avec un event par chargement
+      // de page. Seules les vraies erreurs seront remontées désormais.
     } catch (err) {
       console.warn('[sentry] init failed', err);
     }

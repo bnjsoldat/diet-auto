@@ -2,6 +2,7 @@ import type { DayPlan, Food, MealFoodItem } from '@/types';
 import { boundsForFood } from './optimizer';
 import { categorieOfFood } from './categories';
 import { isDiscreteUnit } from './units';
+import { isCommonFood } from './commonFoods';
 
 export interface Totals {
   kcal: number;
@@ -117,9 +118,16 @@ const SUGGEST_NEVER_PATTERN = new RegExp(
     // Snacks / junk food : pop-corn, chips, bonbons, barres chocolatées de marque
     '|\\b(?:pop-?corn|ma[iï]s éclaté|chips|bretzel|crackers?|cacahuètes? salées?|biscuit apéritif|biscuit salé)\\b' +
     '|\\b(?:bonbon|sucette|chewing-?gum|pâte de fruit|guimauve|nougat|caramel|barre chocolatée|barre céréales?)\\b' +
+    // Galettes soufflées / crackers light (peu rassasiants, profils
+    // nutritionnels absurdes pour une suggestion).
+    '|\\bgalette(?:s)? (?:multicéréales? )?soufflée?s?\\b' +
+    '|\\bgalette(?:s)? de ma[iï]s\\b' +
     // Alcools et liqueurs (vin, bière, spiritueux, « crème de » liqueur)
     '|\\b(?:vin|bi[èe]re|cidre|champagne|crémant|cr[èe]me de (?:cassis|menthe|framboise|mûre|pêche|cacao|whisky))\\b' +
-    '|\\b(?:whisky|vodka|rhum|gin|cognac|pastis|liqueur|kir|martini|apéritif|eau-de-vie|calvados|digestif)\\b',
+    '|\\b(?:whisky|vodka|rhum|gin|cognac|pastis|liqueur|kir|martini|apéritif|eau-de-vie|calvados|digestif)\\b' +
+    // Vins fortifiés (même catégorie « boissons » que eau/thé dans CIQUAL
+    // → pas détectés par le filtre vin générique). Marsala, Porto, etc.
+    '|\\b(?:marsala|porto|madère|xérès|sherry|vermouth|muscat|banyuls|maury|rivesaltes|pineau|ratafia|sangria)\\b',
   'i'
 );
 
@@ -353,6 +361,13 @@ export function suggestComplements(opts: {
     if (dominantMacro === 'prot' && food.prot / kcal100 > 0.05) bonus *= 1.4;
     if (dominantMacro === 'gluc' && food.gluc / kcal100 > 0.05) bonus *= 1.2;
     if (dominantMacro === 'lip' && food.lip / kcal100 > 0.04) bonus *= 1.2;
+
+    // BIG BONUS pour les aliments « courants » (top-50 INCA 3 ANSES).
+    // C'est le signal le plus fort : si un aliment familier (œuf, poulet,
+    // pâtes…) comble le déficit, on le propose AVANT une obscurité CIQUAL
+    // (« Marsala », « Galette multicéréales soufflée »). ×3 pour écraser
+    // tous les autres bonus.
+    if (isCommonFood(food.nom)) bonus *= 3;
 
     candidates.push({ food, quantite: q, comble: dominantMacro, score: s * bonus });
   }

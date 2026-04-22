@@ -21,6 +21,8 @@ import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import { suggestComplements } from '@/lib/suggestions';
 import { categorieOfFood } from '@/lib/categories';
+import { detectMealSlot } from '@/lib/mealSlot';
+import { mealContextScore } from '@/lib/commonFoods';
 import { vibrate } from '@/lib/haptic';
 import { celebrateTargetIfFirstTime } from '@/lib/celebrate';
 import { on as onEvent } from '@/lib/eventBus';
@@ -55,40 +57,68 @@ function shiftDate(isoDate: string, days: number): string {
  * rejoignent le repas qui a déjà un féculent similaire. À défaut, on
  * tombe sur le premier repas du plan.
  */
-function pickMealForCategory(
-  meals: { id: string; nom: string; items: { nom: string }[] }[],
-  cat: string | null
+/**
+ * Choisit le meilleur repas pour insérer une suggestion, en combinant :
+ *  1. Le DÉFICIT kcal par repas (le repas le plus sous sa cible remonte)
+ *  2. Le CONTEXTE sémantique (œuf au petit-déj > œuf en collation soir)
+ *
+ * Évite de tout empiler dans le premier repas qui match la catégorie.
+ * Respecte la distribution des repas choisie par l'utilisateur.
+ */
+function pickBestMealForSuggestion(
+  meals: { id: string; nom: string; items: MealFoodItem[] }[],
+  foodName: string,
+  cat: string | null,
+  mealKcalCurrent: number[],
+  mealKcalTargets: number[]
 ): string {
+  // Score chaque repas :
+  //  - deficitScore : 0 à 1, proportionnel au déficit vs cible (saturé à 1)
+  //  - contextScore : 0 à 1, selon mealContextScore(food, slot)
+  //  - legacyScore  : 0 à 1, ancien heuristique catégorie ↔ nom repas
+  //  - score final = deficitScore * 2 + contextScore * 2 + legacyScore
   const lc = (s: string) => s.toLowerCase();
-  const findByPattern = (patt: RegExp) =>
-    meals.find((m) => patt.test(lc(m.nom)))?.id;
-  // Heuristique simple par catégorie + nom du repas
-  if (cat === 'fruits' || cat === 'laitiers' || cat === 'sucres' || cat === 'cereales') {
-    return (
-      findByPattern(/matin|petit.?d[ée]j|r[ée]veil/) ||
-      findByPattern(/collation|go[uû]ter|snack/) ||
-      meals[0].id
-    );
+  const matchLegacy = (mealName: string): number => {
+    const n = lc(mealName);
+    if (cat === 'fruits' || cat === 'laitiers' || cat === 'sucres') {
+      if (/matin|petit.?d[ée]j|r[ée]veil/.test(n)) return 1;
+      if (/collation|go[uû]ter|snack/.test(n)) return 0.8;
+      return 0.3;
+    }
+    if (cat === 'proteines' || cat === 'legumineuses' || cat === 'plats' || cat === 'legumes') {
+      if (/midi|d[ée]jeuner|d[îi]ner|soir|repas 2|repas 3/.test(n)) return 1;
+      if (/petit.?d[ée]j/.test(n)) return 0.2; // on évite viande au petit-déj
+      return 0.5;
+    }
+    if (cat === 'cereales') {
+      if (/petit.?d[ée]j|matin/.test(n)) return 0.9;
+      if (/midi|d[ée]jeuner|d[îi]ner|soir/.test(n)) return 1;
+      return 0.6;
+    }
+    return 0.5;
+  };
+
+  let bestId = meals[0].id;
+  let bestScore = -Infinity;
+
+  for (let i = 0; i < meals.length; i++) {
+    const m = meals[i];
+    const current = mealKcalCurrent[i] ?? 0;
+    const target = mealKcalTargets[i] ?? 1;
+    const deficit = Math.max(0, target - current);
+    const deficitRatio = Math.min(1, deficit / Math.max(target, 1));
+
+    const slot = detectMealSlot(m.nom, i, meals.length);
+    const contextScore = mealContextScore(foodName, slot);
+    const legacyScore = matchLegacy(m.nom);
+
+    const score = deficitRatio * 2 + contextScore * 2 + legacyScore;
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = m.id;
+    }
   }
-  if (cat === 'proteines' || cat === 'legumineuses' || cat === 'plats') {
-    return (
-      findByPattern(/midi|d[ée]jeuner|d[îi]ner|soir|repas 2|repas 3/) ||
-      meals[0].id
-    );
-  }
-  if (cat === 'legumes') {
-    return (
-      findByPattern(/midi|d[ée]jeuner|d[îi]ner|soir|repas 2|repas 3/) ||
-      meals[0].id
-    );
-  }
-  if (cat === 'fruits-coque' || cat === 'matieres-grasses' || cat === 'sauces') {
-    // Se glisse dans le plus gros repas existant
-    let best = meals[0];
-    for (const m of meals) if (m.items.length > best.items.length) best = m;
-    return best.id;
-  }
-  return meals[0].id;
+  return bestId;
 }
 
 export function Today() {
@@ -295,10 +325,28 @@ export function Today() {
       });
       if (sugs.length === 0) break;
 
-      // Insère chaque suggestion dans le meilleur repas pour sa catégorie.
+      // Pour respecter la distribution des repas de l'utilisateur, on
+      // calcule à chaque itération les kcal actuels et cibles par repas.
+      // La suggestion va dans le repas qui combine le plus gros déficit
+      // ET la meilleure cohérence contextuelle (cf. pickBestMealForSuggestion).
+      const mealKcalTargetsLocal = kcalPerMeal(
+        cibles.kcal,
+        clone.meals.map((m) => m.nom),
+        profile?.mealDistribution
+      );
+      const mealKcalCurrentLocal = clone.meals.map(
+        (m) => totalsForItems(m.items, foodsByName).kcal
+      );
+
       for (const s of sugs) {
         const cat = categorieOfFood(s.food);
-        const targetMeal = pickMealForCategory(clone.meals, cat);
+        const targetMeal = pickBestMealForSuggestion(
+          clone.meals,
+          s.food.nom,
+          cat,
+          mealKcalCurrentLocal,
+          mealKcalTargetsLocal
+        );
         const newItem: MealFoodItem = {
           id: 'itm_' + Math.random().toString(36).slice(2, 9),
           nom: s.food.nom,
@@ -308,6 +356,10 @@ export function Today() {
         const meal = clone.meals.find((m) => m.id === targetMeal);
         if (meal) {
           meal.items.push(newItem);
+          // Met à jour le "current" pour la prochaine suggestion (sinon
+          // toutes les suggestions visent le même repas déficitaire)
+          const idx = clone.meals.findIndex((x) => x.id === meal.id);
+          if (idx >= 0) mealKcalCurrentLocal[idx] += s.quantite * (s.food.kcal / 100);
           addedLog.push(`${s.food.nom} (${s.quantite} g) → ${meal.nom}`);
         }
       }

@@ -55,7 +55,10 @@ export const MACRO_SPLIT = {
  */
 export const PROTEIN_G_PER_KG: Record<Sport, number> = {
   aucun:     1.0,
-  mixte:     1.4,
+  // Mixte : relevé à 1.8 g/kg suite à feedback user (2026-04-22). Un
+  // profil « mixte » en France est typiquement muscu + cardio dominant
+  // muscu, pas endurance pure — ACSM 1.6-1.8 pour ce cas.
+  mixte:     1.8,
   endurance: 1.4,
   muscu:     1.8,
 };

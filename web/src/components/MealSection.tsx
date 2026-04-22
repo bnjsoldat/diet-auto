@@ -21,9 +21,11 @@ interface Props {
   onDragOver?: (mealId: string) => void;
   onDrop?: (mealId: string) => void;
   isDragTarget?: boolean;
+  /** Cible kcal pour ce repas selon la distribution choisie (optionnel). */
+  targetKcal?: number;
 }
 
-export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, isDragTarget }: Props) {
+export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, isDragTarget, targetKcal }: Props) {
   const [open, setOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nomEdit, setNomEdit] = useState(meal.nom);
@@ -125,10 +127,20 @@ export function MealSection({ meal, canRemove, onDragStart, onDragOver, onDrop, 
 
         <div className="flex items-center gap-2 text-sm">
           <span className="muted hidden sm:inline">
-            {formatNumber(totals.kcal)} kcal · P {totals.prot.toFixed(1)} · G{' '}
-            {totals.gluc.toFixed(1)} · L {totals.lip.toFixed(1)}
+            {formatNumber(totals.kcal)}
+            {targetKcal != null && targetKcal > 0 && (
+              <span className="muted/70"> / {targetKcal}</span>
+            )}
+            {' kcal · P '}
+            {totals.prot.toFixed(1)} · G {totals.gluc.toFixed(1)} · L {totals.lip.toFixed(1)}
           </span>
-          <span className="muted sm:hidden font-medium">{formatNumber(totals.kcal)} kcal</span>
+          <span className="muted sm:hidden font-medium">
+            {formatNumber(totals.kcal)}
+            {targetKcal != null && targetKcal > 0 && (
+              <span className="opacity-60"> / {targetKcal}</span>
+            )}
+            {' kcal'}
+          </span>
           <button
             type="button"
             onClick={(e) => {

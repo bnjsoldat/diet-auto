@@ -6,6 +6,7 @@ import { foods, foodsByName } from '@/lib/foods';
 import { suggestComplements, type Suggestion } from '@/lib/suggestions';
 import { totalsForItems } from '@/lib/optimizer';
 import { useDayPlan } from '@/store/useDayPlan';
+import { useSettings } from '@/store/useSettings';
 
 interface Props {
   open: boolean;
@@ -145,9 +146,12 @@ export function OptimizeDialog({ open, result, plan, mode, onClose }: Props) {
   }, [open, onClose]);
 
   const modeConfig = OPTIMIZER_MODES[mode ?? 'normal'];
+  /** Si l'utilisateur a décoché le toggle dans OptimizerSettingsCard,
+   *  on NE calcule PAS et on N'AFFICHE PAS le bloc de suggestions. */
+  const shouldSuggest = useSettings((s) => s.suggestComplements) ?? true;
 
   const suggestions = useMemo(() => {
-    if (!open || !result || !plan) return [];
+    if (!open || !result || !plan || !shouldSuggest) return [];
     return suggestComplements({
       plan,
       totals: result.apres,
@@ -157,7 +161,7 @@ export function OptimizeDialog({ open, result, plan, mode, onClose }: Props) {
       tolerance: { kcal: modeConfig.tolKcal, macro: modeConfig.tolMacro },
       max: 3,
     });
-  }, [open, result, plan, modeConfig]);
+  }, [open, result, plan, modeConfig, shouldSuggest]);
 
   /**
    * Analyse de la distribution des kcal par repas après optimisation.
@@ -290,7 +294,7 @@ export function OptimizeDialog({ open, result, plan, mode, onClose }: Props) {
           </div>
         )}
 
-        {plan && (
+        {plan && shouldSuggest && (
           <SuggestionsBlock
             suggestions={suggestions}
             plan={plan}

@@ -56,6 +56,26 @@ export type DietaryPref =
   | 'sans-lactose'
   | 'halal';
 
+/**
+ * Préférence de répartition des calories entre les repas. Chaque preset
+ * est basé sur une recommandation scientifique ou culturelle réelle.
+ *
+ *  - equilibre        : 25/10/30/10/25 — recommandation ANSES, classique français
+ *  - petit-dej-copieux: 35/10/25/10/20 — chrono-nutrition (Delabos)
+ *  - dejeuner-copieux : 20/5/40/10/25 — tradition française / méditerranéenne
+ *  - diner-copieux    : 15/10/25/10/40 — pattern anglo-américain
+ *  - jeune-16-8       : 0/0/50/20/30 — intermittent fasting 16:8
+ *
+ * Ordre des repas : petit-déj / collation matin / déjeuner / collation
+ * après-midi / dîner (+ collation soir si elle existe dans le plan).
+ */
+export type MealDistribution =
+  | 'equilibre'
+  | 'petit-dej-copieux'
+  | 'dejeuner-copieux'
+  | 'diner-copieux'
+  | 'jeune-16-8';
+
 export interface Profile {
   id: string;
   nom: string;
@@ -86,6 +106,8 @@ export interface Profile {
   sportPrincipal?: Sport;
   /** Préférences alimentaires — filtre la recherche + suggère templates compatibles. */
   dietaryPrefs?: DietaryPref[];
+  /** Preset de répartition des kcal entre repas (défaut : 'equilibre'). */
+  mealDistribution?: MealDistribution;
 
   createdAt: number;
   updatedAt: number;
@@ -210,4 +232,8 @@ export interface Settings {
   weightKcal: number;
   weightMacro: number;
   optimizerMode: OptimizerMode;
+  /** Si true (défaut), l'optimiseur propose des aliments complémentaires
+   *  quand le plan est incomplet. Si false, il ne fait qu'ajuster les
+   *  quantités des aliments déjà présents. */
+  suggestComplements?: boolean;
 }

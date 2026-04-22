@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Settings2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Lightbulb, Settings2 } from 'lucide-react';
 import { useSettings } from '@/store/useSettings';
 import { OPTIMIZER_MODES } from '@/lib/constants';
 import type { OptimizerMode } from '@/types';
@@ -14,6 +14,9 @@ import { InfoTip } from './InfoTip';
 export function OptimizerSettingsCard() {
   const [open, setOpen] = useState(false);
   const mode = useSettings((s) => s.optimizerMode);
+  /** `suggestComplements` défaut `true` → si la clé n'existe pas encore
+   *  dans le store (profils pré-v2), on affiche les suggestions. */
+  const suggestComplements = useSettings((s) => s.suggestComplements) ?? true;
   const update = useSettings((s) => s.update);
   const current = OPTIMIZER_MODES[mode];
 
@@ -78,6 +81,32 @@ export function OptimizerSettingsCard() {
               </button>
             );
           })}
+
+          {/* Toggle suggestions complémentaires. Deux modes :
+                 - ON  : après optim, on propose des aliments pour compléter le plan
+                 - OFF : juste optimiser les quantités, sans rajouter de nouveaux items */}
+          <div className="mt-2 pt-3 border-t">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={suggestComplements}
+                onChange={(e) => update({ suggestComplements: e.target.checked })}
+                className="mt-0.5 h-4 w-4 accent-emerald-600"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <Lightbulb size={14} className="text-amber-500" />
+                  Proposer des aliments complémentaires
+                </div>
+                <div className="text-xs muted mt-0.5">
+                  Si activé (par défaut), après l'optimisation l'app suggère
+                  des aliments à ajouter pour combler un éventuel déficit
+                  kcal/macros. Décoche si tu veux juste <em>ajuster</em> ton
+                  plan sans aucune suggestion.
+                </div>
+              </div>
+            </label>
+          </div>
         </div>
       )}
     </div>

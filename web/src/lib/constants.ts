@@ -1,4 +1,4 @@
-import type { Activite, Genre, Objectif, OptimizerMode, Rythme, Sport } from '@/types';
+import type { Activite, Genre, MealDistribution, Objectif, OptimizerMode, Rythme, Sport } from '@/types';
 
 /** Multiplicateur du métabolisme basal selon le niveau d'activité */
 export const ACTIVITY_COEFS: Record<Activite, number> = {
@@ -342,6 +342,60 @@ export const DEFAULT_MEALS = [
   'Collation 2',
   'Repas 3 (soir)',
 ];
+
+/**
+ * Presets de répartition des kcal par repas (% du total quotidien).
+ *
+ * Chaque preset correspond à un pattern nutritionnel réel basé sur la
+ * littérature scientifique ou la culture culinaire. Le tableau `shares`
+ * représente, dans l'ordre des repas du plan : petit-déj, collation 1,
+ * déjeuner, collation 2, dîner, (collation soir si existe).
+ *
+ * Ref :
+ *  - ANSES ANC 2010 (répartition classique FR)
+ *  - Delabos 2002 (chrono-nutrition)
+ *  - Patterson 2015 / Varady 2021 (intermittent fasting 16:8)
+ */
+export const MEAL_DISTRIBUTION_PRESETS: Record<
+  MealDistribution,
+  {
+    label: string;
+    emoji: string;
+    description: string;
+    shares: number[]; // total = 100, dans l'ordre des repas
+  }
+> = {
+  equilibre: {
+    label: 'Équilibré',
+    emoji: '⚖️',
+    description: 'Réparti sur la journée — recommandation ANSES.',
+    shares: [25, 10, 30, 10, 25],
+  },
+  'petit-dej-copieux': {
+    label: 'Petit-déj copieux',
+    emoji: '🌅',
+    description: 'Chrono-nutrition Delabos : matin dense, soir léger.',
+    shares: [35, 10, 25, 10, 20],
+  },
+  'dejeuner-copieux': {
+    label: 'Déjeuner copieux',
+    emoji: '🍽️',
+    description: 'Tradition française : midi principal, reste modéré.',
+    shares: [20, 5, 40, 10, 25],
+  },
+  'diner-copieux': {
+    label: 'Dîner copieux',
+    emoji: '🌙',
+    description: 'Pattern anglo-américain : soir principal.',
+    shares: [15, 10, 25, 10, 40],
+  },
+  'jeune-16-8': {
+    label: 'Jeûne 16/8',
+    emoji: '⏱️',
+    description: 'Intermittent : 0 petit-déj, repas midi-soir (fenêtre 8h).',
+    shares: [0, 0, 50, 20, 30],
+  },
+};
 
 /**
  * Favoris par défaut seedés à la création d'un nouveau profil.

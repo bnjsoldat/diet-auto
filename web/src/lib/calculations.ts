@@ -1,10 +1,11 @@
-import type { Profile, Targets } from '@/types';
+import type { MealDistribution, Profile, Targets } from '@/types';
 import {
   ACTIVITY_COEFS,
   KCAL_PER_GRAM,
   KCAL_PER_KG_FAT,
   LIPID_MIN_G_PER_KG,
   LIPID_PCT,
+  MEAL_DISTRIBUTION_PRESETS,
   MIN_KCAL_FLOOR,
   OBJECTIVE_DELTA_KCAL,
   PROTEIN_G_PER_KG,
@@ -230,6 +231,50 @@ export function estimatedTargetDate(profile: Profile): Date | null {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return d;
+}
+
+/**
+ * Retourne les kcal cible par repas selon le preset de distribution
+ * choisi par l'utilisateur et le nombre de repas du plan.
+ *
+ * Algorithme :
+ *  1. Prend le preset (défaut 'equilibre').
+ *  2. Adapte les `shares` au nombre réel de repas :
+ *     - Si le plan a N repas et le preset en a M :
+ *       - Si N === M : applique tel quel
+ *       - Si N > M : distribue le reste (proportionnel)
+ *       - Si N < M : somme les excédents sur les principaux
+ *  3. Multiplie par kcalCible pour obtenir les kcal par repas.
+ *
+ * Exemple : kcalCible = 2878, preset = 'equilibre', 5 repas
+ *  → [720, 288, 864, 288, 720] (25%/10%/30%/10%/25%)
+ */
+export function kcalPerMeal(
+  kcalCible: number,
+  nbMeals: number,
+  distribution?: MealDistribution
+): number[] {
+  const preset = MEAL_DISTRIBUTION_PRESETS[distribution ?? 'equilibre'];
+  let shares = [...preset.shares];
+
+  // Adapter le tableau de shares au nombre réel de repas
+  if (nbMeals > shares.length) {
+    // Extra repas : on ajoute 10 % chacun et on renormalise à 100
+    while (shares.length < nbMeals) shares.push(10);
+  } else if (nbMeals < shares.length) {
+    // Moins de repas : on fusionne les derniers dans le dernier conservé
+    const extra = shares.slice(nbMeals).reduce((a, b) => a + b, 0);
+    shares = shares.slice(0, nbMeals);
+    shares[shares.length - 1] += extra;
+  }
+
+  // Renormaliser à 100 (peut être imparfait après adaptations)
+  const total = shares.reduce((a, b) => a + b, 0);
+  if (total > 0 && total !== 100) {
+    shares = shares.map((s) => (s * 100) / total);
+  }
+
+  return shares.map((s) => Math.round((s / 100) * kcalCible));
 }
 
 /**

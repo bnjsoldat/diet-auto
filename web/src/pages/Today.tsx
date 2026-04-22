@@ -14,7 +14,7 @@ import {
 import { useProfile } from '@/store/useProfile';
 import { useDayPlan } from '@/store/useDayPlan';
 import { useSettings } from '@/store/useSettings';
-import { calcTargets } from '@/lib/calculations';
+import { calcTargets, kcalPerMeal } from '@/lib/calculations';
 import { foods, foodsByName } from '@/lib/foods';
 import { track } from '@vercel/analytics';
 import { optimizeQuantities, totalsForItems } from '@/lib/optimizer';
@@ -449,11 +449,19 @@ export function Today() {
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-5">
         <div className="grid gap-4 order-2 lg:order-1">
-          {current.meals.map((meal) => (
+          {(() => {
+            // Cibles kcal par repas selon la distribution préférée du profil.
+            // Calculé une fois par render à partir de la cible totale et du
+            // nombre de repas actuel. Passé à chaque MealSection en prop.
+            const mealTargets = targets
+              ? kcalPerMeal(targets.kcalCible, current.meals.length, profile.mealDistribution)
+              : [];
+            return current.meals.map((meal, i) => (
             <MealSection
               key={meal.id}
               meal={meal}
               canRemove={current.meals.length > 1}
+              targetKcal={mealTargets[i]}
               onDragStart={(id) => setDraggingMealId(id)}
               onDragOver={(id) => setDragOverMealId(id)}
               onDrop={(targetId) => {
@@ -482,7 +490,8 @@ export function Today() {
               }}
               isDragTarget={dragOverMealId === meal.id && draggingMealId !== meal.id}
             />
-          ))}
+            ));
+          })()}
 
           {/* Input inline + bouton (le prompt() natif ne s'affiche pas
               toujours sur mobile, en plus d'être visuellement daté). */}

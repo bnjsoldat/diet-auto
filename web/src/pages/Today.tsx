@@ -28,6 +28,7 @@ import { TargetsCard } from '@/components/TargetsCard';
 import { WaterTracker } from '@/components/WaterTracker';
 import { MicroNutrientsCard } from '@/components/MicroNutrientsCard';
 import { ActivityWidget } from '@/components/ActivityWidget';
+import { WelcomeHint } from '@/components/WelcomeHint';
 import { MealSection } from '@/components/MealSection';
 import { OptimizeDialog } from '@/components/OptimizeDialog';
 import { ShareButton } from '@/components/ShareButton';
@@ -321,6 +322,10 @@ export function Today() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
+      {/* Bannière d'onboarding — visible uniquement à la 1re visite tant que le
+          plan du jour est vide. Guide l'utilisateur vers Mes plans → Optimiser. */}
+      <WelcomeHint hasItems={allItems.length > 0} onOpenTemplates={() => setTplOpen(true)} />
+
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted flex items-center gap-2">

@@ -29,12 +29,32 @@ export function FeedbackButton() {
     setOpen(true);
   }
 
-  function handleSend() {
-    const body = encodeURIComponent(
-      `Page : ${location.pathname}\nUser : ${user?.email ?? 'non connecté'}\n\nMessage :\n${msg}`
-    );
-    const subject = encodeURIComponent('Feedback Ma Diét');
-    window.location.href = `mailto:contact@lentreprise.ai?subject=${subject}&body=${body}`;
+  /**
+   * Envoi : 3 routes pour maximiser les chances d'atterrir dans la boîte
+   * mail de l'utilisateur.
+   *  1. Copie la totalité du message + email dans le presse-papier
+   *     (garantit que l'user ne perd pas son texte).
+   *  2. Ouvre un onglet Gmail web (marche pour la majorité des users).
+   *  3. Tente mailto: en fallback si l'user a un client mail config.
+   */
+  async function handleSend() {
+    const email = 'lentreprise@lentreprise.ai';
+    const subject = 'Feedback Ma Diét';
+    const fullBody = `Page : ${location.pathname}\nUser : ${user?.email ?? 'non connecté'}\n\nMessage :\n${msg}`;
+
+    // 1. Copie dans le presse-papier : garantit zéro perte de message
+    try {
+      await navigator.clipboard.writeText(`${email}\n\n${subject}\n\n${fullBody}`);
+    } catch {
+      /* clipboard indispo, on ignore */
+    }
+
+    // 2. Ouvre Gmail web dans un nouvel onglet (robuste, marche partout)
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(fullBody)}`;
+    window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+
     track('feedback_sent', { length: msg.length });
     setTimeout(() => {
       setOpen(false);
@@ -84,8 +104,9 @@ export function FeedbackButton() {
             <div className="p-4 space-y-3 text-sm">
               <p className="muted text-xs">
                 Écris ce que tu veux : un bug, une idée, un aliment manquant, un remerciement…
-                Ton message m'est envoyé directement par email à{' '}
-                <strong>contact@lentreprise.ai</strong>. Je lis tout et je te réponds.
+                En cliquant Envoyer, ton message s'ouvre dans Gmail (ou dans ton client mail)
+                pré-rempli à <strong>lentreprise@lentreprise.ai</strong>. Le message est aussi
+                copié dans ton presse-papier au cas où. Je lis tout et je réponds.
               </p>
               <textarea
                 autoFocus

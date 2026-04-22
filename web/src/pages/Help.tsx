@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, HelpCircle, Mail, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -334,17 +334,70 @@ export function Help() {
       </div>
 
       {/* Contact */}
-      <div className="card p-5 mt-8 text-center">
-        <MessageCircle size={20} className="text-emerald-600 mx-auto mb-2" />
-        <h2 className="font-semibold">Une question qui n'est pas ici ?</h2>
-        <p className="text-sm muted mt-1">
-          Écris-nous, on te répond sous 48 h.
-        </p>
+      <ContactCard />
+    </div>
+  );
+}
+
+/**
+ * Carte de contact avec email copiable + raccourcis Gmail/Outlook/client mail.
+ * Le mailto: plain-vanilla ne marche pas sur beaucoup de Windows où aucun
+ * client mail n'est configuré (Chrome ouvre alors google.com vide). On
+ * propose donc plusieurs routes + bouton "Copier l'email".
+ */
+function ContactCard() {
+  const email = 'lentreprise@lentreprise.ai';
+  const subject = 'Ma Diét – Question';
+  const [copied, setCopied] = React.useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard indispo : fallback prompt */
+      window.prompt('Copie cette adresse :', email);
+    }
+  }
+
+  return (
+    <div className="card p-5 mt-8 text-center">
+      <MessageCircle size={20} className="text-emerald-600 mx-auto mb-2" />
+      <h2 className="font-semibold">Une question qui n'est pas ici ?</h2>
+      <p className="text-sm muted mt-1">
+        Écris-moi à <strong className="text-[var(--text)]">{email}</strong> — je réponds sous
+        48&nbsp;h.
+      </p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <button type="button" className="btn-primary" onClick={handleCopy}>
+          <Mail size={14} /> {copied ? 'Copié ✓' : "Copier l'email"}
+        </button>
         <a
-          href="mailto:contact@lentreprise.ai?subject=Ma%20Di%C3%A9t%20%E2%80%93%20Question"
-          className="btn-primary mt-4 inline-flex"
+          href={`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(
+            subject
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-outline"
         >
-          <Mail size={14} /> Nous écrire
+          Gmail
+        </a>
+        <a
+          href={`https://outlook.live.com/mail/0/deeplink/compose?to=${email}&subject=${encodeURIComponent(
+            subject
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-outline"
+        >
+          Outlook
+        </a>
+        <a
+          href={`mailto:${email}?subject=${encodeURIComponent(subject)}`}
+          className="btn-outline"
+        >
+          Autre
         </a>
       </div>
     </div>

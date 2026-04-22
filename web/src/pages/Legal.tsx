@@ -171,7 +171,7 @@ function Privacy() {
 
       <h2 className="font-semibold mt-6 mb-2">7. Contact</h2>
       <p className="text-sm muted leading-relaxed">
-        Pour toute question sur tes données : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>.
+        Pour toute question sur tes données : <a href="mailto:lentreprise@lentreprise.ai" className="underline">lentreprise@lentreprise.ai</a>.
         Tu peux aussi déposer une réclamation auprès de la CNIL (cnil.fr).
       </p>
     </article>
@@ -192,7 +192,7 @@ function Mentions() {
       <p className="text-sm muted leading-relaxed mt-2">
         SIRET : 933 093 882 00019<br />
         Adresse : 56 chemin Champs de Merle, 97435 Saint-Paul (La Réunion)<br />
-        Email : <a href="mailto:contact@lentreprise.ai" className="underline">contact@lentreprise.ai</a>
+        Email : <a href="mailto:lentreprise@lentreprise.ai" className="underline">lentreprise@lentreprise.ai</a>
       </p>
       <p className="text-sm muted leading-relaxed mt-2">
         Directeur de la publication : Benjy GRONDIN.

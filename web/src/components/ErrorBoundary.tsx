@@ -68,9 +68,9 @@ export class ErrorBoundary extends Component<Props, State> {
         }\n\nMerci !`
       );
       const subject = encodeURIComponent('[BUG] Ma Diét plante');
-      window.location.href = `mailto:contact@lentreprise.ai?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:lentreprise@lentreprise.ai?subject=${subject}&body=${body}`;
     } catch {
-      window.location.href = 'mailto:contact@lentreprise.ai?subject=[BUG] Ma Diét plante';
+      window.location.href = 'mailto:lentreprise@lentreprise.ai?subject=[BUG] Ma Diét plante';
     }
   };
 
@@ -105,7 +105,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <p className="text-[11px] muted mt-6">
               Erreur enregistrée localement. Tu peux copier-coller le détail ci-dessus si tu
-              m'écris à contact@lentreprise.ai — ça m'aidera à fixer.
+              m'écris à lentreprise@lentreprise.ai — ça m'aidera à fixer.
             </p>
           </div>
         </div>

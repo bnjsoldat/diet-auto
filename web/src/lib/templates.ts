@@ -100,6 +100,10 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
           ['Saumon, atlantique, cuit', 180],
           ['Pâtes alimentaires, cuites, non salées', 220],
           ['Épinard, bouilli/cuit à l\u2019eau', 180],
+          // Ajout d'huile pour la cuisson réaliste (saumon à la poêle,
+          // pâtes, épinards). Même si le saumon a du gras naturel, tout
+          // cuisinier met un peu d'huile. 10g = 2 c. à café.
+          ['Huile d\u2019olive vierge extra', 10],
         ],
       },
       {

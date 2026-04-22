@@ -3,9 +3,14 @@ import {
   ACTIVITY_COEFS,
   KCAL_PER_GRAM,
   KCAL_PER_KG_FAT,
-  MACRO_SPLIT_BY_SPORT,
+  LIPID_MIN_G_PER_KG,
+  LIPID_PCT,
   MIN_KCAL_FLOOR,
   OBJECTIVE_DELTA_KCAL,
+  PROTEIN_G_PER_KG,
+  PROTEIN_LOSS_MULTIPLIER,
+  PROTEIN_MAX_G_PER_KG,
+  PROTEIN_MIN_G_PER_KG,
 } from './constants';
 import { effectiveAge } from './age';
 
@@ -106,13 +111,11 @@ export function calcTargets(profile: Profile, opts: TargetsOptions = {}): Target
 
   const imc = calcIMC(profile);
 
-  // Répartition macros selon le sport principal. Fallback sur 'mixte'
-  // (= répartition standard 25/50/25) si non défini.
-  const sport = profile.sportPrincipal ?? 'mixte';
-  const split = MACRO_SPLIT_BY_SPORT[sport];
-  const prot = (kcalCible * split.protPct) / KCAL_PER_GRAM.prot;
-  const gluc = (kcalCible * split.glucPct) / KCAL_PER_GRAM.gluc;
-  const lip = (kcalCible * split.lipPct) / KCAL_PER_GRAM.lip;
+  // Répartition macros — modèle scientifique (ACSM 2020 / ISSN 2017) :
+  //  1. Protéines en GRAMMES/KG de poids corporel, boostées si perte.
+  //  2. Lipides en % des kcal totales, avec plancher g/kg (santé hormonale).
+  //  3. Glucides = reste des kcal (énergie principale).
+  const macros = computeMacros(profile, kcalCible);
 
   return {
     mb: Math.round(mb),
@@ -120,10 +123,77 @@ export function calcTargets(profile: Profile, opts: TargetsOptions = {}): Target
     kcalCible: Math.round(kcalCible),
     deltaKcal: Math.round(deltaKcal),
     imc: Math.round(imc * 10) / 10,
-    prot: Math.round(prot),
-    gluc: Math.round(gluc),
-    lip: Math.round(lip),
+    prot: Math.round(macros.prot),
+    gluc: Math.round(macros.gluc),
+    lip: Math.round(macros.lip),
   };
+}
+
+/**
+ * Calcule la répartition macros en grammes pour une cible kcal donnée.
+ *
+ * Algorithme (scientifiquement sourcé) :
+ *  1. Protéines = g/kg × poids corporel
+ *     - g/kg selon sport (1.0 à 1.8)
+ *     - ×1.3 si perte de poids (préservation masse maigre, Helms 2014)
+ *     - bornes : [0.8 ; 2.5] g/kg
+ *  2. Lipides = % × kcalCible, avec plancher 0.8 g/kg × poids
+ *     - % selon sport (22 % endurance → 30 % aucun)
+ *     - plancher pour hormones stéroïdiennes, vit liposolubles
+ *  3. Glucides = (kcalCible - prot×4 - lip×9) / 4
+ *     - toujours ≥ 0, sinon on ré-ajuste (cas extrêmes de cible très basse)
+ */
+/** Plafond physiologique : protéines au-dessus de 35 % des kcal n'apportent
+ *  aucun bénéfice (turnover hépatique limité, gluconéogenèse coûteuse). */
+const PROTEIN_MAX_PCT_KCAL = 0.35;
+
+function computeMacros(profile: Profile, kcalCible: number): {
+  prot: number;
+  gluc: number;
+  lip: number;
+} {
+  const sport = profile.sportPrincipal ?? 'mixte';
+
+  // 1. Protéines en g/kg, avec boost perte + bornes g/kg
+  let protPerKg = PROTEIN_G_PER_KG[sport];
+  if (profile.objectifType === 'perdre') {
+    protPerKg *= PROTEIN_LOSS_MULTIPLIER;
+  }
+  protPerKg = Math.min(
+    PROTEIN_MAX_G_PER_KG,
+    Math.max(PROTEIN_MIN_G_PER_KG, protPerKg)
+  );
+  let prot = protPerKg * profile.poids;
+
+  // Plafond physiologique : max 35 % des kcal totales (évite les cas
+  // absurdes type "femme 90 kg à 1200 kcal" où 1.82 g/kg donnerait 55 %
+  // de prot — le corps ne les utilise pas au-delà de 35 %).
+  const protKcalMax = kcalCible * PROTEIN_MAX_PCT_KCAL;
+  if (prot * KCAL_PER_GRAM.prot > protKcalMax) {
+    prot = protKcalMax / KCAL_PER_GRAM.prot;
+  }
+
+  // 2. Lipides en % des kcal totales, avec plancher absolu en g/kg (santé
+  // hormonale, vit liposolubles, AGE).
+  const lipPct = LIPID_PCT[sport];
+  const lipFromPct = (kcalCible * lipPct) / KCAL_PER_GRAM.lip;
+  const lipMinG = LIPID_MIN_G_PER_KG * profile.poids;
+  let lip = Math.max(lipFromPct, lipMinG);
+
+  // 3. Glucides = reste
+  let gluc = (kcalCible - prot * KCAL_PER_GRAM.prot - lip * KCAL_PER_GRAM.lip) / KCAL_PER_GRAM.gluc;
+
+  // Cas extrême : prot (capée à 35 %) + lip min > kcalCible (obésité sévère
+  // au plancher 1200 kcal). On garde le plancher lipides (priorité santé
+  // hormonale), on rabote les protéines pour équilibrer, glucides à 0.
+  if (gluc < 0) {
+    gluc = 0;
+    const kcalForProt = Math.max(0, kcalCible - lipMinG * KCAL_PER_GRAM.lip);
+    prot = kcalForProt / KCAL_PER_GRAM.prot;
+    lip = lipMinG;
+  }
+
+  return { prot, gluc, lip };
 }
 
 // ===================================================================

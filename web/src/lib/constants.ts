@@ -27,7 +27,7 @@ export const ACTIVITY_DESCRIPTIONS: Record<Activite, string> = {
   'Extrêmement actif': 'Athlète / travail physique + sport quotidien',
 };
 
-/** Répartition macros : % protéines / glucides / lipides (total = 100) */
+/** Répartition macros historique (conservée pour rétrocompat tests). */
 export const MACRO_SPLIT = {
   protPct: 0.25,
   glucPct: 0.50,
@@ -35,26 +35,64 @@ export const MACRO_SPLIT = {
 };
 
 /**
- * Répartition macros par sport principal. Sans `sportPrincipal` défini,
- * on retombe sur `mixte` (= MACRO_SPLIT standard).
+ * Protéines cibles en GRAMMES PAR KG de poids corporel, selon le sport.
  *
- *  - muscu      : +protéines (30 %), -glucides. Pour prise/maintien de masse
- *                 musculaire (recommandations 1.6-2.2 g/kg).
- *  - endurance  : -protéines (20 %), +glucides (55 %). Marathon, trail, vélo.
- *  - mixte      : 25/50/25 (défaut historique). Convient à muscu + cardio.
- *  - aucun      : idem mixte (pas de spécialisation).
+ * Sources scientifiques :
+ *  - ACSM 2020 Position Stand (Sports Nutrition)
+ *  - ISSN Protein Position Stand (Jäger et al. 2017)
+ *  - Helms et al. 2014 (Evidence-based recommendations for natural bodybuilding)
+ *  - Longland et al. 2016 (Higher compared with lower dietary protein during
+ *    an energy deficit)
  *
- * Total = 100 % dans chaque ligne.
+ * Valeurs prudentes au sein des fourchettes recommandées :
+ *  - aucun sport   : 1.0 g/kg (recommandation ANSES/OMS, sédentaire)
+ *  - mixte         : 1.4 g/kg (sportif recréatif, ACSM 1.2-1.4)
+ *  - endurance     : 1.4 g/kg (coureur/cycliste, ACSM 1.2-1.4)
+ *  - musculation   : 1.8 g/kg (prise/maintien masse, ACSM 1.6-2.2)
+ *
+ * Multiplicateur en perte de poids : ×1.3 pour préserver la masse
+ * musculaire pendant le déficit (Helms 2014, Longland 2016).
  */
-export const MACRO_SPLIT_BY_SPORT: Record<
-  Sport,
-  { protPct: number; glucPct: number; lipPct: number }
-> = {
-  muscu:     { protPct: 0.30, glucPct: 0.45, lipPct: 0.25 },
-  endurance: { protPct: 0.20, glucPct: 0.55, lipPct: 0.25 },
-  mixte:     { protPct: 0.25, glucPct: 0.50, lipPct: 0.25 },
-  aucun:     { protPct: 0.25, glucPct: 0.50, lipPct: 0.25 },
+export const PROTEIN_G_PER_KG: Record<Sport, number> = {
+  aucun:     1.0,
+  mixte:     1.4,
+  endurance: 1.4,
+  muscu:     1.8,
 };
+
+/** Boost protéines en perte de poids (protection masse maigre). */
+export const PROTEIN_LOSS_MULTIPLIER = 1.3;
+
+/** Plancher absolu (risque atrophie musculaire sous 0.8 g/kg). */
+export const PROTEIN_MIN_G_PER_KG = 0.8;
+
+/** Plafond absolu (au-delà, aucun bénéfice supplémentaire). */
+export const PROTEIN_MAX_G_PER_KG = 2.5;
+
+/**
+ * Lipides : % des kcal totales, selon le sport.
+ *
+ * Sources : ANSES ANC 2010 (35 % max), ACSM 2020 (20-35 %),
+ * Academy of Nutrition and Dietetics 2016.
+ *
+ * Valeurs :
+ *  - aucun sport   : 30 % (standard ANSES 30-35 %)
+ *  - mixte         : 28 %
+ *  - endurance     : 22 % (glucides prioritaires pour l'effort)
+ *  - musculation   : 25 % (protéines + glucides privilégiés)
+ *
+ * Avec plancher en g/kg (hormones stéroïdiennes, vitamines liposolubles,
+ * acides gras essentiels oméga 3/6).
+ */
+export const LIPID_PCT: Record<Sport, number> = {
+  aucun:     0.30,
+  mixte:     0.28,
+  endurance: 0.22,
+  muscu:     0.25,
+};
+
+/** Plancher lipides en g/kg (santé hormonale). */
+export const LIPID_MIN_G_PER_KG = 0.8;
 
 /** Calories par gramme (Atwater) */
 export const KCAL_PER_GRAM = {
@@ -111,7 +149,11 @@ export const RYTHME_LABELS: Record<
   },
 };
 
-/** Libellés sport principal (pour les 4 boutons du ProfileForm). */
+/**
+ * Libellés sport principal (pour les 4 boutons du ProfileForm).
+ * Descriptions basées sur les g/kg ACSM 2020 plutôt que sur un %
+ * arbitraire (les % découlent des g/kg, pas l'inverse).
+ */
 export const SPORT_LABELS: Record<
   Sport,
   { label: string; emoji: string; description: string }
@@ -119,22 +161,22 @@ export const SPORT_LABELS: Record<
   muscu: {
     label: 'Musculation',
     emoji: '💪',
-    description: 'Protéines à 30 % (prise/maintien masse)',
+    description: 'Protéines à 1.8 g/kg (prise/maintien masse)',
   },
   endurance: {
     label: 'Endurance',
     emoji: '🏃',
-    description: 'Glucides à 55 % (marathon, vélo, trail)',
+    description: 'Glucides privilégiés (marathon, vélo, trail)',
   },
   mixte: {
     label: 'Mixte',
     emoji: '🔥',
-    description: 'Équilibré 25/50/25 (muscu + cardio)',
+    description: 'Protéines à 1.4 g/kg (muscu + cardio)',
   },
   aucun: {
     label: 'Pas de sport',
     emoji: '🧘',
-    description: 'Répartition standard',
+    description: 'Protéines à 1.0 g/kg (recommandation ANSES)',
   },
 };
 

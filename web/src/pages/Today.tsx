@@ -107,6 +107,9 @@ export function Today() {
 
   const optimizerMode = useSettings((s) => s.optimizerMode);
   const updateSettings = useSettings((s) => s.update);
+  /** Si false, l'optim N'AJOUTE PAS d'aliments automatiquement —
+   *  elle ne fait que recalculer les quantités des items présents. */
+  const shouldAutoAddComplements = useSettings((s) => s.suggestComplements) ?? true;
   const addCustomTemplate = useCustomTemplates((s) => s.add);
 
   const [result, setResult] = useState<OptimizeResult | null>(null);
@@ -253,10 +256,19 @@ export function Today() {
     const addedLog: string[] = [];
     let lastRes: OptimizeResult | null = null;
 
-    for (let pass = 0; pass < 3; pass++) {
+    // Nombre de passes :
+    //  - Si l'utilisateur a décoché "Proposer des aliments complémentaires"
+    //    → UNE SEULE passe (optim quantités, pas d'ajout auto)
+    //  - Sinon → jusqu'à 3 passes avec suggestions auto-insérées
+    const maxPasses = shouldAutoAddComplements ? 3 : 1;
+
+    for (let pass = 0; pass < maxPasses; pass++) {
       const items = clone.meals.flatMap((m) => m.items);
       const res = optimizeQuantities(items, foodsByName, cibles, { mode: optimizerMode });
       lastRes = res;
+
+      // Si toggle off, on s'arrête ici : pas de suggestion ni d'ajout auto.
+      if (!shouldAutoAddComplements) break;
 
       const ecart = {
         k: Math.abs((res.apres.kcal - cibles.kcal) / cibles.kcal),

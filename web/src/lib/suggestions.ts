@@ -89,7 +89,14 @@ const SUGGEST_BLOCKLIST_PATTERN =
  * - condiments (ail, échalote, oignon crus en portions absurdes),
  * - plantes sauvages / légumes très rares (crosne, bourrache, pissenlit),
  * - céréales/légumineuses "crues" ou "sèches" (se mangent cuites),
- * - produits techniques (amidon, gluten pur, plasma, gélatine, son brut).
+ * - produits techniques (amidon, gluten pur, plasma, gélatine, son brut),
+ * - snacks / junk food (pop-corn, chips, bonbons) — pas de sens nutritionnel,
+ * - alcools et liqueurs (vin, bière, « crème de cassis », etc.) — suggestion
+ *   absurde dans un plan alimentaire.
+ *
+ * Élargi 2026-04-22 après feedback user : l'app suggérait « Crème de cassis »
+ * (un alcool) et « Pop-corn au caramel » — catégorisation CIQUAL trompeuse
+ * (« boissons » pour alcool, « céréales » pour pop-corn) qu'il faut bloquer.
  */
 const SUGGEST_NEVER_PATTERN = new RegExp(
   // Condiments, plantes sauvages, produits techniques, ingrédients bruts
@@ -106,7 +113,13 @@ const SUGGEST_NEVER_PATTERN = new RegExp(
     '|\\b(?:cru|crue|crus|crues|sec|sèche|sèches|séché|séchée)\\b.*\\b(?:riz|pâtes|pates|quinoa|boulgour|lentille|pois|haricot|flocon|avoine|orge|millet|sarrasin|épeautre)\\b' +
     '|\\b(?:riz|pâtes|pates|quinoa|boulgour|lentille|pois chiche|haricot|flocon|avoine|orge|millet|sarrasin|épeautre)\\b.*\\b(?:cru|crue|sec|sèche|séchée)\\b' +
     // Fruits/légumes séchés atypiques
-    '|\\babricot\\b.*\\bsec\\b|\\bbanane\\b.*\\bsèche\\b|\\btomate\\b.*\\bséchée\\b',
+    '|\\babricot\\b.*\\bsec\\b|\\bbanane\\b.*\\bsèche\\b|\\btomate\\b.*\\bséchée\\b' +
+    // Snacks / junk food : pop-corn, chips, bonbons, barres chocolatées de marque
+    '|\\b(?:pop-?corn|ma[iï]s éclaté|chips|bretzel|crackers?|cacahuètes? salées?|biscuit apéritif|biscuit salé)\\b' +
+    '|\\b(?:bonbon|sucette|chewing-?gum|pâte de fruit|guimauve|nougat|caramel|barre chocolatée|barre céréales?)\\b' +
+    // Alcools et liqueurs (vin, bière, spiritueux, « crème de » liqueur)
+    '|\\b(?:vin|bi[èe]re|cidre|champagne|crémant|cr[èe]me de (?:cassis|menthe|framboise|mûre|pêche|cacao|whisky))\\b' +
+    '|\\b(?:whisky|vodka|rhum|gin|cognac|pastis|liqueur|kir|martini|apéritif|eau-de-vie|calvados|digestif)\\b',
   'i'
 );
 

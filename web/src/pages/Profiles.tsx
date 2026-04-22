@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, Plus, Trash2, UserPen } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { ProfileForm } from '@/components/ProfileForm';
@@ -11,6 +11,7 @@ import type { Profile } from '@/types';
 
 export function Profiles() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const profiles = useProfile((s) => s.profiles);
   const activeId = useProfile((s) => s.activeId);
   const setActive = useProfile((s) => s.setActive);
@@ -20,6 +21,16 @@ export function Profiles() {
 
   const [editing, setEditing] = useState<Profile | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Raccourci « Nouveau profil » depuis le ProfileSwitcher : l'URL
+  // /profiles?new=1 ouvre directement le formulaire de création.
+  // On nettoie ensuite le paramètre pour que F5 ne relance pas la création.
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreating(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   async function handleDelete(p: Profile) {
     if (

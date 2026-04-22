@@ -10,6 +10,7 @@ import {
   Star,
   User,
 } from 'lucide-react';
+// ^ User reste importé pour la bottom bar mobile
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { InstallButton } from './InstallButton';
@@ -23,9 +24,11 @@ const nav = [
   { to: '/recipes', label: 'Mes recettes', icon: ChefHat },
   { to: '/history', label: 'Mon suivi', icon: HistoryIcon },
   { to: '/favorites', label: 'Favoris', icon: Star },
-  { to: '/profiles', label: 'Mon profil', icon: User },
-  // Intégrations retiré de la nav (accessible depuis /compte ou /integrations
-  // direct ou footer) — trop d'items rendait la barre illisible sur mobile.
+  // « Mon profil » retiré de la nav principale : accessible via le
+  // ProfileSwitcher en haut à droite (clic sur le nom du profil actif)
+  // et toujours présent dans la bottom bar mobile.
+  // « Intégrations » retiré aussi (accessible depuis /compte, /integrations
+  // direct ou le footer).
 ];
 
 /** 4 onglets principaux pour la bottom bar mobile (les autres sont dans un menu "Plus"). */

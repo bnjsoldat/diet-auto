@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChefHat,
   Copy,
+  Download,
   Plus,
   Save,
   Share2,
@@ -12,9 +13,11 @@ import {
 } from 'lucide-react';
 import { useProfile } from '@/store/useProfile';
 import { useRecipes } from '@/store/useRecipes';
+import { useToast } from '@/store/useToast';
 import { FoodSearch } from '@/components/FoodSearch';
-import { foodsByName } from '@/lib/foods';
+import { foodsByName, normalizeFoodKey } from '@/lib/foods';
 import { totalsForItems } from '@/lib/optimizer';
+import { DEFAULT_RECIPES } from '@/lib/defaultRecipes';
 import type { Recipe, RecipeIngredient } from '@/types';
 import { formatNumber } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -41,6 +44,8 @@ export function Recipes() {
   const [draftSteps, setDraftSteps] = useState<string[]>([]);
   const [shareModal, setShareModal] = useState<Recipe | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [importConfirm, setImportConfirm] = useState(false);
+  const showToast = useToast((s) => s.show);
   /** Recette décodée depuis l'URL #recipe=… en attente d'import — affichée
    *  dans une modale (pas `window.confirm` qui sort de la charte visuelle
    *  et peut être bloqué sur mobile). */
@@ -71,6 +76,34 @@ export function Recipes() {
   function handleImportCancel() {
     clearRecipeFromLocation();
     setPendingImport(null);
+  }
+
+  /**
+   * Importe toutes les recettes par défaut (40) : 10 petit-déj, 10 collations,
+   * 10 déjeuners, 10 dîners. Skip celles dont le nom existe déjà (évite les
+   * doublons si l'utilisateur clique deux fois).
+   */
+  function handleImportDefaults() {
+    const existingNames = new Set(recipes.map((r) => r.nom.toLowerCase()));
+    let imported = 0;
+    let skipped = 0;
+    for (const def of DEFAULT_RECIPES) {
+      if (existingNames.has(def.nom.toLowerCase())) {
+        skipped++;
+        continue;
+      }
+      // Sécurité : ne garde que les ingrédients dont le nom existe dans la DB.
+      const validIngredients = def.ingredients.filter((i) =>
+        foodsByName.has(normalizeFoodKey(i.nom))
+      );
+      if (validIngredients.length === 0) continue;
+      create(def.nom, validIngredients, def.etapes);
+      imported++;
+    }
+    setImportConfirm(false);
+    showToast({
+      message: `${imported} recettes importées${skipped > 0 ? ` (${skipped} déjà présentes)` : ''}.`,
+    });
   }
 
   if (profilesLoaded && !profile) {
@@ -189,11 +222,59 @@ export function Recipes() {
           </p>
         </div>
         {!editing && (
-          <button className="btn-primary" onClick={startNew}>
-            <Plus size={14} /> Nouvelle recette
-          </button>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              className="btn-outline"
+              onClick={() => setImportConfirm(true)}
+              title="Importe 40 recettes populaires (10 par repas) avec ingrédients et étapes"
+            >
+              <Download size={14} /> Importer des recettes populaires
+            </button>
+            <button className="btn-primary" onClick={startNew}>
+              <Plus size={14} /> Nouvelle recette
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Modale de confirmation d'import des 40 recettes par défaut */}
+      {importConfirm && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4"
+          onClick={() => setImportConfirm(false)}
+        >
+          <div
+            className="w-full max-w-md card p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-lg mb-2">Importer 40 recettes populaires</h3>
+            <p className="text-sm muted mb-4">
+              Ces recettes couvrent le quotidien : <strong>10 petits-déjeuners</strong>,{' '}
+              <strong>10 collations</strong>, <strong>10 déjeuners</strong> et{' '}
+              <strong>10 dîners</strong>. Chacune contient les ingrédients, quantités et
+              étapes de préparation.
+            </p>
+            <p className="text-xs muted mb-4">
+              Tu pourras les modifier ou supprimer librement après. Les recettes dont le
+              nom existe déjà ne seront pas dupliquées.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs muted mb-4">
+              <div>🥤 Smoothies, porridges, omelettes</div>
+              <div>🥗 Salades complètes, bowls</div>
+              <div>🍗 Plats poulet/poisson/bœuf</div>
+              <div>🥘 Soupes, poêlées, plats four</div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button className="btn-outline" onClick={() => setImportConfirm(false)}>
+                Annuler
+              </button>
+              <button className="btn-primary" onClick={handleImportDefaults}>
+                <Download size={14} /> Importer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editing ? (
         <div className="card p-5">

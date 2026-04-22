@@ -144,9 +144,20 @@ export interface Food {
 
 export interface MealFoodItem {
   id: string; // local uuid
-  nom: string; // canonical name (matches foods.json)
-  quantite: number; // g
+  nom: string; // canonical name (matches foods.json) OU nom de recette si recipe
+  quantite: number; // g (total si recipe)
   verrou: boolean;
+  /**
+   * Si défini, cet item représente une recette composite (ex : « Bowl
+   * fromage blanc + muesli »). Les calculs nutritionnels se font depuis
+   * `recipe.ingredients` — `quantite` n'est utilisée que pour l'affichage
+   * "X g total". L'optimiseur ne touche PAS aux items de recette (traités
+   * comme verrouillés).
+   */
+  recipe?: {
+    etapes?: string[];
+    ingredients: RecipeIngredient[];
+  };
 }
 
 export interface Meal {

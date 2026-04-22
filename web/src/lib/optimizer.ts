@@ -143,9 +143,41 @@ export function optimizeQuantities(
   const modeConfig = OPTIMIZER_MODES[options?.mode ?? 'normal'];
   const poids = { poidsKcal: modeConfig.poidsKcal, poidsMacro: modeConfig.poidsMacro };
 
-  // Construire les lignes à partir des items reconnus
+  // Calcul de la contribution FIXE (non-scalable) des items de recette.
+  // Les recettes sont traitées comme un bloc verrouillé : l'optimiseur
+  // ajuste uniquement les items alimentaires simples pour atteindre la
+  // cible MOINS la contribution des recettes.
+  let fixedKcal = 0, fixedProt = 0, fixedGluc = 0, fixedLip = 0;
+  for (const item of items) {
+    if (item.recipe && item.recipe.ingredients.length > 0) {
+      for (const ing of item.recipe.ingredients) {
+        const food = foodsByName.get(ing.nom.toLowerCase());
+        if (!food) continue;
+        const q = ing.quantite;
+        fixedKcal += (q * food.kcal) / 100;
+        fixedProt += (q * food.prot) / 100;
+        fixedGluc += (q * food.gluc) / 100;
+        fixedLip += (q * food.lip) / 100;
+      }
+    }
+  }
+
+  // Cibles ajustées : la partie "scalable" du plan doit combler
+  // (cible totale - contribution fixe). Plancher à 1 pour éviter
+  // les divisions par zéro dans la fonction objectif.
+  const adjustedCibles: Cibles = {
+    kcal: Math.max(1, cibles.kcal - fixedKcal),
+    prot: Math.max(1, cibles.prot - fixedProt),
+    gluc: Math.max(1, cibles.gluc - fixedGluc),
+    lip: Math.max(1, cibles.lip - fixedLip),
+  };
+
+  // Construire les lignes à partir des items reconnus (les items de
+  // recette sont automatiquement exclus : item.nom = nom de recette,
+  // pas un aliment → foodsByName.get() renvoie undefined).
   const lignes: Line[] = [];
   for (const item of items) {
+    if (item.recipe) continue; // skip explicite recettes
     const food = foodsByName.get(item.nom.toLowerCase());
     if (!food) continue;
     const b = boundsForFood(food, { min: options?.qmin, max: options?.qmax });
@@ -161,12 +193,22 @@ export function optimizeQuantities(
     });
   }
 
+  // Helper pour assembler un total (scalables optimisés + recettes fixes)
+  const withFixed = (scalableTotals: { kcal: number; prot: number; gluc: number; lip: number }) => ({
+    kcal: scalableTotals.kcal + fixedKcal,
+    prot: scalableTotals.prot + fixedProt,
+    gluc: scalableTotals.gluc + fixedGluc,
+    lip: scalableTotals.lip + fixedLip,
+  });
+
   if (lignes.length === 0) {
+    // Pas d'items scalables : on renvoie juste les recettes
+    const recipeTotals = { kcal: fixedKcal, prot: fixedProt, gluc: fixedGluc, lip: fixedLip };
     return {
       iterations: 0,
       converge: true,
-      avant: { kcal: 0, prot: 0, gluc: 0, lip: 0 },
-      apres: { kcal: 0, prot: 0, gluc: 0, lip: 0 },
+      avant: recipeTotals,
+      apres: recipeTotals,
       cibles,
     };
   }
@@ -174,8 +216,12 @@ export function optimizeQuantities(
   // Clamp initial
   clampQuantities(lignes);
 
-  const avant = calcTotaux(lignes);
-  let f = fonctionObjectif(lignes, cibles, poids);
+  // avant/apres renvoyés à l'extérieur : on inclut les recettes dans le total.
+  // La fonction objectif, elle, compare uniquement la partie scalable à
+  // `adjustedCibles` (cibles - contribution recettes).
+  const avantScalable = calcTotaux(lignes);
+  const avant = withFixed(avantScalable);
+  let f = fonctionObjectif(lignes, adjustedCibles, poids);
   let iter = 0;
   let converge = false;
 
@@ -190,7 +236,7 @@ export function optimizeQuantities(
   } = OPTIMIZER_CONFIG;
 
   for (; iter < maxIterations; iter++) {
-    const g = gradient(lignes, cibles, poids);
+    const g = gradient(lignes, adjustedCibles, poids);
     const nG = norme(g);
     if (nG < toleranceGradient) {
       converge = true;
@@ -212,7 +258,7 @@ export function optimizeQuantities(
         const nv = qBack[i] - alpha * g[i];
         l.item.quantite = Math.max(l.qmin, Math.min(l.qmax, nv));
       }
-      const fNew = fonctionObjectif(lignes, cibles, poids);
+      const fNew = fonctionObjectif(lignes, adjustedCibles, poids);
       if (fNew < f - 1e-12) {
         f = fNew;
         trouve = true;
@@ -257,7 +303,8 @@ export function optimizeQuantities(
     l.item.quantite = Math.max(l.qmin, Math.min(l.qmax, l.item.quantite));
   }
 
-  const apres = calcTotaux(lignes);
+  const apresScalable = calcTotaux(lignes);
+  const apres = withFixed(apresScalable);
 
   return {
     iterations: iter + 1,
@@ -268,19 +315,24 @@ export function optimizeQuantities(
   };
 }
 
-/** Totaux (kcal + macros + micros) pour une liste d'items. */
+/** Totaux (kcal + macros + micros) pour une liste d'items.
+ *
+ * Gère trois types d'items :
+ *  1. Item alimentaire simple : lookup foodsByName, scale par quantite/100.
+ *  2. Item recette composite (avec `recipe.ingredients`) : somme les
+ *     nutriments de chaque ingrédient de la recette scalés individuellement.
+ *
+ * Les items de recette ne sont jamais déroulés en items séparés — c'est
+ * toujours UNE ligne affichée à l'utilisateur.
+ */
 export function totalsForItems(items: MealFoodItem[], foodsByName: Map<string, Food>) {
   let kcal = 0, prot = 0, gluc = 0, lip = 0;
   let fib = 0, suc = 0, sel = 0, ags = 0;
-  // Couverture : nombre d'items pour lesquels CIQUAL a le nutriment.
-  // Sert à afficher "≥ X" quand on n'a pas toute la donnée.
   let covFib = 0, covSuc = 0, covSel = 0, covAgs = 0;
   let totalItems = 0;
-  for (const item of items) {
-    const food = foodsByName.get(item.nom.toLowerCase());
-    if (!food) continue;
-    totalItems++;
-    const q = item.quantite;
+
+  /** Ajoute les nutriments d'un ingrédient à l'état (kcal, prot, etc.). */
+  function addFood(food: Food, q: number) {
     kcal += (q * food.kcal) / 100;
     prot += (q * food.prot) / 100;
     gluc += (q * food.gluc) / 100;
@@ -290,10 +342,27 @@ export function totalsForItems(items: MealFoodItem[], foodsByName: Map<string, F
     if (food.sel != null) { sel += (q * food.sel) / 100; covSel++; }
     if (food.ags != null) { ags += (q * food.ags) / 100; covAgs++; }
   }
+
+  for (const item of items) {
+    // Cas recette composite : on somme les ingrédients de la recette.
+    if (item.recipe && item.recipe.ingredients.length > 0) {
+      totalItems++;
+      for (const ing of item.recipe.ingredients) {
+        const food = foodsByName.get(ing.nom.toLowerCase());
+        if (!food) continue;
+        addFood(food, ing.quantite);
+      }
+      continue;
+    }
+    // Cas item simple : lookup + scale par quantite/100
+    const food = foodsByName.get(item.nom.toLowerCase());
+    if (!food) continue;
+    totalItems++;
+    addFood(food, item.quantite);
+  }
   return {
     kcal, prot, gluc, lip,
     fib, suc, sel, ags,
-    // Ratios de couverture (0..1) pour afficher "≈" ou "≥" quand incomplet
     cov: {
       fib: totalItems > 0 ? covFib / totalItems : 1,
       suc: totalItems > 0 ? covSuc / totalItems : 1,

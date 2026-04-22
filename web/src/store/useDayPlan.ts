@@ -126,14 +126,27 @@ export const useDayPlan = create<DayPlanState>((set, get) => {
 
     addRecipe(mealId, recipe, portionRatio = 1) {
       const plan = get().ensurePlan();
-      const newItems: MealFoodItem[] = recipe.ingredients.map((ing) => ({
-        id: uid('itm'),
+      // Depuis 2026-04-22 : on ne déroule PLUS les ingrédients en items
+      // séparés. On crée UN SEUL item composite avec la recette attachée.
+      // Visuellement plus propre (« Bowl fromage blanc » en 1 ligne),
+      // clic → détail de la recette avec étapes.
+      const scaledIngredients = recipe.ingredients.map((ing) => ({
         nom: ing.nom,
         quantite: Math.max(1, Math.round(ing.quantite * portionRatio)),
-        verrou: false,
       }));
+      const totalG = scaledIngredients.reduce((s, i) => s + i.quantite, 0);
+      const item: MealFoodItem = {
+        id: uid('itm'),
+        nom: recipe.nom,
+        quantite: totalG,
+        verrou: false,
+        recipe: {
+          etapes: recipe.etapes,
+          ingredients: scaledIngredients,
+        },
+      };
       const meals = plan.meals.map((m) =>
-        m.id === mealId ? { ...m, items: [...m.items, ...newItems] } : m
+        m.id === mealId ? { ...m, items: [...m.items, item] } : m
       );
       const updated: DayPlan = { ...plan, meals, updatedAt: Date.now() };
       set({ plans: { ...get().plans, [plan.date]: updated } });

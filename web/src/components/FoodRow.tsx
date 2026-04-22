@@ -1,4 +1,5 @@
-import { Lock, LockOpen, Star, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { ChefHat, ChevronDown, Lock, LockOpen, Star, Trash2 } from 'lucide-react';
 import { foodsByName } from '@/lib/foods';
 import { useFavorites } from '@/store/useFavorites';
 import type { MealFoodItem } from '@/types';
@@ -12,22 +13,134 @@ interface Props {
   onRemove: () => void;
 }
 
+/**
+ * Ligne d'un aliment (ou d'une recette) dans un repas.
+ *
+ * Deux rendus selon `item.recipe` :
+ *  - recette composite → affiche nom de recette + emoji chef +
+ *    quantité totale + toggle pour déplier les ingrédients et étapes.
+ *    L'optimiseur ne modifie pas cet item (traité comme verrouillé).
+ *  - aliment simple → rendu classique (quantité éditable, verrou, etc.)
+ */
 export function FoodRow({ item, onUpdate, onRemove }: Props) {
-  const food = foodsByName.get(item.nom.toLowerCase());
+  const isRecipe = !!item.recipe;
+
+  // Hooks déclarés inconditionnellement (pas de hooks conditionnels)
+  const [recipeOpen, setRecipeOpen] = useState(false);
   const toggleFav = useFavorites((s) => s.toggle);
   const isFav = useFavorites((s) => s.favorites.includes(item.nom));
 
+  // ============ RENDU RECETTE COMPOSITE ============
+  if (isRecipe && item.recipe) {
+    // Calcul des macros agrégées depuis les ingrédients
+    let kcal = 0, prot = 0, gluc = 0, lip = 0;
+    let totalG = 0;
+    for (const ing of item.recipe.ingredients) {
+      const food = foodsByName.get(ing.nom.toLowerCase());
+      if (!food) continue;
+      kcal += (ing.quantite * food.kcal) / 100;
+      prot += (ing.quantite * food.prot) / 100;
+      gluc += (ing.quantite * food.gluc) / 100;
+      lip += (ing.quantite * food.lip) / 100;
+      totalG += ing.quantite;
+    }
+
+    return (
+      <div className="border-b last:border-0 animate-fade-in-up">
+        <div className="grid grid-cols-[1fr_auto] gap-2 items-center py-2">
+          <button
+            type="button"
+            onClick={() => setRecipeOpen((o) => !o)}
+            className="min-w-0 text-left flex items-start gap-2 hover:opacity-90"
+            aria-expanded={recipeOpen}
+            title={recipeOpen ? 'Masquer la recette' : 'Voir la recette'}
+          >
+            <span className="h-6 w-6 shrink-0 grid place-items-center rounded-md bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400">
+              <ChefHat size={13} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium truncate" title={item.nom}>
+                  {item.nom}
+                </span>
+                <ChevronDown
+                  size={13}
+                  className={cn(
+                    'muted shrink-0 transition-transform',
+                    recipeOpen && 'rotate-180'
+                  )}
+                />
+              </div>
+              <div className="text-xs muted">
+                {formatNumber(kcal)} kcal · P {prot.toFixed(1)} · G {gluc.toFixed(1)} · L{' '}
+                {lip.toFixed(1)} · {totalG} g total ·{' '}
+                <span className="text-emerald-600">
+                  {item.recipe.ingredients.length} ingrédient
+                  {item.recipe.ingredients.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={onRemove}
+              className="h-8 w-8 grid place-items-center rounded-md muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+              title="Retirer cette recette"
+              aria-label={`Retirer ${item.nom}`}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Drawer : ingrédients + étapes de préparation */}
+        {recipeOpen && (
+          <div className="pb-3 pl-8 pr-2 animate-fade-in-up">
+            <div className="rounded-md bg-[var(--bg-subtle)] p-3 text-xs">
+              <div className="font-semibold mb-1.5 uppercase tracking-wide muted">
+                Ingrédients ({item.recipe.ingredients.length})
+              </div>
+              <ul className="space-y-0.5 mb-3">
+                {item.recipe.ingredients.map((ing, i) => (
+                  <li key={i} className="flex justify-between gap-2">
+                    <span className="truncate">{shortName(ing.nom)}</span>
+                    <span className="font-mono tabular-nums shrink-0">{ing.quantite} g</span>
+                  </li>
+                ))}
+              </ul>
+              {item.recipe.etapes && item.recipe.etapes.length > 0 && (
+                <>
+                  <div className="font-semibold mb-1.5 uppercase tracking-wide muted">
+                    Préparation
+                  </div>
+                  <ol className="space-y-1 list-decimal list-inside">
+                    {item.recipe.etapes.map((step, i) => (
+                      <li key={i} className="leading-snug">
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ============ RENDU ALIMENT SIMPLE (existant) ============
+  const food = foodsByName.get(item.nom.toLowerCase());
   const kcal = food ? (item.quantite * food.kcal) / 100 : 0;
   const prot = food ? (item.quantite * food.prot) / 100 : 0;
   const gluc = food ? (item.quantite * food.gluc) / 100 : 0;
   const lip = food ? (item.quantite * food.lip) / 100 : 0;
 
-  // Détection unité pratique à afficher
   const unite = food ? bestUnitForGrams(food, item.quantite) : null;
   const count = unite ? item.quantite / unite.g : 0;
   const hasUnits = !!food?.unites?.length;
-
-  // Unité "active" : la première du food (par défaut) quand on édite en unité
   const activeUnite = food?.unites?.[0] ?? null;
 
   function parseNum(raw: string): number {

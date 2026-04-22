@@ -14,6 +14,31 @@ export type Objectif =
   | 'Prise de masse'
   | 'Prise de masse rapide';
 
+/**
+ * Intention haut niveau de l'utilisateur (nouveau modèle v2).
+ * Sert de catégorisation pour les 3 boutons visuels du ProfileForm.
+ */
+export type ObjectifType = 'perdre' | 'maintien' | 'prendre';
+
+/**
+ * Rythme de perte/prise en kg/semaine. Le delta kcal journalier est
+ * dérivé via : rythme × 7700 kcal/kg / 7 jours.
+ *  - 0.25 = Doux   (environ -275/+275 kcal/j)
+ *  - 0.5  = Modéré (environ -550/+550)  ← recommandé
+ *  - 0.75 = Soutenu(environ -825/+825)
+ *  - 1    = Intense(environ -1100/+1100)
+ */
+export type Rythme = 0.25 | 0.5 | 0.75 | 1;
+
+/**
+ * Sport principal — ajuste la répartition macros.
+ *  - muscu : protéines boostées (30 %)
+ *  - endurance : glucides boostés (55 %)
+ *  - mixte : répartition équilibrée 25/50/25 (défaut)
+ *  - aucun : idem mixte
+ */
+export type Sport = 'muscu' | 'endurance' | 'mixte' | 'aucun';
+
 export interface Profile {
   id: string;
   nom: string;
@@ -27,6 +52,22 @@ export interface Profile {
   genre: Genre;
   activite: Activite;
   objectif: Objectif;
+
+  /**
+   * Nouveaux champs objectif v2 (optionnels, rétrocompat garantie).
+   *
+   * Si `poidsCible` + `rythmeSem` sont présents, `calcTargets` les utilise
+   * PRIORITAIREMENT pour dériver le deltaKcal du jour (au lieu de retomber
+   * sur `objectif` legacy). Le `sportPrincipal` change la répartition macros.
+   *
+   * Les profils existants (pré-v2) continuent à fonctionner via le fallback
+   * sur `objectif` → OBJECTIVE_DELTA_KCAL.
+   */
+  objectifType?: ObjectifType;
+  poidsCible?: number;
+  rythmeSem?: Rythme;
+  sportPrincipal?: Sport;
+
   createdAt: number;
   updatedAt: number;
 }

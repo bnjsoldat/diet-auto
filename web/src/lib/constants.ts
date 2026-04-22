@@ -1,4 +1,4 @@
-import type { Activite, Objectif, OptimizerMode } from '@/types';
+import type { Activite, Genre, Objectif, OptimizerMode, Rythme, Sport } from '@/types';
 
 /** Multiplicateur du métabolisme basal selon le niveau d'activité */
 export const ACTIVITY_COEFS: Record<Activite, number> = {
@@ -34,11 +34,108 @@ export const MACRO_SPLIT = {
   lipPct: 0.25,
 };
 
+/**
+ * Répartition macros par sport principal. Sans `sportPrincipal` défini,
+ * on retombe sur `mixte` (= MACRO_SPLIT standard).
+ *
+ *  - muscu      : +protéines (30 %), -glucides. Pour prise/maintien de masse
+ *                 musculaire (recommandations 1.6-2.2 g/kg).
+ *  - endurance  : -protéines (20 %), +glucides (55 %). Marathon, trail, vélo.
+ *  - mixte      : 25/50/25 (défaut historique). Convient à muscu + cardio.
+ *  - aucun      : idem mixte (pas de spécialisation).
+ *
+ * Total = 100 % dans chaque ligne.
+ */
+export const MACRO_SPLIT_BY_SPORT: Record<
+  Sport,
+  { protPct: number; glucPct: number; lipPct: number }
+> = {
+  muscu:     { protPct: 0.30, glucPct: 0.45, lipPct: 0.25 },
+  endurance: { protPct: 0.20, glucPct: 0.55, lipPct: 0.25 },
+  mixte:     { protPct: 0.25, glucPct: 0.50, lipPct: 0.25 },
+  aucun:     { protPct: 0.25, glucPct: 0.50, lipPct: 0.25 },
+};
+
 /** Calories par gramme (Atwater) */
 export const KCAL_PER_GRAM = {
   prot: 4,
   gluc: 4,
   lip: 9,
+};
+
+/**
+ * Équivalent énergétique de 1 kg de graisse corporelle (approx.).
+ * Utilisé pour dériver le deltaKcal journalier depuis le rythme kg/semaine.
+ * Référence : Wishnofsky 1958, révisée — ~7700 kcal/kg est la valeur
+ * standard en nutrition sportive.
+ */
+export const KCAL_PER_KG_FAT = 7700;
+
+/**
+ * Plancher kcal absolu par genre (santé).
+ * En dessous, le corps réduit son métabolisme basal et déclenche des
+ * adaptations hormonales (thyroïde, cortisol) qui ruinent la perte.
+ * Recommandations OMS / nutritionnistes sportifs.
+ */
+export const MIN_KCAL_FLOOR: Record<Genre, number> = {
+  Homme: 1500,
+  Femme: 1200,
+};
+
+/**
+ * Libellés et descriptions des rythmes (slider dans le ProfileForm).
+ */
+export const RYTHME_LABELS: Record<
+  Rythme,
+  { label: string; description: string; kcalApprox: number }
+> = {
+  0.25: {
+    label: 'Doux',
+    description: 'Tenable long terme, faible sensation de restriction',
+    kcalApprox: Math.round((0.25 * KCAL_PER_KG_FAT) / 7),
+  },
+  0.5: {
+    label: 'Modéré',
+    description: 'Recommandé — bon compromis vitesse/confort',
+    kcalApprox: Math.round((0.5 * KCAL_PER_KG_FAT) / 7),
+  },
+  0.75: {
+    label: 'Soutenu',
+    description: 'Demande de la rigueur, surveille la fatigue',
+    kcalApprox: Math.round((0.75 * KCAL_PER_KG_FAT) / 7),
+  },
+  1: {
+    label: 'Intense',
+    description: 'Court terme uniquement, risque de fonte musculaire',
+    kcalApprox: Math.round((1 * KCAL_PER_KG_FAT) / 7),
+  },
+};
+
+/** Libellés sport principal (pour les 4 boutons du ProfileForm). */
+export const SPORT_LABELS: Record<
+  Sport,
+  { label: string; emoji: string; description: string }
+> = {
+  muscu: {
+    label: 'Musculation',
+    emoji: '💪',
+    description: 'Protéines à 30 % (prise/maintien masse)',
+  },
+  endurance: {
+    label: 'Endurance',
+    emoji: '🏃',
+    description: 'Glucides à 55 % (marathon, vélo, trail)',
+  },
+  mixte: {
+    label: 'Mixte',
+    emoji: '🔥',
+    description: 'Équilibré 25/50/25 (muscu + cardio)',
+  },
+  aucun: {
+    label: 'Pas de sport',
+    emoji: '🧘',
+    description: 'Répartition standard',
+  },
 };
 
 /** Bornes de quantité par défaut (g) si aucune borne spécifique ne s'applique. */

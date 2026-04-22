@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import type { OptimizerMode, Targets } from '@/types';
-import { AlertTriangle, Camera, Check, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, Camera, Check, RotateCcw, Target as TargetIcon, X } from 'lucide-react';
 import { OPTIMIZER_MODES } from '@/lib/constants';
+import { estimatedTargetDate } from '@/lib/calculations';
+import { useProfile } from '@/store/useProfile';
 import { ProgressRings } from './ProgressRings';
 import { InfoTip } from './InfoTip';
 
@@ -117,6 +119,16 @@ function Row({
 
 export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, currentLip, mode = 'normal' }: Props) {
   const m = OPTIMIZER_MODES[mode];
+  const profile = useProfile((s) => s.getActive());
+  /** Objectif "poids cible" : présent si l'utilisateur a choisi Perdre/Prendre + cible. */
+  const targetGoal =
+    profile && profile.poidsCible != null && profile.rythmeSem != null
+      ? {
+          from: profile.poids,
+          to: profile.poidsCible,
+          date: estimatedTargetDate(profile),
+        }
+      : null;
   /**
    * Snapshot = état figé à l'instant où l'utilisateur clique "Comparer".
    * Tant qu'il est non-null, les lignes affichent un badge delta vs ce snapshot.
@@ -143,6 +155,29 @@ export function TargetsCard({ targets, currentKcal, currentProt, currentGluc, cu
   }
   return (
     <div className="card p-5">
+      {targetGoal && (
+        <div className="mb-4 flex items-center gap-2 text-sm rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 px-3 py-2">
+          <TargetIcon size={14} className="text-emerald-600 shrink-0" />
+          <span>
+            Objectif :{' '}
+            <strong>
+              {targetGoal.from.toFixed(1)} → {targetGoal.to.toFixed(1)} kg
+            </strong>
+            {targetGoal.date && (
+              <>
+                {' '}d'ici le{' '}
+                <strong>
+                  {targetGoal.date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </strong>
+              </>
+            )}
+          </span>
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider muted mb-1">

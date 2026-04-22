@@ -334,6 +334,23 @@ export function WeightTracker({ profile }: Props) {
                     position: 'insideTopRight',
                   }}
                 />
+                {/* Ligne cible émeraude (si profile.poidsCible défini). Montre
+                    visuellement jusqu'où l'utilisateur veut aller. */}
+                {profile.poidsCible != null && (
+                  <ReferenceLine
+                    yAxisId="kg"
+                    y={profile.poidsCible}
+                    stroke="#10b981"
+                    strokeDasharray="5 3"
+                    strokeWidth={1.5}
+                    label={{
+                      value: `cible ${profile.poidsCible.toFixed(1)} kg`,
+                      fill: '#10b981',
+                      fontSize: 10,
+                      position: 'insideBottomRight',
+                    }}
+                  />
+                )}
                 <Line
                   yAxisId="kg"
                   type="monotone"

@@ -7,7 +7,14 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test:calc": "node scripts/test-calculations.mjs",
+    "test:blocklist": "node scripts/test-blocklist.mjs",
+    "test:suggestions": "node scripts/test-suggestions.mjs",
+    "test:all": "npm run typecheck && npm run test:calc && npm run test:blocklist && npm run test:suggestions",
+    "preflight": "npm run test:all && npm run build",
+    "screenshots": "node scripts/screenshot.cjs",
+    "screenshots:ph": "node scripts/resize-for-producthunt.cjs"
   },
   "dependencies": {
     "@sentry/react": "^10.49.0",

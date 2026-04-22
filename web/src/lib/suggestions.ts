@@ -127,7 +127,29 @@ const SUGGEST_NEVER_PATTERN = new RegExp(
     '|\\b(?:whisky|vodka|rhum|gin|cognac|pastis|liqueur|kir|martini|apéritif|eau-de-vie|calvados|digestif)\\b' +
     // Vins fortifiés (même catégorie « boissons » que eau/thé dans CIQUAL
     // → pas détectés par le filtre vin générique). Marsala, Porto, etc.
-    '|\\b(?:marsala|porto|madère|xérès|sherry|vermouth|muscat|banyuls|maury|rivesaltes|pineau|ratafia|sangria)\\b',
+    '|\\b(?:marsala|porto|madère|xérès|sherry|vermouth|muscat|banyuls|maury|rivesaltes|pineau|ratafia|sangria)\\b' +
+    // Aliments en poudre / déshydratés / reconstitués (on ne les mange pas
+    // tels quels — œuf en poudre, lait en poudre, protéine en poudre, etc.)
+    '|\\b(?:en poudre|déshydraté|déshydratée|lyophilisé|lyophilisée|atomisé)\\b' +
+    // Graines pures (cucurbitacées, chia, lin, sésame, tournesol) — peu
+    // consommées seules en France. Les amandes / noix / noisettes restent OK.
+    '|\\bgraine(?:s)? (?:de|d\')(?: courge| lin| sésame| tournesol| pavot| chia| ma[iï]s| cucurbitacé| chanvre)\\b' +
+    '|\\b(?:cucurbitacées|chanvre|lupin), graine\\b' +
+    // Lupin cru : toxique (alcaloïdes quinolizidiniques) sans trempage
+    // prolongé. Pas un aliment courant en France de toute façon.
+    '|\\blupin\\b' +
+    // Aliments marqués explicitement "graine crue" / "graine sèche" — rarement
+    // consommés bruts, souvent destinés à germer ou à être transformés.
+    '|\\bgraine(?:s)? (?:crue|crues|sèche|sèches|brute|brutes)\\b' +
+    // Aliments diététiques spécialisés (hyposodés, sans sucres ajoutés, pour
+    // diabétiques, allégés techniques) — pas à recommander au grand public.
+    '|\\b(?:hyposodé|hyposodée|pour diab[eé]tique|sans sucres? ajoutés?|allégé technique)\\b' +
+    // Biscuits secs (type Petit Beurre, biscottes) peu nourrissants pour une
+    // suggestion principale. On garde les vraies céréales (flocons, muesli).
+    '|\\bbiscuit(?:s)? sec(?:s)?\\b' +
+    '|\\bbiscotte(?:s)?\\b' +
+    // Gâteaux, viennoiseries, pâtisseries (riches en sucres, pas « commun/sain »)
+    '|\\b(?:gâteau|brioche|croissant|pain au chocolat|chausson|viennoiserie|pâtisserie|tarte sucrée)\\b',
   'i'
 );
 

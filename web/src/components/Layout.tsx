@@ -2,9 +2,11 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './PageTransition';
 import {
+  BookOpen,
   CalendarDays,
   CalendarRange,
   ChefHat,
+  HelpCircle,
   History as HistoryIcon,
   ShoppingCart,
   Star,
@@ -88,6 +90,37 @@ export function Layout() {
           )}
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* Sur la landing, on affiche Blog + Aide prominents (SEO +
+                découverte). Sur les pages app, Aide devient une icône
+                discrète (les 6 items de nav principale occupent déjà
+                la place — on évite la surcharge). */}
+            {isLanding ? (
+              <>
+                <Link
+                  to="/blog"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm muted hover:text-[var(--text)] px-2.5 py-1.5 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <BookOpen size={14} />
+                  Blog
+                </Link>
+                <Link
+                  to="/aide"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm muted hover:text-[var(--text)] px-2.5 py-1.5 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
+                >
+                  <HelpCircle size={14} />
+                  Aide
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/aide"
+                title="Aide"
+                aria-label="Aide"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md muted hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] transition-colors"
+              >
+                <HelpCircle size={16} />
+              </Link>
+            )}
             <AuthButton />
             {!isLanding && <ProfileSwitcher />}
             <InstallButton />

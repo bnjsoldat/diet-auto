@@ -1,5 +1,6 @@
 import type { Meal, MealFoodItem } from '@/types';
 import { uid } from './utils';
+import { normalizeFoodKey } from './foods';
 
 /**
  * Templates de plans journaliers pré-composés. Quantités volontairement
@@ -76,6 +77,9 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
           ['Avocat, pulpe, cru', 60],
           ['Yaourt nature', 200],
           ['Miel', 15],
+          // Beurre doux pour les œufs brouillés / à la poêle — réaliste
+          // pour un cuisinier normal. 5 g = 1 petite noisette.
+          ['Beurre à 82% MG, doux', 5],
         ],
       },
       {
@@ -215,7 +219,10 @@ export function buildMealsFromTemplate(
   return tpl.meals.map((m) => {
     const items: MealFoodItem[] = [];
     for (const [nom, qty] of m.items) {
-      const found = foodsByName.get(nom.toLowerCase());
+      // normalizeFoodKey gère les apostrophes typographiques `’` qui
+      // polluaient silencieusement certains items des templates (bug
+      // trouvé 2026-04-22 : "Flocon d’avoine" ne matchait pas la DB).
+      const found = foodsByName.get(normalizeFoodKey(nom));
       if (!found) continue;
       items.push({
         id: uid('itm'),

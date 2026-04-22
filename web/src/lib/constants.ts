@@ -190,20 +190,25 @@ export const QUANTITY_BOUNDS = {
  * Bornes réalistes par groupe CIQUAL (g pour une portion raisonnable dans un repas).
  * Empêche l'optimiseur de pondre des portions délirantes (ex : 150 g de miel).
  * min bas = on accepte une petite quantité ; max = plafond d'une portion humaine normale.
+ *
+ * Valeurs resserrées 2026-04-22 après feedback utilisateur : l'optimiseur
+ * avait tendance à concentrer les kcal sur les aliments à grande borne
+ * (pain à 350 g → 8-10 tranches, pas réaliste).
  */
 export const PORTION_BOUNDS_BY_GROUPE: Record<string, { min: number; max: number }> = {
   // Protéines : plancher 60 g pour garantir une vraie portion de viande/poisson
   // quand l'aliment est la source principale de protéines du repas.
   'viandes, œufs, poissons et assimilés': { min: 60, max: 300 },
-  'produits laitiers': { min: 20, max: 500 },
+  'produits laitiers': { min: 20, max: 300 },  // 300g = 1 pot de fromage blanc / 2 yaourts
   'fromages': { min: 10, max: 80 },
-  // Céréales/féculents : plafonds relevés pour sportifs très actifs.
-  'céréales et produits à base de céréales': { min: 15, max: 350 },
-  'féculents': { min: 30, max: 450 },
-  'plats composés': { min: 50, max: 600 },
+  // Céréales/féculents : plafonds resserrés. 250 g de pâtes cuites = grosse
+  // portion pour sportif, au-delà c'est un bol d'allumé.
+  'céréales et produits à base de céréales': { min: 15, max: 250 },
+  'féculents': { min: 30, max: 350 },
+  'plats composés': { min: 50, max: 500 },
   'légumes': { min: 20, max: 400 },
-  'fruits': { min: 30, max: 350 },
-  'légumineuses': { min: 20, max: 300 },
+  'fruits': { min: 30, max: 250 },  // 1-2 fruits max par repas
+  'légumineuses': { min: 20, max: 250 },
   'fruits à coque': { min: 5, max: 50 },
   'matières grasses': { min: 2, max: 30 },
   'sucres et produits sucrés': { min: 2, max: 30 },
@@ -241,12 +246,37 @@ export const PORTION_BOUNDS_BY_NAME_PATTERN: { pattern: RegExp; bounds: { min: n
   { pattern: /\b(whisky|vodka|rhum|gin|cognac|liqueur|eau-de-vie)\b/i, bounds: { min: 5, max: 50 } },
   // Vins
   { pattern: /\bvin\b/i, bounds: { min: 50, max: 200 } },
-  // Œufs (un œuf ~50-60 g)
-  { pattern: /\bœuf\b/i, bounds: { min: 30, max: 180 } },
+  // (œuf bound déplacé plus bas pour cohérence groupée avec autres aliments du petit-déj)
   // Fromages très gras ou à pâte dure
   { pattern: /\b(parmesan|roquefort|comté|beaufort|mimolette|bleu)\b/i, bounds: { min: 5, max: 50 } },
   // Charcuteries grasses
   { pattern: /\b(lardon|lard|chorizo|saucisson|rillette|foie gras)\b/i, bounds: { min: 10, max: 80 } },
+  // Pain (toutes variantes) : 1 tranche ~ 30 g. 3-4 tranches max par repas
+  // réaliste (même pour muscu au petit-déj).
+  { pattern: /\bpain\b/i, bounds: { min: 10, max: 120 } },
+  // Pain panini / bagel / sandwich : plus dense, 1 portion = ~60 g
+  { pattern: /\b(pain panini|panini|bagel|ciabatta|focaccia)\b/i, bounds: { min: 30, max: 100 } },
+  // Flocons / muesli : portion typique 40-80 g. Plafond 100 g au-delà c'est un saladier.
+  { pattern: /\b(flocon|muesli|granola|céréales? petit[- ]déjeuner)\b/i, bounds: { min: 15, max: 100 } },
+  // Avocat : 1 avocat entier (pulpe) ~ 120-150 g. Plafond 150 g = 1 avocat.
+  { pattern: /\bavocat\b/i, bounds: { min: 30, max: 150 } },
+  // Banane : 1 banane moyenne ~ 120 g. 2 bananes max par portion.
+  { pattern: /\bbanane\b/i, bounds: { min: 50, max: 200 } },
+  // Pomme / poire / orange : 1-2 fruits par portion, 120-200 g chacun.
+  { pattern: /\b(pomme|poire|orange|pêche|nectarine|kiwi)\b/i, bounds: { min: 50, max: 250 } },
+  // Fruits séchés (pruneau, abricot sec, raisin sec, datte) : très caloriques,
+  // portion typique 20-30 g. Plafond 40 g pour éviter les surdosages.
+  { pattern: /\b(pruneau|raisin sec|abricot sec|datte|figue séchée|fruit sec|fruits séchés)\b/i, bounds: { min: 5, max: 40 } },
+  // Œuf : min 30 g (demi-œuf), max 240 g (4 œufs standards pour bodybuilder
+  // au petit-déj). Élargi de 180 → 240 suite au feedback 2026-04-22
+  // (user rapporte qu'en muscu on mange 2-4 œufs normalement).
+  { pattern: /\bœuf\b/i, bounds: { min: 60, max: 240 } },
+  // Yaourt : 1 pot = 125 g. Plafond 2 pots (250 g) par repas.
+  { pattern: /\byaourt\b/i, bounds: { min: 60, max: 250 } },
+  // Fromage blanc / petit suisse : portion 100-200 g. Plafond 300 g.
+  { pattern: /\b(fromage blanc|petit suisse|skyr)\b/i, bounds: { min: 50, max: 300 } },
+  // Beurre : 1 c. à café = 5 g, 1 c. à soupe = ~15 g. Plafond 30 g.
+  { pattern: /\bbeurre\b/i, bounds: { min: 2, max: 30 } },
 ];
 
 /** Paramètres de l'optimiseur */
@@ -311,4 +341,58 @@ export const DEFAULT_MEALS = [
   'Repas 2 (midi)',
   'Collation 2',
   'Repas 3 (soir)',
+];
+
+/**
+ * Favoris par défaut seedés à la création d'un nouveau profil.
+ * Sélection des ~25 aliments les plus consommés en France (source :
+ * INCA 3 - Anses, rapport de consommation alimentaire). Noms conformes
+ * à CIQUAL 2020 (la base de données utilisée).
+ *
+ * Couvre :
+ *  - céréales (pain, riz, pâtes, flocons)
+ *  - protéines animales (poulet, œuf, poisson)
+ *  - laitiers (yaourt, fromage blanc, emmental)
+ *  - fruits courants (banane, pomme)
+ *  - légumes faciles (tomate, courgette, carotte, brocoli)
+ *  - matières grasses (huile d'olive, beurre, amandes)
+ *  - sucres rapides (miel, chocolat)
+ *  - boissons (eau)
+ *
+ * L'utilisateur peut décocher au fil de l'eau. L'objectif : ne pas
+ * démarrer avec une page Favoris vide, ce qui tue l'adoption.
+ */
+export const DEFAULT_FAVORITES: string[] = [
+  // Céréales / féculents
+  'Pain complet',
+  'Pâtes alimentaires, cuites, non salées',
+  'Riz basmati, cuit, non salé',
+  'Flocon d\u2019avoine',
+  // Protéines animales
+  'Poulet, filet, grillé',
+  'Oeuf, cru',
+  'Saumon, atlantique, cuit',
+  'Thon albacore ou thon jaune, au naturel, appertisé, égoutté',
+  // Laitiers
+  'Yaourt nature',
+  'Fromage blanc nature ou aux fruits (aliment moyen)',
+  'Emmental',
+  // Fruits
+  'Banane, pulpe, crue',
+  'Pomme, crue, pulpe et peau',
+  // Légumes
+  'Tomate, crue',
+  'Courgette, crue',
+  'Carotte, crue',
+  'Brocoli, bouilli/cuit à l\u2019eau, croquant',
+  'Épinard, bouilli/cuit à l\u2019eau',
+  // Matières grasses et fruits à coque
+  'Huile d\u2019olive vierge extra',
+  'Amande, grillée',
+  'Avocat, pulpe, cru',
+  // Sucres / plaisir
+  'Miel',
+  'Chocolat noir à 40% de cacao minimum, à pâtisser, tablette',
+  // Légumineuses
+  'Lentille verte, bouillie/cuite à l\u2019eau',
 ];

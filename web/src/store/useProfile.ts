@@ -2,6 +2,9 @@ import { create } from 'zustand';
 import { storage } from '@/lib/storage';
 import type { Profile } from '@/types';
 import { uid } from '@/lib/utils';
+import { DEFAULT_FAVORITES } from '@/lib/constants';
+import { foodsByName, normalizeFoodKey } from '@/lib/foods';
+import { isFoodAllowed } from '@/lib/dietary';
 
 interface ProfileState {
   profiles: Profile[];
@@ -40,6 +43,25 @@ export const useProfile = create<ProfileState>((set, get) => ({
     const activeId = profile.id;
     set({ profiles, activeId });
     await persist({ profiles, activeId });
+
+    // Seed des favoris par défaut à la création — évite la page Favoris
+    // vide qui tue l'adoption. On filtre :
+    //  1) que les noms effectivement présents dans CIQUAL (robustesse)
+    //  2) que ceux compatibles avec les préférences alim du profil
+    //     (ex : un profil végan n'aura pas Saumon en favori par défaut)
+    try {
+      const seed = DEFAULT_FAVORITES.filter((name) => {
+        const food = foodsByName.get(normalizeFoodKey(name));
+        if (!food) return false;
+        return isFoodAllowed(food, profile.dietaryPrefs);
+      });
+      if (seed.length > 0) {
+        await storage.saveFavorites(profile.id, seed);
+      }
+    } catch {
+      // Favori seed non critique : on n'interrompt pas la création profil
+    }
+
     return profile;
   },
 

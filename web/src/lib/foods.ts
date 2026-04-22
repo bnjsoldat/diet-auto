@@ -23,6 +23,22 @@ function normalize(s: string): string {
     .trim();
 }
 
+/**
+ * Normalise une clé de lookup d'aliment. Gère les variantes d'apostrophes
+ * (U+0027, U+2019, U+02BC, U+02B9) qui polluent souvent les sources
+ * externes (templates avec `\u2019`, copier-coller depuis Word, etc.).
+ *
+ * Toutes les clés du Map `foodsByName` passent par cette fonction — donc
+ * `foodsByName.get(nom.toLowerCase())` continue de marcher, et les
+ * anciens callers n'ont pas besoin de modification.
+ *
+ * Exporté pour que le code externe (templates, favoris seedés) puisse
+ * se normaliser explicitement si nécessaire.
+ */
+export function normalizeFoodKey(name: string): string {
+  return name.toLowerCase().replace(/[\u2019\u02BC\u02B9\u02BB`´]/g, "'");
+}
+
 /** Tri des patterns par longueur de préfixe décroissante pour privilégier le plus spécifique. */
 const SORTED_PATTERNS = [...UNIT_PATTERNS].sort(
   (a, b) => normalize(b.prefix).length - normalize(a.prefix).length
@@ -55,10 +71,10 @@ function findUnitsByPattern(nom: string): Unite[] | null {
 function mergeFoods(): Food[] {
   const map = new Map<string, Food>();
   for (const f of foodsRaw as Food[]) {
-    map.set(f.nom.toLowerCase(), { ...f });
+    map.set(normalizeFoodKey(f.nom), { ...f });
   }
   for (const f of foodsExtras as Food[]) {
-    map.set(f.nom.toLowerCase(), { ...f });
+    map.set(normalizeFoodKey(f.nom), { ...f });
   }
   // Appliquer les unités : 1) exact match, 2) pattern fallback
   for (const f of map.values()) {
@@ -88,9 +104,10 @@ const CIQUAL: Food[] = mergeFoods();
  */
 export let foods: Food[] = CIQUAL;
 
-/** Map nom → Food (lowercase). Mutée en place par `registerCustomFoods`. */
+/** Map nom → Food. Clés normalisées via `normalizeFoodKey` (gère apostrophes
+ *  typographiques, accents, etc.). Mutée en place par `registerCustomFoods`. */
 export const foodsByName: Map<string, Food> = new Map(
-  foods.map((f) => [f.nom.toLowerCase(), f])
+  foods.map((f) => [normalizeFoodKey(f.nom), f])
 );
 
 /** Index fuzzy pour la recherche rapide dans le combobox. Collection mise à jour en place. */
@@ -134,7 +151,7 @@ export function registerCustomFoods(customs: Food[]) {
   }
   // Ajouter les nouveaux customs
   for (const f of customs) {
-    foodsByName.set(f.nom.toLowerCase(), { ...f, groupe: 'perso' });
+    foodsByName.set(normalizeFoodKey(f.nom), { ...f, groupe: 'perso' });
   }
   // Reconstruire foods + groupes
   foods = [

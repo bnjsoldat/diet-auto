@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import type { DayPlan, OptimizerMode, OptimizeResult } from '@/types';
-import { AlertTriangle, Check, Lightbulb, Plus, X } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, Plus, Scale, X } from 'lucide-react';
 import { OPTIMIZER_MODES } from '@/lib/constants';
-import { foods } from '@/lib/foods';
+import { foods, foodsByName } from '@/lib/foods';
 import { suggestComplements, type Suggestion } from '@/lib/suggestions';
+import { totalsForItems } from '@/lib/optimizer';
 import { useDayPlan } from '@/store/useDayPlan';
 
 interface Props {
@@ -158,6 +159,30 @@ export function OptimizeDialog({ open, result, plan, mode, onClose }: Props) {
     });
   }, [open, result, plan, modeConfig]);
 
+  /**
+   * Analyse de la distribution des kcal par repas après optimisation.
+   * L'optimiseur n'a pas de notion de "quel repas" (il traite tout à plat),
+   * donc il peut concentrer les kcal sur un seul repas. On détecte ce cas
+   * et on affiche un warning utile — l'utilisateur peut alors redistribuer
+   * manuellement ou supprimer des items trop chargés.
+   */
+  const mealDistribution = useMemo(() => {
+    if (!open || !result || !plan) return null;
+    const meals = plan.meals.map((m) => {
+      const t = totalsForItems(m.items, foodsByName);
+      return { nom: m.nom, kcal: t.kcal };
+    });
+    const total = meals.reduce((a, m) => a + m.kcal, 0);
+    if (total < 100) return null;
+    return meals.map((m) => ({ ...m, pct: (m.kcal / total) * 100 }));
+  }, [open, result, plan]);
+
+  /** Repas qui dépassent 40 % du total — signe d'un plan déséquilibré. */
+  const overloadedMeals = useMemo(
+    () => mealDistribution?.filter((m) => m.pct > 40) ?? [],
+    [mealDistribution]
+  );
+
   if (!open || !result) return null;
 
   return (
@@ -223,6 +248,47 @@ export function OptimizeDialog({ open, result, plan, mode, onClose }: Props) {
           cible={result.cibles.lip}
           tolerance={modeConfig.tolMacro}
         />
+
+        {/* Warning distribution repas : si un repas > 40 % du total kcal,
+            c'est probablement pas ce que l'user voulait (il préfère souvent
+            le midi ou le soir chargé, pas le petit-déj). L'optimiseur
+            n'a pas cette notion — on délègue à l'utilisateur via warning. */}
+        {overloadedMeals.length > 0 && mealDistribution && (
+          <div className="mt-4 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3">
+            <div className="flex items-start gap-2">
+              <Scale size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">Plan déséquilibré</div>
+                <div className="text-xs muted mt-0.5">
+                  {overloadedMeals.map((m, i) => (
+                    <span key={m.nom}>
+                      {i > 0 && ', '}
+                      <strong>{m.nom}</strong> = {Math.round(m.pct)} % du total
+                    </span>
+                  ))}
+                  . Si tu préfères équilibrer, retire ou diminue manuellement des
+                  aliments dans ce repas et relance l'optimisation.
+                </div>
+                <div className="mt-2 grid gap-1 text-xs">
+                  {mealDistribution.map((m) => (
+                    <div key={m.nom} className="flex items-center gap-2">
+                      <span className="w-28 truncate muted">{m.nom}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${m.pct > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                          style={{ width: `${Math.min(100, m.pct)}%` }}
+                        />
+                      </div>
+                      <span className="font-mono tabular-nums text-[11px] w-12 text-right">
+                        {Math.round(m.pct)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {plan && (
           <SuggestionsBlock

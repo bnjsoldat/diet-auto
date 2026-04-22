@@ -7,6 +7,7 @@ import { useDayPlan } from '@/store/useDayPlan';
 import { useProfile } from '@/store/useProfile';
 import { calcTargets } from '@/lib/calculations';
 import { totalsForItems } from '@/lib/optimizer';
+import { isFoodAllowed } from '@/lib/dietary';
 import type { Food } from '@/types';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, categorieOfFood, foodsByCategorie } from '@/lib/categories';
@@ -89,11 +90,23 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
       .map((x) => x.f);
   }
 
+  /**
+   * Filtrage préférences alimentaires (Phase 3).
+   * Appliqué à TOUS les résultats avant le reranking/limite.
+   * Si le résultat final est vide et qu'une pref est active, l'utilisateur
+   * saura que c'est le filtre (voir le bandeau d'info dans la liste).
+   */
+  const dietaryPrefs = profile?.dietaryPrefs;
+  const applyDietaryFilter = (list: Food[]): Food[] => {
+    if (!dietaryPrefs || dietaryPrefs.length === 0) return list;
+    return list.filter((f) => isFoodAllowed(f, dietaryPrefs));
+  };
+
   const results = useMemo<Food[]>(() => {
     const query = q.trim();
     if (query) {
       // Recherche fuzzy sur tout, filtrée par catégorie si choisie
-      const raw = searchFoods(query, 60);
+      const raw = applyDietaryFilter(searchFoods(query, 80));
       if (filter === 'favoris') {
         const favSet = new Set(favs);
         const favHits = raw.filter((f) => favSet.has(f.nom));
@@ -105,15 +118,15 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
     // Pas de query : on montre par catégorie
     if (filter === 'favoris') {
       const favSet = new Set(favs);
-      return foods.filter((f) => favSet.has(f.nom)).slice(0, 40);
+      return applyDietaryFilter(foods.filter((f) => favSet.has(f.nom))).slice(0, 40);
     }
-    if (filter === 'all') return rerankForDeficit(foods.slice()).slice(0, 40);
-    return (foodsByCategorie[filter] ?? []).slice(0, 80);
+    if (filter === 'all') return rerankForDeficit(applyDietaryFilter(foods.slice())).slice(0, 40);
+    return applyDietaryFilter(foodsByCategorie[filter] ?? []).slice(0, 80);
     // `customs` et `deficitMacro` sont listés en dépendances pour
     // forcer un recompute quand l'utilisateur scanne un aliment ou
     // modifie son plan.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, favs, filter, customs, deficitMacro]);
+  }, [q, favs, filter, customs, deficitMacro, dietaryPrefs]);
 
   useEffect(() => {
     setIdx(0);
@@ -260,6 +273,14 @@ export function FoodSearch({ onSelect, placeholder = 'Rechercher un aliment…' 
                 ? 'lipides'
                 : 'calories'}{' '}
               remontés.
+            </div>
+          )}
+
+          {/* Bandeau préférences alimentaires actives */}
+          {dietaryPrefs && dietaryPrefs.length > 0 && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border-b border-purple-100 dark:border-purple-900">
+              <FilterIcon size={11} />
+              Filtré selon tes préférences ({dietaryPrefs.join(', ')}). Modifie dans Mon profil.
             </div>
           )}
 

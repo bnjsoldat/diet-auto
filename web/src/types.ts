@@ -39,6 +39,23 @@ export type Rythme = 0.25 | 0.5 | 0.75 | 1;
  */
 export type Sport = 'muscu' | 'endurance' | 'mixte' | 'aucun';
 
+/**
+ * Préférences alimentaires — filtrent les aliments suggérés dans la
+ * recherche et les templates. Multi-select (ex : sans-gluten + sans-lactose).
+ *
+ *  - vegetarien   : pas de viande ni poisson (garde œufs + laitiers)
+ *  - vegan        : pas de produits animaux du tout (ni miel)
+ *  - sans-gluten  : pas de blé/seigle/orge et dérivés
+ *  - sans-lactose : pas de lait/fromages/yaourts
+ *  - halal        : pas de porc ni alcool
+ */
+export type DietaryPref =
+  | 'vegetarien'
+  | 'vegan'
+  | 'sans-gluten'
+  | 'sans-lactose'
+  | 'halal';
+
 export interface Profile {
   id: string;
   nom: string;
@@ -67,6 +84,8 @@ export interface Profile {
   poidsCible?: number;
   rythmeSem?: Rythme;
   sportPrincipal?: Sport;
+  /** Préférences alimentaires — filtre la recherche + suggère templates compatibles. */
+  dietaryPrefs?: DietaryPref[];
 
   createdAt: number;
   updatedAt: number;

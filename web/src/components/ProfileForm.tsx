@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Minus, TrendingDown, TrendingUp } from 'lucide-react';
-import type { Activite, Genre, Objectif, ObjectifType, Profile, Rythme, Sport } from '@/types';
+import type { Activite, DietaryPref, Genre, Objectif, ObjectifType, Profile, Rythme, Sport } from '@/types';
 import {
   ACTIVITY_COEFS,
   ACTIVITY_DESCRIPTIONS,
@@ -13,6 +13,7 @@ import {
   estimatedTargetDate,
   recommendedTargetWeight,
 } from '@/lib/calculations';
+import { DIETARY_PREFS } from '@/lib/dietary';
 import { ageFromBirthDate } from '@/lib/age';
 import { cn } from '@/lib/utils';
 import { InfoTip } from './InfoTip';
@@ -71,6 +72,13 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
   // Sport principal (Phase 2)
   const [sportPrincipal, setSportPrincipal] = useState<Sport>(initial?.sportPrincipal ?? 'mixte');
 
+  // Préférences alimentaires (Phase 3) — multi-select
+  const [dietaryPrefs, setDietaryPrefs] = useState<DietaryPref[]>(initial?.dietaryPrefs ?? []);
+  const toggleDietary = (pref: DietaryPref) =>
+    setDietaryPrefs((current) =>
+      current.includes(pref) ? current.filter((p) => p !== pref) : [...current, pref]
+    );
+
   const poidsNum = typeof poids === 'number' ? poids : 0;
   const tailleCmNum = typeof tailleCm === 'number' ? tailleCm : 0;
   const ageNum = birthDate
@@ -122,6 +130,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
     poidsCible: objectifType === 'maintien' ? undefined : poidsCibleNum || undefined,
     rythmeSem: objectifType === 'maintien' ? undefined : rythmeSem,
     sportPrincipal,
+    dietaryPrefs: dietaryPrefs.length > 0 ? dietaryPrefs : undefined,
     createdAt: 0,
     updatedAt: 0,
   };
@@ -167,6 +176,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       poidsCible: objectifType === 'maintien' ? undefined : poidsCibleNum || undefined,
       rythmeSem: objectifType === 'maintien' ? undefined : rythmeSem,
       sportPrincipal,
+      dietaryPrefs: dietaryPrefs.length > 0 ? dietaryPrefs : undefined,
     });
   }
 
@@ -456,6 +466,51 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
             );
           })}
         </div>
+      </div>
+
+      {/* ================= PRÉFÉRENCES ALIMENTAIRES (Phase 3) ================= */}
+      <div>
+        <label className="flex items-center gap-1.5 text-sm font-medium mb-2">
+          Préférences alimentaires (optionnel)
+          <InfoTip>
+            Filtre automatiquement la recherche d'aliments selon tes choix.
+            Ex : avec « Végan » activé, la viande et le poisson n'apparaissent
+            plus dans les suggestions. Multi-select possible (végétarien +
+            sans gluten par exemple). Tu peux toujours taper un aliment
+            exclu directement dans la recherche pour l'ajouter ponctuellement.
+          </InfoTip>
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {DIETARY_PREFS.map((pref) => {
+            const active = dietaryPrefs.includes(pref.id);
+            return (
+              <button
+                key={pref.id}
+                type="button"
+                onClick={() => toggleDietary(pref.id)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-md border p-2.5 text-left transition-colors',
+                  active
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
+                    : 'border-[var(--border)] hover:bg-[var(--bg-subtle)]'
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">{pref.emoji}</span>
+                  <span className="text-sm font-medium">{pref.label}</span>
+                </div>
+                <span className="text-[10px] muted leading-tight">{pref.description}</span>
+              </button>
+            );
+          })}
+        </div>
+        {dietaryPrefs.length > 0 && (
+          <p className="mt-2 text-[11px] muted">
+            ℹ️ La recherche d'aliments masque automatiquement ce qui ne matche pas.
+            Les templates prédéfinis ({dietaryPrefs.includes('vegetarien') || dietaryPrefs.includes('vegan') ? 'sauf le végétarien' : 'viande/poisson inclus'})
+            afficheront un avertissement s'ils contiennent des aliments incompatibles.
+          </p>
+        )}
       </div>
 
       {previewTargets && (

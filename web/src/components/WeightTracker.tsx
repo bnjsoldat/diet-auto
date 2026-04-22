@@ -11,6 +11,8 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useWeight } from '@/store/useWeight';
+import { useProfile } from '@/store/useProfile';
+import { useToast } from '@/store/useToast';
 import type { Profile, WeightEntry } from '@/types';
 import { todayKey, friendlyDate } from '@/lib/utils';
 
@@ -18,10 +20,26 @@ interface Props {
   profile: Profile;
 }
 
+/**
+ * Suivi de poids + courbe + auto-sync du profil.
+ *
+ * Comportement clé : quand l'utilisateur saisit une nouvelle pesée et que
+ * celle-ci devient la plus récente (date ≥ max des dates existantes), on
+ * met aussi à jour le `poids` du profil actif via `updateProfile`. Ça
+ * déclenche automatiquement le recalcul du métabolisme basal → cibles
+ * kcal/macros. Sinon l'app utiliserait ad vitam le poids de création,
+ * ce qui est absurde après 5 kg de perte.
+ *
+ * Le "départ" sur la courbe reste basé sur la 1re mesure chronologique
+ * (ou à défaut, sur profile.poids si aucune mesure). Donc on ne perd pas
+ * le repère visuel même après auto-update.
+ */
 export function WeightTracker({ profile }: Props) {
   const entries = useWeight((s) => s.entries);
   const addOrUpdate = useWeight((s) => s.addOrUpdate);
   const remove = useWeight((s) => s.remove);
+  const updateProfile = useProfile((s) => s.updateProfile);
+  const showToast = useToast((s) => s.show);
 
   const [date, setDate] = useState(todayKey());
   const [kg, setKg] = useState<number | ''>('');
@@ -34,14 +52,37 @@ export function WeightTracker({ profile }: Props) {
 
   const latest = sorted[sorted.length - 1];
   const first = sorted[0];
-  const delta = latest && first ? latest.kg - first.kg : 0;
-  const deltaSinceStart = latest ? latest.kg - profile.poids : 0;
+  /** Baseline : 1re mesure si dispo, sinon poids initial du profil. */
+  const baseline = first?.kg ?? profile.poids;
+  const delta = latest ? latest.kg - baseline : 0;
 
-  function handleAdd(e: React.FormEvent) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (typeof kg !== 'number' || kg <= 0) return;
     const entry: WeightEntry = { date, kg };
+
+    // On capte la dernière date AVANT d'ajouter, pour savoir si cette
+    // nouvelle entrée devient le "poids actuel".
+    const latestBefore = sorted[sorted.length - 1];
+    const becomesLatest = !latestBefore || date >= latestBefore.date;
+
     addOrUpdate(entry);
+
+    // Auto-update du profil uniquement si :
+    //  1) cette pesée est la plus récente (sinon on backfill de l'historique
+    //     et on ne veut pas changer le poids "actuel")
+    //  2) l'écart avec profile.poids est ≥ 0.1 kg (évite les updates inutiles)
+    if (becomesLatest && Math.abs(kg - profile.poids) >= 0.1) {
+      try {
+        await updateProfile(profile.id, { poids: kg });
+        showToast({
+          message: `Poids mis à jour (${kg.toFixed(1)} kg). Cibles kcal recalculées.`,
+        });
+      } catch {
+        // Erreur silencieuse : la pesée est tout de même enregistrée
+      }
+    }
+
     setKg('');
   }
 
@@ -74,7 +115,10 @@ export function WeightTracker({ profile }: Props) {
         )}
       </div>
 
-      {chartData.length >= 2 && (
+      {/* Graphe : affiché dès 1 mesure (avant, il fallait 2 mesures).
+          Avec 1 seul point, on voit le dot + la ligne "départ" du profil,
+          ce qui donne déjà un repère visuel utile. */}
+      {chartData.length >= 1 && (
         <div className="h-40 mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
@@ -87,8 +131,8 @@ export function WeightTracker({ profile }: Props) {
               />
               <YAxis
                 domain={[
-                  (dataMin: number) => Math.floor(dataMin - 1),
-                  (dataMax: number) => Math.ceil(dataMax + 1),
+                  (dataMin: number) => Math.floor(Math.min(dataMin, baseline) - 1),
+                  (dataMax: number) => Math.ceil(Math.max(dataMax, baseline) + 1),
                 ]}
                 fontSize={11}
                 stroke="var(--text-muted)"
@@ -104,11 +148,11 @@ export function WeightTracker({ profile }: Props) {
                 }}
               />
               <ReferenceLine
-                y={profile.poids}
+                y={baseline}
                 stroke="var(--text-muted)"
                 strokeDasharray="3 3"
                 label={{
-                  value: `départ ${profile.poids} kg`,
+                  value: `départ ${baseline.toFixed(1)} kg`,
                   fill: 'var(--text-muted)',
                   fontSize: 10,
                   position: 'insideTopRight',
@@ -129,14 +173,16 @@ export function WeightTracker({ profile }: Props) {
 
       {chartData.length === 1 && (
         <p className="text-xs muted mb-3">
-          Une seule mesure enregistrée. Ajoutes-en une autre pour voir la courbe apparaître.
+          1re mesure enregistrée. Pèse-toi à nouveau dans 3-7 jours pour voir la
+          tendance se dessiner. La ligne pointillée montre ton poids de départ.
         </p>
       )}
 
       {chartData.length === 0 && (
         <p className="text-xs muted mb-3">
-          Pèse-toi régulièrement (même heure idéalement) et note ton poids ci-dessous pour voir ta
-          progression.
+          Pèse-toi régulièrement (même heure idéalement, à jeun) et note ton
+          poids ci-dessous. Ton profil ({profile.poids} kg) sera mis à jour
+          automatiquement et les cibles kcal recalculées.
         </p>
       )}
 
@@ -175,6 +221,12 @@ export function WeightTracker({ profile }: Props) {
         </button>
       </form>
 
+      {/* Astuce discrète pour rassurer sur l'auto-update */}
+      <p className="text-[11px] muted mt-2">
+        💡 Une pesée à la date la plus récente met à jour le poids de ton
+        profil. Les cibles kcal/macros s'ajustent automatiquement.
+      </p>
+
       {sorted.length > 0 && (
         <details className="mt-4">
           <summary className="text-xs muted cursor-pointer">
@@ -202,13 +254,13 @@ export function WeightTracker({ profile }: Props) {
         </details>
       )}
 
-      {latest && Math.abs(deltaSinceStart) > 0.1 && (
+      {latest && sorted.length >= 2 && Math.abs(delta) > 0.1 && (
         <p className="mt-3 text-xs muted">
           Tu as{' '}
-          <span className={deltaSinceStart < 0 ? 'text-emerald-600' : 'text-amber-600'}>
-            {deltaSinceStart > 0 ? 'pris' : 'perdu'} {Math.abs(deltaSinceStart).toFixed(1)} kg
+          <span className={delta < 0 ? 'text-emerald-600' : 'text-amber-600'}>
+            {delta > 0 ? 'pris' : 'perdu'} {Math.abs(delta).toFixed(1)} kg
           </span>{' '}
-          depuis la création du profil.
+          depuis ta 1re pesée.
         </p>
       )}
     </div>

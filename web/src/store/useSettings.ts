@@ -10,6 +10,7 @@ const DEFAULT: Settings = {
   weightKcal: 2.0,
   weightMacro: 1.0,
   optimizerMode: 'normal',
+  suggestComplements: true,
 };
 
 interface SettingsState extends Settings {
@@ -25,6 +26,9 @@ function persist(s: Settings): Settings {
     weightKcal: s.weightKcal,
     weightMacro: s.weightMacro,
     optimizerMode: s.optimizerMode,
+    // Bug 2026-04-22 : `suggestComplements` était absent de `persist`,
+    // donc le toggle se réinitialisait à `true` au reload. Fix.
+    suggestComplements: s.suggestComplements ?? true,
   };
 }
 

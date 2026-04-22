@@ -451,10 +451,16 @@ export function Today() {
         <div className="grid gap-4 order-2 lg:order-1">
           {(() => {
             // Cibles kcal par repas selon la distribution préférée du profil.
-            // Calculé une fois par render à partir de la cible totale et du
-            // nombre de repas actuel. Passé à chaque MealSection en prop.
+            // Détection sémantique par NOM de repas (cf. detectMealSlot) pour
+            // que l'ordre dans le plan n'impacte plus le mapping — un plan
+            // « Petit-déj, Déjeuner, Collation, Dîner » est géré correctement
+            // même si le preset assume l'ordre classique 5 repas.
             const mealTargets = targets
-              ? kcalPerMeal(targets.kcalCible, current.meals.length, profile.mealDistribution)
+              ? kcalPerMeal(
+                  targets.kcalCible,
+                  current.meals.map((m) => m.nom),
+                  profile.mealDistribution
+                )
               : [];
             return current.meals.map((meal, i) => (
             <MealSection

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Minus, TrendingDown, TrendingUp } from 'lucide-react';
-import type { Activite, DietaryPref, Genre, Objectif, ObjectifType, Profile, Rythme, Sport } from '@/types';
+import type { Activite, DietaryPref, Genre, MealDistribution, Objectif, ObjectifType, Profile, Rythme, Sport } from '@/types';
 import {
   ACTIVITY_COEFS,
   ACTIVITY_DESCRIPTIONS,
+  MEAL_DISTRIBUTION_PRESETS,
   RYTHME_LABELS,
   SPORT_LABELS,
 } from '@/lib/constants';
@@ -79,9 +80,12 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       current.includes(pref) ? current.filter((p) => p !== pref) : [...current, pref]
     );
 
-  // Distribution des repas : réglée depuis OptimizerSettingsCard
-  // (« Paramètres du plan »). On passe l'existant en patch lors d'un
-  // update pour ne pas l'écraser.
+  // Distribution des repas — single-select.
+  // Aussi modifiable depuis OptimizerSettingsCard (« Paramètres du plan »)
+  // pour que l'utilisateur puisse tester un preset sans rouvrir le profil.
+  const [mealDistribution, setMealDistribution] = useState<MealDistribution>(
+    initial?.mealDistribution ?? 'equilibre'
+  );
 
   const poidsNum = typeof poids === 'number' ? poids : 0;
   const tailleCmNum = typeof tailleCm === 'number' ? tailleCm : 0;
@@ -135,7 +139,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
     rythmeSem: objectifType === 'maintien' ? undefined : rythmeSem,
     sportPrincipal,
     dietaryPrefs: dietaryPrefs.length > 0 ? dietaryPrefs : undefined,
-    mealDistribution: initial?.mealDistribution,
+    mealDistribution,
     createdAt: 0,
     updatedAt: 0,
   };
@@ -182,9 +186,7 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       rythmeSem: objectifType === 'maintien' ? undefined : rythmeSem,
       sportPrincipal,
       dietaryPrefs: dietaryPrefs.length > 0 ? dietaryPrefs : undefined,
-      // mealDistribution : préservé depuis l'initial si existant (géré
-      // depuis OptimizerSettingsCard « Paramètres du plan »).
-      mealDistribution: initial?.mealDistribution,
+      mealDistribution,
     });
   }
 
@@ -476,9 +478,60 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
         </div>
       </div>
 
-      {/* Distribution des repas déplacée vers OptimizerSettingsCard
-          (renommée "Paramètres du plan") — c'est un réglage de
-          comportement du plan, pas un trait personnel. */}
+      {/* ================= RÉPARTITION DES REPAS ================= */}
+      <div>
+        <label className="flex items-center gap-1.5 text-sm font-medium mb-2">
+          Répartition des repas
+          <InfoTip>
+            <strong>Choisis comment répartir tes calories sur la journée.</strong>{' '}
+            Chaque preset est basé sur une recommandation scientifique réelle :
+            <br />
+            <br />
+            • <em>Équilibré</em> : recommandation ANSES, classique française
+            <br />
+            • <em>Petit-déj copieux</em> : chrono-nutrition Delabos
+            <br />
+            • <em>Déjeuner copieux</em> : tradition française/méditerranéenne
+            <br />
+            • <em>Dîner copieux</em> : pattern anglo-américain
+            <br />
+            • <em>Jeûne 16/8</em> : intermittent, fenêtre alimentaire 8 h
+            <br />
+            <br />
+            Les cibles kcal par repas s'affichent sur « Aujourd'hui ».
+            Tu peux aussi changer ce preset depuis la carte « Paramètres
+            du plan » (un clic, sans rouvrir ce formulaire).
+          </InfoTip>
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          {(Object.keys(MEAL_DISTRIBUTION_PRESETS) as MealDistribution[]).map((key) => {
+            const meta = MEAL_DISTRIBUTION_PRESETS[key];
+            const active = mealDistribution === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setMealDistribution(key)}
+                className={cn(
+                  'flex flex-col items-start gap-0.5 rounded-md border p-2.5 text-left transition-colors',
+                  active
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40'
+                    : 'border-[var(--border)] hover:bg-[var(--bg-subtle)]'
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">{meta.emoji}</span>
+                  <span className="text-sm font-medium">{meta.label}</span>
+                </div>
+                <span className="text-[10px] muted leading-tight">{meta.description}</span>
+                <span className="text-[10px] muted font-mono">
+                  {Object.values(meta.shares).filter((s) => s > 0).join('/')} %
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ================= PRÉFÉRENCES ALIMENTAIRES (Phase 3) ================= */}
       <div>

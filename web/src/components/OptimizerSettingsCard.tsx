@@ -116,7 +116,7 @@ export function OptimizerSettingsCard() {
                     </div>
                     <span className="text-[10px] muted leading-tight">{meta.description}</span>
                     <span className="text-[10px] muted font-mono">
-                      {meta.shares.slice(0, 5).filter((s) => s > 0).join('/')} %
+                      {Object.values(meta.shares).filter((s) => s > 0).join('/')} %
                     </span>
                   </button>
                 );

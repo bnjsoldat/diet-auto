@@ -344,17 +344,34 @@ export const DEFAULT_MEALS = [
 ];
 
 /**
+ * Slots sémantiques de repas (indépendants de l'ordre dans le plan).
+ * Chaque repas du plan est classé dans un slot via détection par mot-clé
+ * (cf. `lib/mealSlot.ts`). Ça permet à un plan « Petit-déj, Déjeuner,
+ * Collation, Dîner, Collation du soir » d'être traité correctement
+ * même si l'ordre diffère du classique.
+ */
+export type MealSlot =
+  | 'petit-dej'
+  | 'collation-matin'
+  | 'dejeuner'
+  | 'collation-aprem'
+  | 'diner'
+  | 'collation-soir';
+
+/**
  * Presets de répartition des kcal par repas (% du total quotidien).
  *
- * Chaque preset correspond à un pattern nutritionnel réel basé sur la
- * littérature scientifique ou la culture culinaire. Le tableau `shares`
- * représente, dans l'ordre des repas du plan : petit-déj, collation 1,
- * déjeuner, collation 2, dîner, (collation soir si existe).
+ * Shares indexés par SLOT SÉMANTIQUE (pas par position). Chaque preset
+ * correspond à un pattern nutritionnel réel basé sur la littérature
+ * scientifique ou la culture culinaire.
  *
  * Ref :
  *  - ANSES ANC 2010 (répartition classique FR)
  *  - Delabos 2002 (chrono-nutrition)
  *  - Patterson 2015 / Varady 2021 (intermittent fasting 16:8)
+ *
+ * La somme peut dépasser ou être sous 100 selon le nombre de slots
+ * actifs dans le plan — le calcul `kcalPerMeal` renormalise.
  */
 export const MEAL_DISTRIBUTION_PRESETS: Record<
   MealDistribution,
@@ -362,38 +379,73 @@ export const MEAL_DISTRIBUTION_PRESETS: Record<
     label: string;
     emoji: string;
     description: string;
-    shares: number[]; // total = 100, dans l'ordre des repas
+    shares: Record<MealSlot, number>;
   }
 > = {
   equilibre: {
     label: 'Équilibré',
     emoji: '⚖️',
     description: 'Réparti sur la journée — recommandation ANSES.',
-    shares: [25, 10, 30, 10, 25],
+    shares: {
+      'petit-dej': 25,
+      'collation-matin': 10,
+      'dejeuner': 30,
+      'collation-aprem': 10,
+      'diner': 25,
+      'collation-soir': 0,
+    },
   },
   'petit-dej-copieux': {
     label: 'Petit-déj copieux',
     emoji: '🌅',
     description: 'Chrono-nutrition Delabos : matin dense, soir léger.',
-    shares: [35, 10, 25, 10, 20],
+    shares: {
+      'petit-dej': 35,
+      'collation-matin': 10,
+      'dejeuner': 25,
+      'collation-aprem': 10,
+      'diner': 20,
+      'collation-soir': 0,
+    },
   },
   'dejeuner-copieux': {
     label: 'Déjeuner copieux',
     emoji: '🍽️',
     description: 'Tradition française : midi principal, reste modéré.',
-    shares: [20, 5, 40, 10, 25],
+    shares: {
+      'petit-dej': 20,
+      'collation-matin': 5,
+      'dejeuner': 40,
+      'collation-aprem': 10,
+      'diner': 25,
+      'collation-soir': 0,
+    },
   },
   'diner-copieux': {
     label: 'Dîner copieux',
     emoji: '🌙',
     description: 'Pattern anglo-américain : soir principal.',
-    shares: [15, 10, 25, 10, 40],
+    shares: {
+      'petit-dej': 15,
+      'collation-matin': 10,
+      'dejeuner': 25,
+      'collation-aprem': 10,
+      'diner': 40,
+      'collation-soir': 0,
+    },
   },
   'jeune-16-8': {
     label: 'Jeûne 16/8',
     emoji: '⏱️',
     description: 'Intermittent : 0 petit-déj, repas midi-soir (fenêtre 8h).',
-    shares: [0, 0, 50, 20, 30],
+    shares: {
+      'petit-dej': 0,
+      'collation-matin': 0,
+      'dejeuner': 50,
+      'collation-aprem': 20,
+      'diner': 30,
+      'collation-soir': 0,
+    },
   },
 };
 

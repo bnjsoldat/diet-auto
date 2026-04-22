@@ -13,6 +13,7 @@ import {
   PROTEIN_MAX_G_PER_KG,
   PROTEIN_MIN_G_PER_KG,
 } from './constants';
+import { detectMealSlot } from './mealSlot';
 import { effectiveAge } from './age';
 
 /** Métabolisme basal — formule utilisée dans le Sheet d'origine
@@ -234,47 +235,55 @@ export function estimatedTargetDate(profile: Profile): Date | null {
 }
 
 /**
- * Retourne les kcal cible par repas selon le preset de distribution
- * choisi par l'utilisateur et le nombre de repas du plan.
+ * Retourne les kcal cible par repas selon :
+ *  - les noms des repas (détection sémantique via `detectMealSlot`)
+ *  - le preset de distribution choisi
+ *  - la cible kcal totale de la journée
  *
  * Algorithme :
- *  1. Prend le preset (défaut 'equilibre').
- *  2. Adapte les `shares` au nombre réel de repas :
- *     - Si le plan a N repas et le preset en a M :
- *       - Si N === M : applique tel quel
- *       - Si N > M : distribue le reste (proportionnel)
- *       - Si N < M : somme les excédents sur les principaux
- *  3. Multiplie par kcalCible pour obtenir les kcal par repas.
+ *  1. Pour chaque repas du plan, détecte son slot sémantique par nom
+ *     (petit-dej, collation-matin, dejeuner, collation-aprem, diner,
+ *     collation-soir).
+ *  2. Prend le share correspondant dans le preset.
+ *  3. Renormalise sur la somme des shares ACTIVÉS dans le plan (si un
+ *     slot n'est pas présent, ses kcal sont redistribuées proportion-
+ *     nellement aux autres).
+ *  4. Multiplie par kcalCible.
  *
- * Exemple : kcalCible = 2878, preset = 'equilibre', 5 repas
- *  → [720, 288, 864, 288, 720] (25%/10%/30%/10%/25%)
+ * Exemple : plan « Petit-déj, Déjeuner, Collation, Dîner, Collation soir »
+ * avec preset 'equilibre' (shares petit-dej 25, dejeuner 30, collation-
+ * aprem 10, diner 25, collation-soir 0) :
+ *  - Petit-déj        → 25
+ *  - Déjeuner         → 30
+ *  - Collation (idx 2)→ collation-aprem → 10
+ *  - Dîner            → 25
+ *  - Collation du soir→ collation-soir → 0
+ *  Total = 90 → renormalise × 100/90 = [27.8, 33.3, 11.1, 27.8, 0]
+ *  Pour 2878 kcal : [800, 960, 320, 800, 0] (collation soir à 0 est gênant,
+ *  cf. note : on force un minimum 5 % pour éviter les "0 kcal" absurdes).
  */
 export function kcalPerMeal(
   kcalCible: number,
-  nbMeals: number,
+  mealNames: string[],
   distribution?: MealDistribution
 ): number[] {
   const preset = MEAL_DISTRIBUTION_PRESETS[distribution ?? 'equilibre'];
-  let shares = [...preset.shares];
+  const MIN_SHARE = 5; // plancher : jamais un repas à 0 kcal cible
 
-  // Adapter le tableau de shares au nombre réel de repas
-  if (nbMeals > shares.length) {
-    // Extra repas : on ajoute 10 % chacun et on renormalise à 100
-    while (shares.length < nbMeals) shares.push(10);
-  } else if (nbMeals < shares.length) {
-    // Moins de repas : on fusionne les derniers dans le dernier conservé
-    const extra = shares.slice(nbMeals).reduce((a, b) => a + b, 0);
-    shares = shares.slice(0, nbMeals);
-    shares[shares.length - 1] += extra;
-  }
+  // 1. Slot sémantique de chaque repas
+  const slots = mealNames.map((n, i) => detectMealSlot(n, i, mealNames.length));
 
-  // Renormaliser à 100 (peut être imparfait après adaptations)
-  const total = shares.reduce((a, b) => a + b, 0);
+  // 2. Share brut du preset pour chaque slot (avec plancher)
+  let raw = slots.map((s) => Math.max(preset.shares[s], MIN_SHARE));
+
+  // 3. Renormalisation à 100 sur le total des repas du plan
+  const total = raw.reduce((a, b) => a + b, 0);
   if (total > 0 && total !== 100) {
-    shares = shares.map((s) => (s * 100) / total);
+    raw = raw.map((s) => (s * 100) / total);
   }
 
-  return shares.map((s) => Math.round((s / 100) * kcalCible));
+  // 4. Multiplie par kcalCible (arrondi à l'unité)
+  return raw.map((s) => Math.round((s / 100) * kcalCible));
 }
 
 /**

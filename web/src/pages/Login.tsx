@@ -36,10 +36,13 @@ export function Login() {
   // Brouillon : on persiste l'email entré pour qu'un user qui quitte
   // au milieu de la saisie le retrouve à son retour. Le mot de passe
   // n'est JAMAIS persisté (sécurité).
-  const draft = useDraft('login-form', { email: '', mode: 'magic' as Mode });
+  // Mode par défaut : 'signin-password' depuis 22/04/2026 — feedback user
+  // « le lien magique fait peur à certaines personnes ». Le mot de passe
+  // étant le plus familier, on en fait le défaut. Lien magique reste
+  // accessible via les 3 onglets.
+  const draft = useDraft('login-form', { email: '', mode: 'signin-password' as Mode });
 
   const [mode, setMode] = useState<Mode>(draft.initial.mode);
-  const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState(draft.initial.email);
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
@@ -153,7 +156,113 @@ export function Login() {
           <div className="flex-1 border-t" />
         </div>
 
-        {/* ---- 2. Magic link (défaut) ---- */}
+        {/* Onglets : 3 modes visibles directement (plus de « Autres options »).
+            Ordre : Se connecter → Créer un compte → Lien magique. Le mot
+            de passe (familier) est mis en avant ; le lien magique reste
+            disponible avec une note rassurante pour ceux qui ne connaissent
+            pas le concept (feedback user 22/04 : « ça fait peur »). */}
+        <div className="grid grid-cols-3 gap-1 bg-[var(--bg-subtle)] rounded-md p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => { setMode('signin-password'); setMsg(null); }}
+            className={
+              'h-8 rounded font-medium transition-colors ' +
+              (mode === 'signin-password'
+                ? 'bg-[var(--card)] shadow-sm text-[var(--text)]'
+                : 'muted hover:text-[var(--text)]')
+            }
+          >
+            Connexion
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('signup-password'); setMsg(null); }}
+            className={
+              'h-8 rounded font-medium transition-colors ' +
+              (mode === 'signup-password'
+                ? 'bg-[var(--card)] shadow-sm text-[var(--text)]'
+                : 'muted hover:text-[var(--text)]')
+            }
+          >
+            Créer un compte
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode('magic'); setMsg(null); }}
+            className={
+              'h-8 rounded font-medium transition-colors ' +
+              (mode === 'magic'
+                ? 'bg-[var(--card)] shadow-sm text-[var(--text)]'
+                : 'muted hover:text-[var(--text)]')
+            }
+          >
+            Lien magique
+          </button>
+        </div>
+
+        {/* Mode 1 + 2 : email + mot de passe (signin OU signup) */}
+        {(mode === 'signin-password' || mode === 'signup-password') && (
+          <form onSubmit={handlePasswordSubmit} className="space-y-3">
+            <label className="block">
+              <span className="text-sm font-medium mb-1 block">Email</span>
+              <div className="relative">
+                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input pl-9 h-11"
+                  placeholder="toi@exemple.fr"
+                  autoComplete="email"
+                />
+              </div>
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium mb-1 block">Mot de passe</span>
+              <div className="relative">
+                <KeyRound size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input pl-9 h-11"
+                  placeholder={mode === 'signup-password' ? 'Au moins 6 caractères' : 'Ton mot de passe'}
+                  autoComplete={mode === 'signup-password' ? 'new-password' : 'current-password'}
+                />
+              </div>
+            </label>
+            {msg && (
+              <div
+                className={
+                  'text-sm rounded-md p-2.5 ' +
+                  (msg.type === 'error'
+                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
+                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900')
+                }
+              >
+                {msg.text}
+              </div>
+            )}
+            <button type="submit" className="btn-primary w-full h-11" disabled={loading}>
+              {loading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : mode === 'signup-password' ? (
+                <>
+                  <UserPlus size={14} /> Créer mon compte
+                </>
+              ) : (
+                <>
+                  <LogIn size={14} /> Me connecter
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Mode 3 : lien magique avec NOTE RASSURANTE */}
         {mode === 'magic' && (
           <form onSubmit={handleMagicLink} className="space-y-3">
             <label className="block">
@@ -193,123 +302,24 @@ export function Login() {
                 </>
               )}
             </button>
-            <p className="text-[11px] muted text-center">
-              Tu reçois un email avec un lien. Clique dessus, tu es connecté. Pas de mot de passe à
-              retenir.
-            </p>
+
+            {/* Note rassurante */}
+            <div className="rounded-md bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 text-xs space-y-1.5">
+              <div className="font-semibold text-blue-900 dark:text-blue-300">
+                C'est quoi un lien magique ?
+              </div>
+              <p className="text-blue-800 dark:text-blue-300/90 leading-relaxed">
+                On t'envoie un email avec un lien <strong>sécurisé à usage unique</strong>{' '}
+                (valable 1 h). Tu cliques, tu es connecté. <strong>Pas de mot de passe</strong>{' '}
+                à retenir.
+              </p>
+              <p className="text-blue-800/80 dark:text-blue-300/70 italic">
+                C'est ce qu'utilisent Notion, Slack, Stripe et la plupart des outils modernes.
+                Plus sûr qu'un mot de passe (rien à voler).
+              </p>
+            </div>
           </form>
         )}
-
-        {/* ---- 3. Mot de passe (caché) ---- */}
-        {(mode === 'signin-password' || mode === 'signup-password') && (
-          <form onSubmit={handlePasswordSubmit} className="space-y-3">
-            <label className="block">
-              <span className="text-sm font-medium mb-1 block">Email</span>
-              <div className="relative">
-                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input pl-9 h-11"
-                  placeholder="toi@exemple.fr"
-                  autoComplete="email"
-                />
-              </div>
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium mb-1 block">Mot de passe</span>
-              <div className="relative">
-                <KeyRound size={14} className="absolute left-3 top-1/2 -translate-y-1/2 muted" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input pl-9 h-11"
-                  placeholder="Au moins 6 caractères"
-                  autoComplete={mode === 'signup-password' ? 'new-password' : 'current-password'}
-                />
-              </div>
-            </label>
-            {msg && (
-              <div
-                className={
-                  'text-sm rounded-md p-2.5 ' +
-                  (msg.type === 'error'
-                    ? 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
-                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900')
-                }
-              >
-                {msg.text}
-              </div>
-            )}
-            <button type="submit" className="btn-primary w-full h-11" disabled={loading}>
-              {loading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : mode === 'signup-password' ? (
-                <>
-                  <UserPlus size={14} /> Créer mon compte
-                </>
-              ) : (
-                <>
-                  <LogIn size={14} /> Me connecter
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* Bascule "autres options" */}
-        <details
-          open={showPassword}
-          onToggle={(e) => setShowPassword((e.target as HTMLDetailsElement).open)}
-          className="text-xs muted"
-        >
-          <summary className="cursor-pointer select-none hover:text-[var(--text)]">
-            Autres options
-          </summary>
-          <div className="pt-3 flex flex-col gap-1.5">
-            {mode !== 'magic' && (
-              <button
-                type="button"
-                className="underline text-left hover:text-[var(--text)]"
-                onClick={() => {
-                  setMode('magic');
-                  setMsg(null);
-                }}
-              >
-                ← Revenir au lien magique (recommandé)
-              </button>
-            )}
-            {mode !== 'signin-password' && (
-              <button
-                type="button"
-                className="underline text-left hover:text-[var(--text)]"
-                onClick={() => {
-                  setMode('signin-password');
-                  setMsg(null);
-                }}
-              >
-                Se connecter avec mot de passe
-              </button>
-            )}
-            {mode !== 'signup-password' && (
-              <button
-                type="button"
-                className="underline text-left hover:text-[var(--text)]"
-                onClick={() => {
-                  setMode('signup-password');
-                  setMsg(null);
-                }}
-              >
-                Créer un compte avec mot de passe
-              </button>
-            )}
-          </div>
-        </details>
       </div>
 
       <p className="text-[11px] muted text-center mt-6 max-w-sm mx-auto">

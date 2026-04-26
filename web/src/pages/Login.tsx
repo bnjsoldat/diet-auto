@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import { AtSign, CheckCircle2, KeyRound, Loader2, LogIn, Mail, Sparkles, UserPlus } from 'lucide-react';
 import { useAuth } from '@/store/useAuth';
 import { isCloudEnabled } from '@/lib/supabase';
+import { useDraft } from '@/hooks/useDraft';
 
 /**
  * Page de connexion — auth OBLIGATOIRE pour accéder à l'app.
@@ -32,11 +33,22 @@ export function Login() {
   const loading = useAuth((s) => s.loading);
   const user = useAuth((s) => s.user);
 
-  const [mode, setMode] = useState<Mode>('magic');
+  // Brouillon : on persiste l'email entré pour qu'un user qui quitte
+  // au milieu de la saisie le retrouve à son retour. Le mot de passe
+  // n'est JAMAIS persisté (sécurité).
+  const draft = useDraft('login-form', { email: '', mode: 'magic' as Mode });
+
+  const [mode, setMode] = useState<Mode>(draft.initial.mode);
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(draft.initial.email);
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  // Auto-save du brouillon (email + mode) à chaque changement.
+  useEffect(() => {
+    draft.save({ email, mode });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, mode]);
 
   // Déjà connecté ? <Navigate> gère ça proprement pendant le render
   // (pas de warning React).
@@ -95,6 +107,7 @@ export function Login() {
       }
       setMsg({ type: 'error', text: clearText });
     } else {
+      draft.clear(); // login OK : on nettoie le brouillon
       navigate(from, { replace: true });
     }
   }

@@ -16,6 +16,7 @@ import {
 } from '@/lib/calculations';
 import { DIETARY_PREFS } from '@/lib/dietary';
 import { ageFromBirthDate } from '@/lib/age';
+import { useDraft } from '@/hooks/useDraft';
 import { cn } from '@/lib/utils';
 import { InfoTip } from './InfoTip';
 
@@ -52,29 +53,71 @@ function deriveObjectifLegacy(type: ObjectifType, rythme: Rythme | null): Object
 }
 
 export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, onCancel }: Props) {
-  const [nom, setNom] = useState(initial?.nom ?? '');
-  const [poids, setPoids] = useState<NumLike>(initial?.poids ?? 70);
-  const [tailleCm, setTailleCm] = useState<NumLike>(
-    initial?.taille ? Math.round(initial.taille * 100) : 175
+  // Brouillon : actif UNIQUEMENT en mode création (pas en édition d'un
+  // profil existant — sinon on écraserait les valeurs de l'utilisateur).
+  // Si l'user quitte au milieu de la création et revient → ses valeurs
+  // sont restaurées.
+  const isCreating = !initial?.nom;
+  const draft = useDraft(
+    'profile-form',
+    {
+      nom: '',
+      poids: 70 as NumLike,
+      tailleCm: 175 as NumLike,
+      birthDate: '',
+      ageFallback: 30 as NumLike,
+      genre: 'Homme' as Genre,
+      activite: 'Actif' as Activite,
+      objectifType: 'maintien' as ObjectifType,
+      poidsCible: '' as NumLike,
+      rythmeSem: 0.5 as Rythme,
+      sportPrincipal: 'mixte' as Sport,
+      dietaryPrefs: [] as DietaryPref[],
+      mealDistribution: 'equilibre' as MealDistribution,
+    },
+    { enabled: isCreating }
   );
-  const [birthDate, setBirthDate] = useState<string>(initial?.birthDate ?? '');
-  const [ageFallback, setAgeFallback] = useState<NumLike>(initial?.age ?? 30);
-  const [genre, setGenre] = useState<Genre>(initial?.genre ?? 'Homme');
-  const [activite, setActivite] = useState<Activite>(initial?.activite ?? 'Actif');
+
+  const [nom, setNom] = useState(initial?.nom ?? draft.initial.nom);
+  const [poids, setPoids] = useState<NumLike>(
+    initial?.poids ?? draft.initial.poids
+  );
+  const [tailleCm, setTailleCm] = useState<NumLike>(
+    initial?.taille ? Math.round(initial.taille * 100) : draft.initial.tailleCm
+  );
+  const [birthDate, setBirthDate] = useState<string>(
+    initial?.birthDate ?? draft.initial.birthDate
+  );
+  const [ageFallback, setAgeFallback] = useState<NumLike>(
+    initial?.age ?? draft.initial.ageFallback
+  );
+  const [genre, setGenre] = useState<Genre>(initial?.genre ?? draft.initial.genre);
+  const [activite, setActivite] = useState<Activite>(
+    initial?.activite ?? draft.initial.activite
+  );
 
   // Nouveau modèle objectif v2 : 3 boutons + poids cible + rythme.
   // Si le profil initial n'a pas d'objectifType, on le dérive de l'ancien Objectif.
   const [objectifType, setObjectifType] = useState<ObjectifType>(
-    initial?.objectifType ?? (initial?.objectif ? deriveObjectifTypeFromLegacy(initial.objectif) : 'maintien')
+    initial?.objectifType ??
+      (initial?.objectif ? deriveObjectifTypeFromLegacy(initial.objectif) : draft.initial.objectifType)
   );
-  const [poidsCible, setPoidsCible] = useState<NumLike>(initial?.poidsCible ?? '');
-  const [rythmeSem, setRythmeSem] = useState<Rythme>(initial?.rythmeSem ?? 0.5);
+  const [poidsCible, setPoidsCible] = useState<NumLike>(
+    initial?.poidsCible ?? draft.initial.poidsCible
+  );
+  const [rythmeSem, setRythmeSem] = useState<Rythme>(
+    initial?.rythmeSem ?? draft.initial.rythmeSem
+  );
 
   // Sport principal (Phase 2)
-  const [sportPrincipal, setSportPrincipal] = useState<Sport>(initial?.sportPrincipal ?? 'mixte');
+  const [sportPrincipal, setSportPrincipal] = useState<Sport>(
+    initial?.sportPrincipal ?? draft.initial.sportPrincipal
+  );
 
   // Préférences alimentaires (Phase 3) — multi-select
-  const [dietaryPrefs, setDietaryPrefs] = useState<DietaryPref[]>(initial?.dietaryPrefs ?? []);
+  const [dietaryPrefs, setDietaryPrefs] = useState<DietaryPref[]>(
+    initial?.dietaryPrefs ?? draft.initial.dietaryPrefs
+  );
   const toggleDietary = (pref: DietaryPref) =>
     setDietaryPrefs((current) =>
       current.includes(pref) ? current.filter((p) => p !== pref) : [...current, pref]
@@ -84,8 +127,32 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
   // Aussi modifiable depuis OptimizerSettingsCard (« Paramètres du plan »)
   // pour que l'utilisateur puisse tester un preset sans rouvrir le profil.
   const [mealDistribution, setMealDistribution] = useState<MealDistribution>(
-    initial?.mealDistribution ?? 'equilibre'
+    initial?.mealDistribution ?? draft.initial.mealDistribution
   );
+
+  // Auto-save du brouillon à chaque changement (uniquement en mode création)
+  useEffect(() => {
+    if (!isCreating) return;
+    draft.save({
+      nom,
+      poids,
+      tailleCm,
+      birthDate,
+      ageFallback,
+      genre,
+      activite,
+      objectifType,
+      poidsCible,
+      rythmeSem,
+      sportPrincipal,
+      dietaryPrefs,
+      mealDistribution,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    nom, poids, tailleCm, birthDate, ageFallback, genre, activite,
+    objectifType, poidsCible, rythmeSem, sportPrincipal, dietaryPrefs, mealDistribution,
+  ]);
 
   const poidsNum = typeof poids === 'number' ? poids : 0;
   const tailleCmNum = typeof tailleCm === 'number' ? tailleCm : 0;
@@ -188,6 +255,10 @@ export function ProfileForm({ initial, submitLabel = 'Enregistrer', onSubmit, on
       dietaryPrefs: dietaryPrefs.length > 0 ? dietaryPrefs : undefined,
       mealDistribution,
     });
+    // Submit OK en mode création → nettoie le brouillon. Pas appelé en
+    // mode édition pour éviter d'écraser un brouillon de création
+    // potentiellement en cours dans un autre onglet.
+    if (isCreating) draft.clear();
   }
 
   const canSubmit =

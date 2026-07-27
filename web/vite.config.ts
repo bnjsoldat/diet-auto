@@ -15,6 +15,17 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Le preload-helper virtuel de Vite (~1 KB) est requis par TOUT
+          // chunk qui fait un import() dynamique. Sans routage explicite,
+          // Rollup l'avait placé dans vendor-pdf → chaque page chargeait
+          // 174 KB gzip de jsPDF juste pour ce helper. On le colle dans
+          // vendor-react (chargé partout de toute façon).
+          if (id.includes('vite/preload-helper')) return 'vendor-react';
+          // clsx (~400 octets) est une dépendance de recharts ET de toute
+          // l'app (via cn()). Sans routage explicite, Rollup le plaçait
+          // dans vendor-charts → chaque page chargeait 112 KB gzip de
+          // Recharts pour cette seule fonction. On le met dans vendor-react.
+          if (id.includes('node_modules/clsx')) return 'vendor-react';
           // Vendors lourds : splits classiques
           if (id.includes('node_modules/react-router')) return 'vendor-react';
           if (id.includes('node_modules/react-dom')) return 'vendor-react';

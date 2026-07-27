@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChefHat, ChevronDown, Lock, LockOpen, Star, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, ChefHat, ChevronDown, Lock, LockOpen, Star, Trash2 } from 'lucide-react';
 import { foodsByName } from '@/lib/foods';
 import { useFavorites } from '@/store/useFavorites';
+import { getSubstitutes, hasSubstitutes } from '@/lib/substitutes';
 import type { MealFoodItem } from '@/types';
 import { cn, formatNumber } from '@/lib/utils';
 import { bestUnitForGrams, formatCount, isDiscreteUnit, pluralize } from '@/lib/units';
@@ -27,6 +28,7 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
 
   // Hooks déclarés inconditionnellement (pas de hooks conditionnels)
   const [recipeOpen, setRecipeOpen] = useState(false);
+  const [subsOpen, setSubsOpen] = useState(false);
   const toggleFav = useFavorites((s) => s.toggle);
   const isFav = useFavorites((s) => s.favorites.includes(item.nom));
 
@@ -159,10 +161,14 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
     onUpdate({ quantite: Math.max(0, Math.round(parseNum(raw) * activeUnite.g)) });
   }
 
+  const substitutable = hasSubstitutes(item.nom);
+  const substitutes = subsOpen ? getSubstitutes(item.nom, item.quantite) : [];
+
   return (
+    <div className="border-b last:border-0">
     <div
       className={cn(
-        'grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-2 border-b last:border-0 animate-fade-in-up',
+        'grid grid-cols-[1fr_auto_auto] sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-2 animate-fade-in-up',
         item.verrou && 'bg-amber-50/50 dark:bg-amber-950/20 -mx-4 px-4'
       )}
     >
@@ -244,6 +250,23 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
       </div>
 
       <div className="flex items-center gap-1">
+        {substitutable && (
+          <button
+            type="button"
+            onClick={() => setSubsOpen((o) => !o)}
+            className={cn(
+              'h-8 w-8 grid place-items-center rounded-md border transition-colors',
+              subsOpen
+                ? 'bg-emerald-100 border-emerald-300 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-400'
+                : 'muted hover:bg-[var(--bg-subtle)]'
+            )}
+            title="Remplacer par un aliment équivalent"
+            aria-label={`Voir les substituts de ${item.nom}`}
+            aria-expanded={subsOpen}
+          >
+            <ArrowLeftRight size={14} />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onUpdate({ verrou: !item.verrou })}
@@ -270,6 +293,36 @@ export function FoodRow({ item, onUpdate, onRemove }: Props) {
           <Trash2 size={14} />
         </button>
       </div>
+    </div>
+
+    {/* Panneau substituts : « Pas fan ? Remplace par… ». Quantités
+        iso-caloriques pour ne pas casser l'équilibre du plan. */}
+    {subsOpen && substitutes.length > 0 && (
+      <div className="pb-2.5 animate-fade-in-up">
+        <div className="rounded-md bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 p-2.5">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 mb-1.5">
+            Remplacer par (même apport calorique)
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {substitutes.map((s) => (
+              <button
+                key={s.food.nom}
+                type="button"
+                onClick={() => {
+                  onUpdate({ nom: s.food.nom, quantite: s.quantite });
+                  setSubsOpen(false);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs rounded-full border border-emerald-300 dark:border-emerald-800 bg-[var(--card)] px-2.5 h-7 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                title={`${s.food.nom} — ${Math.round((s.quantite * s.food.kcal) / 100)} kcal`}
+              >
+                <span className="font-medium">{shortName(s.food.nom)}</span>
+                <span className="muted">{s.quantite} g</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

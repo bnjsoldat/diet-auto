@@ -205,6 +205,143 @@ export const PLAN_TEMPLATES: PlanTemplate[] = [
       },
     ],
   },
+  {
+    id: 'mediterraneen',
+    label: 'M\u00e9diterran\u00e9en',
+    emoji: '\u{1FAD2}',
+    description: 'Poisson, huile d\u2019olive, l\u00e9gumes, l\u00e9gumineuses. Le r\u00e9gime aux meilleurs r\u00e9sultats sant\u00e9.',
+    mode: 'normal',
+    meals: [
+      {
+        nom: 'Petit-d\u00e9jeuner',
+        items: [
+          ['Yaourt \u00e0 la grecque, nature', 150],
+          ['Miel', 10],
+          ['Noix', 15],
+          ['Pain complet', 50],
+          ['Huile d\u2019olive vierge extra', 5],
+          ['Tomate, crue', 80],
+        ],
+      },
+      {
+        nom: 'D\u00e9jeuner',
+        items: [
+          ['Sardine, \u00e0 l\u2019huile d\u2019olive, appertis\u00e9e, \u00e9goutt\u00e9e', 100],
+          ['Pois chiche, bouilli/cuit \u00e0 l\u2019eau', 150],
+          ['Tomate, crue', 120],
+          ['Concombre, pulpe et peau, cru', 100],
+          ['Feta AOP', 40],
+          ['Huile d\u2019olive vierge extra', 12],
+          ['Pain complet', 50],
+        ],
+      },
+      {
+        nom: 'Collation',
+        items: [
+          ['Orange, pulpe, crue', 150],
+          ['Amande (avec peau)', 20],
+        ],
+      },
+      {
+        nom: 'D\u00eener',
+        items: [
+          ['Saumon, atlantique, cuit', 130],
+          ['Riz complet, cuit', 150],
+          ['Courgette, crue', 150],
+          ['Poivron rouge, cru', 80],
+          ['Huile d\u2019olive vierge extra', 12],
+        ],
+      },
+    ],
+  },
+  {
+    id: 'petit-mangeur',
+    label: 'Petit mangeur',
+    emoji: '\u{1F37D}\ufe0f',
+    description: '~1400-1600 kcal. Portions l\u00e9g\u00e8res. Pour petits gabarits ou faibles app\u00e9tits.',
+    mode: 'souple',
+    meals: [
+      {
+        nom: 'Petit-d\u00e9jeuner',
+        items: [
+          ['Yaourt nature', 125],
+          ['Flocon d\u2019avoine', 25],
+          ['Banane, pulpe, crue', 80],
+          ['Miel', 5],
+        ],
+      },
+      {
+        nom: 'D\u00e9jeuner',
+        items: [
+          ['Poulet, filet, grill\u00e9', 100],
+          ['Riz basmati, cuit, non sal\u00e9', 120],
+          ['Haricot vert, bouilli/cuit \u00e0 l\u2019eau', 150],
+          ['Huile d\u2019olive vierge extra', 7],
+        ],
+      },
+      {
+        nom: 'Collation',
+        items: [
+          ['Pomme, crue, pulpe et peau', 120],
+          ['Amande, grill\u00e9e', 10],
+        ],
+      },
+      {
+        nom: 'D\u00eener',
+        items: [
+          ['Cabillaud, cuit \u00e0 la vapeur', 110],
+          ['Pomme de terre de conservation, sans peau, bouillie/cuite \u00e0 l\u2019eau', 130],
+          ['Courgette, crue', 150],
+          ['Huile d\u2019olive vierge extra', 7],
+        ],
+      },
+    ],
+  },
+  {
+    id: 'low-carb',
+    label: 'Low-carb',
+    emoji: '\u{1F969}',
+    description: 'Glucides r\u00e9duits (~100 g/j), prot\u00e9ines et bons lipides \u00e9lev\u00e9s. Sati\u00e9t\u00e9 maximale, id\u00e9al s\u00e8che.',
+    mode: 'normal',
+    meals: [
+      {
+        nom: 'Petit-d\u00e9jeuner',
+        items: [
+          ['Oeuf, entier, cru', 120],
+          ['Avocat, pulpe, cru', 80],
+          ['Tomate, crue', 100],
+          ['Beurre \u00e0 82% MG, doux', 5],
+        ],
+      },
+      {
+        nom: 'D\u00e9jeuner',
+        items: [
+          ['Poulet, filet, grill\u00e9', 160],
+          ['Brocoli, bouilli/cuit \u00e0 l\u2019eau, croquant', 200],
+          ['Avocat, pulpe, cru', 60],
+          ['Huile d\u2019olive vierge extra', 12],
+          ['Emmental', 25],
+        ],
+      },
+      {
+        nom: 'Collation',
+        items: [
+          ['Fromage blanc nature ou aux fruits (aliment moyen)', 150],
+          ['Noix', 20],
+        ],
+      },
+      {
+        nom: 'D\u00eener',
+        items: [
+          ['Saumon, atlantique, cuit', 150],
+          ['\u00c9pinard, bouilli/cuit \u00e0 l\u2019eau', 200],
+          ['Champignon de Paris ou champignon de couche, bouilli/cuit \u00e0 l\u2019eau', 100],
+          ['Huile d\u2019olive vierge extra', 10],
+          ['Amande, grill\u00e9e', 15],
+        ],
+      },
+    ],
+  },
 ];
 
 /**

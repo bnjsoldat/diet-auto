@@ -85,6 +85,7 @@ export function Onboarding() {
       className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-4"
       role="dialog"
       aria-modal="true"
+      aria-label="Présentation de Ma Diét"
     >
       <div className="w-full max-w-md card p-6 sm:p-8 animate-slide-down">
         {/* Header : skip à droite */}
@@ -114,19 +115,25 @@ export function Onboarding() {
         <h2 className="mt-5 text-xl font-bold text-center">{s.title}</h2>
         <p className="mt-3 text-sm muted text-center leading-relaxed">{s.description}</p>
 
-        {/* Indicateurs de progression */}
-        <div className="mt-6 flex justify-center gap-1.5">
+        {/* Indicateurs de progression. Zone cliquable ≥ 24px (a11y
+            target-size) via padding — le dot visible reste fin. */}
+        <div className="mt-3 flex justify-center">
           {STEPS.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setStep(i)}
-              className={cn(
-                'h-1.5 rounded-full transition-all',
-                i === step ? 'w-6 bg-emerald-600' : 'w-1.5 bg-[var(--border)]'
-              )}
+              className="p-3 grid place-items-center"
               aria-label={`Étape ${i + 1} sur ${STEPS.length}`}
-            />
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  'h-1.5 rounded-full transition-all block',
+                  i === step ? 'w-6 bg-emerald-600' : 'w-1.5 bg-[var(--border)]'
+                )}
+              />
+            </button>
           ))}
         </div>
 

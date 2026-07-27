@@ -85,7 +85,9 @@
   }
 
   .btn-primary {
-    @apply btn bg-emerald-600 text-white hover:bg-emerald-700 dark:hover:bg-emerald-500;
+    /* emerald-700 (pas 600) : contraste blanc/fond 4.8:1 — conforme
+       WCAG AA texte normal (audit Lighthouse 2026-04-22). */
+    @apply btn bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500;
   }
 
   .btn-ghost {

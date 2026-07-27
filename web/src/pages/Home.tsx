@@ -151,8 +151,10 @@ export function Home() {
         </div>
       </section>
 
-      {/* Features grid */}
+      {/* Features grid. h2 sr-only : les cards utilisent des h3, il faut
+          un h2 entre le h1 du hero et eux (a11y heading-order). */}
       <section className="mt-24 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 className="sr-only">Fonctionnalités</h2>
         <Feature
           icon={Wand2}
           title="Calculé, pas bricolé"
